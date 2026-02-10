@@ -1,0 +1,27 @@
+:root {
+    --primary: #2ecc71;
+    --bg: #f4f7f6;
+    --card: #ffffff;
+}
+
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+.container { max-width: 600px; margin: auto; }
+
+header { text-align: center; margin-bottom: 30px; }
+
+.dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+.card { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+.card h3 { font-size: 0.9rem; color: #666; margin: 0; }
+.card p { font-size: 1.2rem; font-weight: bold; margin: 5px 0 0; color: #333; }
+
+.progress-container { background: #ddd; border-radius: 20px; height: 25px; margin-bottom: 30px; overflow: hidden; }
+.progress-bar { background: var(--primary); height: 100%; width: 0%; color: white; text-align: center; font-size: 0.8rem; line-height: 25px; transition: width 0.5s; }
+
+.table-wrapper { background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f8f9fa; font-size: 0.85rem; color: #888; }
+
+.status { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
+.pago { background: #e8f5e9; color: #2e7d32; }
+.pendente { background: #fff3e0; color: #ef6c00; }

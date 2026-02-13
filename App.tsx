@@ -1,43 +1,46 @@
 import React, { useState, useEffect } from 'react';
 
-const App: React.FC = () => {
+const App = () => {
   const [dados, setDados] = useState<any>(null);
-  const [erro, setErro] = useState(false);
 
   useEffect(() => {
-    // O fetch busca direto na raiz porque o arquivo está na public
     fetch('/pagamentos.json')
-      .then(res => {
-        if (!res.ok) throw new Error("Erro ao carregar JSON");
-        return res.json();
-      })
+      .then(res => res.json())
       .then(json => setDados(json))
-      .catch(() => setErro(true));
+      .catch(err => console.error("Erro ao ler JSON:", err));
   }, []);
 
-  if (erro) return <div className="p-10 text-red-500 font-bold">Erro: Ficheiro pagamentos.json não encontrado na pasta public!</div>;
-  if (!dados) return <div className="p-10 font-bold italic">A carregar lista da Família FDA...</div>;
+  if (!dados) return <div className="p-10 font-bold">A carregar lista da Família FDA...</div>;
 
-  const totalPago = dados.membros.filter((m: any) => m.pago).length;
+  const pagos = dados.membros.filter((m: any) => m.pago).length;
+  const total = pagos * dados.config.valorPorPessoa;
 
   return (
-    <div className="min-h-screen bg-[#FDFCF0] p-6">
-      <h1 className="text-3xl font-black text-[#D4A373] mb-8 uppercase italic">Família FDA</h1>
-      
-      <div className="bg-white p-6 rounded-2xl shadow-lg border-b-4 border-green-600 mb-6">
-        <p className="text-xs font-bold text-gray-400 uppercase">Arrecadado</p>
-        <div className="text-2xl font-black">R$ {totalPago * dados.config.valorPorPessoa}</div>
-      </div>
+    <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans">
+      <header className="text-center mb-10">
+        <h1 className="text-4xl font-black text-[#D4A373] italic uppercase">Família FDA</h1>
+        <p className="text-[10px] font-bold text-gray-400 tracking-[0.3em]">CONTROLE FIM DE ANO 2026</p>
+      </header>
 
-      <div className="grid grid-cols-1 gap-2">
-        {dados.membros.map((m: any, i: number) => (
-          <div key={i} className="bg-white p-3 rounded-lg shadow-sm flex justify-between items-center border border-gray-100">
-            <span className="font-bold text-gray-700">{m.nome}</span>
-            <span className={`text-[10px] font-black px-2 py-1 rounded ${m.pago ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-400'}`}>
-              {m.pago ? 'PAGO' : 'PENDENTE'}
-            </span>
+      <div className="max-w-md mx-auto space-y-4">
+        <div className="bg-black text-white p-6 rounded-3xl shadow-xl">
+          <p className="text-[10px] text-[#D4A373] font-bold uppercase mb-1">Total Arrecadado</p>
+          <div className="text-3xl font-black">R$ {total}</div>
+          <div className="mt-4 w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+            <div className="bg-[#D4A373] h-full" style={{ width: `${(total/dados.config.metaTotal)*100}%` }}></div>
           </div>
-        ))}
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
+          {dados.membros.map((m: any, i: number) => (
+            <div key={i} className="flex justify-between items-center p-4 border-b border-gray-50 hover:bg-gray-50">
+              <span className="font-bold text-gray-700">{i + 1}. {m.nome}</span>
+              <span className={`text-[9px] font-black px-2 py-1 rounded ${m.pago ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-400'}`}>
+                {m.pago ? 'PAGO' : 'PENDENTE'}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

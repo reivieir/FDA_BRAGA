@@ -1,0 +1,35 @@
+{
+  "config": {
+    "valorPorPessoa": 150,
+    "metaTotal": 4050
+  },
+  "membros": [
+    { "nome": "Adriana", "pago": false },
+    { "nome": "Adriano", "pago": false },
+    { "nome": "Angela", "pago": false },
+    { "nome": "Silvinho", "pago": false },
+    { "nome": "Vini", "pago": false },
+    { "nome": "Stefany", "pago": false },
+    { "nome": "Antonio", "pago": false },
+    { "nome": "Paty", "pago": false },
+    { "nome": "Helena", "pago": false },
+    { "nome": "Pablo", "pago": false },
+    { "nome": "Giovana", "pago": false },
+    { "nome": "Manu", "pago": false },
+    { "nome": "Jair", "pago": false },
+    { "nome": "Amanda", "pago": false },
+    { "nome": "Clarice", "pago": false },
+    { "nome": "Deia", "pago": false },
+    { "nome": "Reinaldo", "pago": false },
+    { "nome": "Gilson", "pago": false },
+    { "nome": "Helio", "pago": false },
+    { "nome": "Bia", "pago": false },
+    { "nome": "Ju", "pago": false },
+    { "nome": "Cintia", "pago": false },
+    { "nome": "Rafael", "pago": false },
+    { "nome": "Katia", "pago": false },
+    { "nome": "Giovani", "pago": false },
+    { "nome": "Julia", "pago": false },
+    { "nome": "Juan", "pago": false }
+  ]
+}

@@ -14,9 +14,18 @@ const App = () => {
   const [valorInput, setValorInput] = useState('');
   const [mesInput, setMesInput] = useState('Fevereiro');
 
+  // Definição dos grupos conforme a sua imagem
+  const grupos = [
+    ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"],
+    ["Helena", "Antonio", "Paty", "Jair", "Giovana", "Manu", "Pablo"],
+    ["Clarice", "Gilson", "Deia", "Helio", "Amanda", "Reinaldo"],
+    ["Katia", "Giovani", "Cintia", "Rafael", "Ju", "Bia"],
+    ["Julia", "Juan"]
+  ];
+
   const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
-  // Função para definir a meta individual
+  // Regra de meta
   const getMetaIndividual = (nome: string) => nome === 'Pablo' ? 330 : 660;
 
   useEffect(() => { fetchData(); }, []);
@@ -39,18 +48,17 @@ const App = () => {
 
   const calcularPago = (id: number) => historico.filter(p => p.membro_id === id).reduce((acc, p) => acc + p.valor, 0);
   
-  // Cálculo da Meta Total Dinâmica
   const metaTotalGeral = membros.reduce((acc, m) => acc + getMetaIndividual(m.nome), 0);
   const totalArrecadadoGeral = historico.reduce((acc, p) => acc + p.valor, 0);
 
   if (isAdmin) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen font-sans">
-        <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold mb-4 uppercase text-xs">← Voltar ao Site</button>
-        <h1 className="text-2xl font-black mb-6">LANÇAMENTOS - REINALDO</h1>
+      <div className="p-4 bg-gray-100 min-h-screen font-sans">
+        <button onClick={() => setIsAdmin(false)} className="mb-4 text-xs font-bold text-blue-600 uppercase tracking-widest">← Voltar ao Site</button>
+        <h1 className="text-xl font-black mb-6">LANÇAMENTOS - ADMIN</h1>
         
-        <div className="bg-white p-6 rounded-3xl shadow-sm mb-8 space-y-4 border border-gray-200">
-          <select className="w-full p-3 border rounded-xl font-bold" onChange={e => setSelectedMembro(e.target.value)}>
+        <div className="bg-white p-6 rounded-3xl shadow-sm mb-6 space-y-3">
+          <select className="w-full p-3 border rounded-xl font-bold bg-gray-50" onChange={e => setSelectedMembro(e.target.value)}>
             <option value="">Selecione o Familiar</option>
             {membros.map(m => <option key={m.id} value={m.id}>{m.nome} (Meta: R${getMetaIndividual(m.nome)})</option>)}
           </select>
@@ -60,15 +68,14 @@ const App = () => {
               {meses.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
-          <button onClick={registrarPagamento} className="w-full bg-green-600 text-white font-black p-4 rounded-xl shadow-lg active:scale-95 transition-transform">CONFIRMAR RECEBIMENTO</button>
+          <button onClick={registrarPagamento} className="w-full bg-green-600 text-white font-black p-4 rounded-xl shadow-lg active:scale-95 transition-all">CONFIRMAR</button>
         </div>
 
-        <h2 className="font-black text-gray-400 text-xs uppercase mb-4 tracking-widest">Histórico Recente</h2>
         <div className="space-y-2">
           {historico.slice().reverse().map(p => (
-            <div key={p.id} className="bg-white p-4 rounded-2xl flex justify-between shadow-sm text-sm border-l-4 border-green-500">
+            <div key={p.id} className="bg-white p-3 rounded-xl flex justify-between shadow-sm text-xs border-l-4 border-green-500">
               <span className="font-bold">{p.membros?.nome}</span>
-              <span className="text-gray-500 font-black">R$ {p.valor} <span className="text-[10px] text-gray-300">({p.mes})</span></span>
+              <span className="text-gray-500">R$ {p.valor} <span className="text-gray-300">({p.mes})</span></span>
             </div>
           ))}
         </div>
@@ -77,69 +84,82 @@ const App = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans text-gray-800">
-      <header className="text-center mb-10">
-        <h1 className="text-4xl font-black text-[#D4A373] italic uppercase tracking-tighter">Família <span className="text-green-700">FDA</span></h1>
-        <p className="text-[10px] font-bold text-gray-400 tracking-[0.3em]">CONTROLE DE ARRECADAÇÃO 2026</p>
+    <div className="min-h-screen bg-[#FDFCF0] p-4 md:p-10 font-sans text-gray-800">
+      <header className="text-center mb-12">
+        <h1 className="text-4xl md:text-6xl font-black text-[#D4A373] italic uppercase tracking-tighter">Família <span className="text-green-700">FDA</span></h1>
+        <p className="text-[10px] font-bold text-gray-400 tracking-[0.4em] mt-2">SISTEMA DE CONTROLE FINANCEIRO 2026</p>
       </header>
 
       {/* Card de Progresso Geral */}
-      <div className="max-w-md mx-auto bg-black text-white p-6 rounded-3xl shadow-2xl mb-8">
-        <div className="flex justify-between items-end mb-4">
-          <div>
-            <p className="text-[10px] text-[#D4A373] font-black uppercase">Total da Festa</p>
-            <div className="text-3xl font-black">R$ {totalArrecadadoGeral}</div>
+      <div className="max-w-6xl mx-auto bg-black text-white p-8 rounded-[40px] shadow-2xl mb-12 border-b-8 border-green-700">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+          <div className="text-center md:text-left">
+            <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest">Total Arrecadado</p>
+            <div className="text-4xl md:text-6xl font-black">R$ {totalArrecadadoGeral}</div>
           </div>
-          <div className="text-right">
-            <p className="text-[10px] text-gray-500 font-black uppercase">Meta Final</p>
-            <div className="text-sm font-bold text-gray-400">R$ {metaTotalGeral}</div>
+          <div className="text-center md:text-right">
+            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Meta Final da Festa</p>
+            <div className="text-xl font-bold text-gray-400">R$ {metaTotalGeral}</div>
           </div>
         </div>
-        <div className="w-full bg-gray-800 h-3 rounded-full overflow-hidden">
-          <div className="bg-green-500 h-full transition-all duration-1000" style={{ width: `${(totalArrecadadoGeral/metaTotalGeral)*100}%` }}></div>
+        <div className="w-full bg-gray-800 h-4 rounded-full overflow-hidden">
+          <div className="bg-green-500 h-full transition-all duration-1000 shadow-[0_0_20px_rgba(34,197,94,0.5)]" style={{ width: `${(totalArrecadadoGeral/metaTotalGeral)*100}%` }}></div>
         </div>
+        <p className="text-right text-[10px] font-black mt-3 text-green-500 uppercase italic tracking-widest">
+          {((totalArrecadadoGeral / metaTotalGeral) * 100).toFixed(1)}% Concluído
+        </p>
       </div>
 
-      {/* Lista Individual */}
-      <section className="max-w-md mx-auto space-y-3">
-        {membros.map(m => {
-          const pago = calcularPago(m.id);
-          const metaInd = getMetaIndividual(m.nome);
-          const aPagar = metaInd - pago;
-          return (
-            <div key={m.id} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
-              <div className="flex justify-between items-center mb-3">
-                <span className="font-black text-gray-700 uppercase italic text-sm">{m.nome}</span>
-                <span className={`text-[10px] font-black px-3 py-1 rounded-full ${aPagar <= 0 ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-500'}`}>
-                  {aPagar <= 0 ? 'QUITADO' : `FALTA R$ ${aPagar}`}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="flex gap-4">
-                  <div>
-                    <p className="text-[8px] font-bold text-gray-400 uppercase">Pago</p>
-                    <p className="font-black text-xs text-green-600">R$ {pago}</p>
-                  </div>
-                  <div>
-                    <p className="text-[8px] font-bold text-gray-400 uppercase">Meta</p>
-                    <p className="font-black text-xs text-gray-400">R$ {metaInd}</p>
-                  </div>
-                </div>
-                {/* Barrinha de progresso individual */}
-                <div className="w-24 bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                   <div className="bg-[#D4A373] h-full" style={{ width: `${Math.min((pago/metaInd)*100, 100)}%` }}></div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </section>
+      {/* Grade de Grupos (5 Colunas conforme a imagem) */}
+      <main className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {grupos.map((grupo, gIdx) => (
+          <div key={gIdx} className="space-y-3">
+            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 border-b border-gray-200 pb-2">
+              Grupo {gIdx + 1}
+            </h2>
+            {grupo.map(nome => {
+              const membro = membros.find(m => m.nome === nome);
+              const pago = membro ? calcularPago(membro.id) : 0;
+              const metaInd = getMetaIndividual(nome);
+              const aPagar = metaInd - pago;
+              const porcentagem = Math.min((pago / metaInd) * 100, 100);
 
-      <footer className="mt-20 text-center pb-10">
-        <div className="inline-block p-4 border-t border-dashed border-gray-200">
-          <input type="password" placeholder="Senha Admin" className="p-2 border rounded-xl text-xs bg-white" onChange={e => setSenha(e.target.value)} />
-          <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-2 text-[10px] font-black text-gray-400 uppercase hover:text-black">Acessar Painel</button>
-        </div>
+              return (
+                <div key={nome} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-black text-xs text-gray-700 uppercase italic truncate">{nome}</span>
+                    <div className={`h-2 w-2 rounded-full ${aPagar <= 0 ? 'bg-green-500' : 'bg-red-400'}`}></div>
+                  </div>
+                  
+                  <div className="flex justify-between items-end mb-2">
+                    <div>
+                      <p className="text-[8px] font-bold text-gray-300 uppercase">Recebido</p>
+                      <p className={`text-xs font-black ${pago > 0 ? 'text-green-600' : 'text-gray-400'}`}>R$ {pago}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[8px] font-bold text-gray-300 uppercase">Falta</p>
+                      <p className={`text-xs font-black ${aPagar <= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                        {aPagar <= 0 ? 'QUITADO' : `R$ ${aPagar}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="w-full bg-gray-50 h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-500 ${aPagar <= 0 ? 'bg-green-500' : 'bg-[#D4A373]'}`} 
+                      style={{ width: `${porcentagem}%` }}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </main>
+
+      <footer className="mt-24 text-center pb-20 border-t border-dashed border-gray-200 pt-10">
+        <input type="password" placeholder="Admin" className="p-3 border rounded-2xl text-xs bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#D4A373]" onChange={e => setSenha(e.target.value)} />
+        <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-black transition-colors">Acessar Painel</button>
       </footer>
     </div>
   );

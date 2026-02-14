@@ -1,51 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Festa - Família</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🎉 Festa de Fim de Ano</h1>
-            <p>Acompanhamento de Arrecadação</p>
-        </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Família FDA - Controle 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body { background-color: #FDFCF0; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
 
-        <div class="dashboard">
-            <div class="card">
-                <h3>Total Arrecadado</h3>
-                <p id="arrecadado">R$ 0,00</p>
-            </div>
-            <div class="card">
-                <h3>Meta Final (11 meses)</h3>
-                <p id="meta">R$ 17.820,00</p>
-            </div>
-        </div>
-
-        <div class="progress-container">
-            <div class="progress-bar" id="barra-progresso">0%</div>
-        </div>
-
-        <section class="lista-pagamentos">
-            <h2>Status de Pagamento</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Status</th>
-                            <th>Total Pago</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabela-corpo">
-                        </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
-
-    <script src="script.js"></script>
-</body>
+    /* ESTA É A LINHA MAIS IMPORTANTE: 
+       Ela aponta para o App.tsx que você moveu para a raiz.
+    */
+    <script type="module" src="/App.tsx"></script>
+  </body>
 </html>

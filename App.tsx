@@ -32,7 +32,7 @@ const App = () => {
   const [mesGlobal, setMesGlobal] = useState(mesAtual);
 
   const meses = ["Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-  const metaMensalGrupo = 1530; // Sua meta calibrada
+  const metaMensalGrupo = 1590; // Sua meta calibrada
 
   const gruposDef = [
     { titulo: "Grupo Adriana", nomes: ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"] },

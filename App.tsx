@@ -280,7 +280,7 @@ const App = () => {
           </div>
 
           <div className="w-full md:w-80 space-y-4">
-              <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4 italic">Gastos Bragança</h2>
+              <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4 italic">PGTOS LOCAÇÃO CHÁCARA</h2>
               <div className="bg-white rounded-[40px] p-6 shadow-sm border border-gray-100">
                 {saidas.map(s => (
                   <div key={s.id} className="mb-4 last:mb-0 border-b border-gray-50 pb-4 last:border-0">

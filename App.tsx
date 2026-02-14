@@ -1,48 +1,69 @@
 import React, { useState, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 
-// Configuração do Banco (As chaves você pega no painel do Supabase)
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL, 
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 const App = () => {
   const [membros, setMembros] = useState<any[]>([]);
+  const [historico, setHistorico] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [password, setPassword] = useState('');
+  const [senha, setSenha] = useState('');
+  
+  // Estados para o formulário de pagamento
+  const [selectedMembro, setSelectedMembro] = useState('');
+  const [valorInput, setValorInput] = useState('');
+  const [mesInput, setMesInput] = useState('Fevereiro');
 
-  const metaTotal = 4050; // 27 pessoas * 150
+  const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  const metaIndividual = 150; //
 
-  useEffect(() => { fetchMembros(); }, []);
+  useEffect(() => { fetchData(); }, []);
 
-  const fetchMembros = async () => {
-    const { data } = await supabase.from('membros').select('*').order('nome');
-    if (data) setMembros(data);
+  const fetchData = async () => {
+    const { data: m } = await supabase.from('membros').select('*').order('nome');
+    const { data: p } = await supabase.from('pagamentos_detalhes').select('*, membros(nome)');
+    if (m) setMembros(m);
+    if (p) setHistorico(p);
   };
 
-  const togglePagamento = async (id: number, statusAtual: boolean) => {
-    await supabase.from('membros').update({ pago: !statusAtual }).eq('id', id);
-    fetchMembros();
+  const registrarPagamento = async () => {
+    if (!selectedMembro || !valorInput) return;
+    await supabase.from('pagamentos_detalhes').insert([
+      { membro_id: selectedMembro, valor: parseFloat(valorInput), mes: mesInput }
+    ]);
+    setValorInput('');
+    fetchData();
   };
 
-  const arrecadado = membros.reduce((acc, m) => acc + (m.pago ? 150 : 0), 0);
+  const calcularPago = (id: number) => historico.filter(p => p.membro_id === id).reduce((acc, p) => acc + p.valor, 0);
 
   if (isAdmin) {
     return (
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <button onClick={() => setIsAdmin(false)} className="mb-4 text-xs font-bold uppercase text-blue-600">← Voltar ao Site</button>
-        <h1 className="text-xl font-black mb-6">PAINEL DO REINALDO</h1>
+      <div className="p-6 bg-gray-50 min-h-screen font-sans">
+        <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold mb-4">← Voltar</button>
+        <h1 className="text-2xl font-black mb-6">PAINEL DE LANÇAMENTOS</h1>
+        
+        <div className="bg-white p-6 rounded-3xl shadow-sm mb-8 space-y-4 border border-gray-200">
+          <select className="w-full p-3 border rounded-xl" onChange={e => setSelectedMembro(e.target.value)}>
+            <option value="">Selecione o Familiar</option>
+            {membros.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
+          </select>
+          <div className="flex gap-2">
+            <input type="number" placeholder="Valor R$" className="w-1/2 p-3 border rounded-xl" value={valorInput} onChange={e => setValorInput(e.target.value)} />
+            <select className="w-1/2 p-3 border rounded-xl" value={mesInput} onChange={e => setMesInput(e.target.value)}>
+              {meses.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          <button onClick={registrarPagamento} className="w-full bg-green-600 text-white font-black p-4 rounded-xl shadow-lg">CONFIRMAR DEPÓSITO</button>
+        </div>
+
+        <h2 className="font-black text-gray-400 text-xs uppercase mb-4 tracking-widest">Últimos Lançamentos</h2>
         <div className="space-y-2">
-          {membros.map(m => (
-            <div key={m.id} className="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm">
-              <span className="font-bold">{m.nome}</span>
-              <button 
-                onClick={() => togglePagamento(m.id, m.pago)}
-                className={`px-4 py-2 rounded-lg text-xs font-black ${m.pago ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`}
-              >
-                {m.pago ? 'PAGO' : 'MARCAR PAGO'}
-              </button>
+          {historico.slice().reverse().map(p => (
+            <div key={p.id} className="bg-white p-4 rounded-2xl flex justify-between shadow-sm text-sm">
+              <span className="font-bold">{p.membros?.nome}</span>
+              <span className="text-green-600 font-black">R$ {p.valor} ({p.mes})</span>
             </div>
           ))}
         </div>
@@ -51,53 +72,53 @@ const App = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans">
+    <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans text-gray-800">
       <header className="text-center mb-10">
         <h1 className="text-4xl font-black text-[#D4A373] italic uppercase">Família FDA</h1>
-        <p className="text-[10px] font-bold text-gray-400 tracking-[0.3em]">CONTROLE FIM DE ANO 2026</p>
+        <p className="text-[10px] font-bold text-gray-400 tracking-[0.3em]">CONTROLE FINANCEIRO 2026</p>
       </header>
 
-      <div className="max-w-md mx-auto space-y-4">
-        <div className="bg-black text-white p-6 rounded-3xl shadow-xl">
-          <p className="text-[10px] text-[#D4A373] font-bold uppercase mb-1">Total Arrecadado</p>
-          <div className="text-3xl font-black">R$ {arrecadado}</div>
-          <div className="mt-4 w-full bg-gray-800 h-2 rounded-full overflow-hidden">
-            <div className="bg-[#D4A373] h-full" style={{ width: `${(arrecadado/metaTotal)*100}%` }}></div>
+      {/* Resumo por Mês */}
+      <section className="mb-10 overflow-x-auto flex gap-4 pb-4">
+        {meses.filter(mes => historico.some(p => p.mes === mes)).map(mes => (
+          <div key={mes} className="bg-white p-4 rounded-3xl shadow-md min-w-[150px] border-b-4 border-[#D4A373]">
+            <p className="text-[10px] font-black text-gray-400 uppercase">{mes}</p>
+            <p className="text-xl font-black">R$ {historico.filter(p => p.mes === mes).reduce((acc, p) => acc + p.valor, 0)}</p>
           </div>
-        </div>
+        ))}
+      </section>
 
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
-          {membros.map((m, i) => (
-            <div key={m.id} className="flex justify-between items-center p-4 border-b border-gray-50">
-              <span className="font-bold text-gray-700">{i + 1}. {m.nome}</span>
-              <span className={`text-[9px] font-black px-2 py-1 rounded ${m.pago ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-400'}`}>
-                {m.pago ? 'PAGO' : 'PENDENTE'}
-              </span>
+      {/* Lista de Membros com Saldo Devedor */}
+      <section className="max-w-md mx-auto space-y-3">
+        <h2 className="text-xs font-black text-center text-gray-400 uppercase tracking-widest mb-6">Situação Individual</h2>
+        {membros.map(m => {
+          const pago = calcularPago(m.id);
+          const aPagar = metaIndividual - pago;
+          return (
+            <div key={m.id} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-black text-gray-700">{m.nome}</span>
+                <span className={`text-[10px] font-black px-3 py-1 rounded-full ${aPagar <= 0 ? 'bg-green-100 text-green-700' : 'bg-orange-50 text-orange-600'}`}>
+                  {aPagar <= 0 ? 'QUITADO' : `FALTA R$ ${aPagar}`}
+                </span>
+              </div>
+              <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase">
+                <span>Pago: R$ {pago}</span>
+                <span>Meta: R$ {metaIndividual}</span>
+              </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
+      </section>
 
-        <div className="mt-10 p-4 border-t border-dashed border-gray-200 text-center">
-          <input 
-            type="password" 
-            placeholder="Senha Admin" 
-            className="text-xs p-2 border rounded-lg mr-2"
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button 
-            onClick={() => password === 'FDA2026' && setIsAdmin(true)}
-            className="text-[10px] font-bold text-gray-400 uppercase"
-          >
-            Acessar Painel
-          </button>
-        </div>
-      </div>
+      <footer className="mt-20 text-center">
+        <input type="password" placeholder="Admin" className="p-2 border rounded-lg text-xs" onChange={e => setSenha(e.target.value)} />
+        <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-2 text-[10px] font-black text-gray-400 uppercase">Painel</button>
+      </footer>
     </div>
   );
 };
 
-export default App;
-import { createRoot } from 'react-dom/client';
 const container = document.getElementById('root');
-const root = createRoot(container!);
-root.render(<App />);
+if (container) { createRoot(container).render(<App />); }
+export default App;

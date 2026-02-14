@@ -317,7 +317,7 @@ const App = () => {
 
         {/* COLUNA 2: GASTOS */}
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Gastos em Bragança</h2>
+          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Extrato de Saídas - Locação e Despesas</h2>
           <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 min-h-[150px]">
             {saidas.map(s => (
               <div key={s.id} className="mb-4 last:mb-0 border-b border-gray-50 pb-4 last:border-0 italic">
@@ -333,7 +333,7 @@ const App = () => {
 
         {/* COLUNA 3: AUDITORIA */}
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-4 italic">Auditoria e Extratos</h2>
+          <h2 className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-4 italic">Extrato de Depósitos</h2>
           <div className="bg-blue-50/50 rounded-[40px] p-6 shadow-sm border border-blue-100 min-h-[150px]">
             {docs.map(d => (
               <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 mb-3 bg-white rounded-2xl shadow-sm border border-blue-50 hover:bg-blue-600 group transition-all">

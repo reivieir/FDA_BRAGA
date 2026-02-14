@@ -10,13 +10,14 @@ const App = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [senha, setSenha] = useState('');
   
-  // Estados para o formulário de pagamento
   const [selectedMembro, setSelectedMembro] = useState('');
   const [valorInput, setValorInput] = useState('');
   const [mesInput, setMesInput] = useState('Fevereiro');
 
   const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-  const metaIndividual = 150; //
+
+  // Função para definir a meta individual
+  const getMetaIndividual = (nome: string) => nome === 'Pablo' ? 330 : 660;
 
   useEffect(() => { fetchData(); }, []);
 
@@ -37,17 +38,21 @@ const App = () => {
   };
 
   const calcularPago = (id: number) => historico.filter(p => p.membro_id === id).reduce((acc, p) => acc + p.valor, 0);
+  
+  // Cálculo da Meta Total Dinâmica
+  const metaTotalGeral = membros.reduce((acc, m) => acc + getMetaIndividual(m.nome), 0);
+  const totalArrecadadoGeral = historico.reduce((acc, p) => acc + p.valor, 0);
 
   if (isAdmin) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen font-sans">
-        <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold mb-4">← Voltar</button>
-        <h1 className="text-2xl font-black mb-6">PAINEL DE LANÇAMENTOS</h1>
+        <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold mb-4 uppercase text-xs">← Voltar ao Site</button>
+        <h1 className="text-2xl font-black mb-6">LANÇAMENTOS - REINALDO</h1>
         
         <div className="bg-white p-6 rounded-3xl shadow-sm mb-8 space-y-4 border border-gray-200">
-          <select className="w-full p-3 border rounded-xl" onChange={e => setSelectedMembro(e.target.value)}>
+          <select className="w-full p-3 border rounded-xl font-bold" onChange={e => setSelectedMembro(e.target.value)}>
             <option value="">Selecione o Familiar</option>
-            {membros.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
+            {membros.map(m => <option key={m.id} value={m.id}>{m.nome} (Meta: R${getMetaIndividual(m.nome)})</option>)}
           </select>
           <div className="flex gap-2">
             <input type="number" placeholder="Valor R$" className="w-1/2 p-3 border rounded-xl" value={valorInput} onChange={e => setValorInput(e.target.value)} />
@@ -55,15 +60,15 @@ const App = () => {
               {meses.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
-          <button onClick={registrarPagamento} className="w-full bg-green-600 text-white font-black p-4 rounded-xl shadow-lg">CONFIRMAR DEPÓSITO</button>
+          <button onClick={registrarPagamento} className="w-full bg-green-600 text-white font-black p-4 rounded-xl shadow-lg active:scale-95 transition-transform">CONFIRMAR RECEBIMENTO</button>
         </div>
 
-        <h2 className="font-black text-gray-400 text-xs uppercase mb-4 tracking-widest">Últimos Lançamentos</h2>
+        <h2 className="font-black text-gray-400 text-xs uppercase mb-4 tracking-widest">Histórico Recente</h2>
         <div className="space-y-2">
           {historico.slice().reverse().map(p => (
-            <div key={p.id} className="bg-white p-4 rounded-2xl flex justify-between shadow-sm text-sm">
+            <div key={p.id} className="bg-white p-4 rounded-2xl flex justify-between shadow-sm text-sm border-l-4 border-green-500">
               <span className="font-bold">{p.membros?.nome}</span>
-              <span className="text-green-600 font-black">R$ {p.valor} ({p.mes})</span>
+              <span className="text-gray-500 font-black">R$ {p.valor} <span className="text-[10px] text-gray-300">({p.mes})</span></span>
             </div>
           ))}
         </div>
@@ -74,46 +79,67 @@ const App = () => {
   return (
     <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans text-gray-800">
       <header className="text-center mb-10">
-        <h1 className="text-4xl font-black text-[#D4A373] italic uppercase">Família FDA</h1>
-        <p className="text-[10px] font-bold text-gray-400 tracking-[0.3em]">CONTROLE FINANCEIRO 2026</p>
+        <h1 className="text-4xl font-black text-[#D4A373] italic uppercase tracking-tighter">Família <span className="text-green-700">FDA</span></h1>
+        <p className="text-[10px] font-bold text-gray-400 tracking-[0.3em]">CONTROLE DE ARRECADAÇÃO 2026</p>
       </header>
 
-      {/* Resumo por Mês */}
-      <section className="mb-10 overflow-x-auto flex gap-4 pb-4">
-        {meses.filter(mes => historico.some(p => p.mes === mes)).map(mes => (
-          <div key={mes} className="bg-white p-4 rounded-3xl shadow-md min-w-[150px] border-b-4 border-[#D4A373]">
-            <p className="text-[10px] font-black text-gray-400 uppercase">{mes}</p>
-            <p className="text-xl font-black">R$ {historico.filter(p => p.mes === mes).reduce((acc, p) => acc + p.valor, 0)}</p>
+      {/* Card de Progresso Geral */}
+      <div className="max-w-md mx-auto bg-black text-white p-6 rounded-3xl shadow-2xl mb-8">
+        <div className="flex justify-between items-end mb-4">
+          <div>
+            <p className="text-[10px] text-[#D4A373] font-black uppercase">Total da Festa</p>
+            <div className="text-3xl font-black">R$ {totalArrecadadoGeral}</div>
           </div>
-        ))}
-      </section>
+          <div className="text-right">
+            <p className="text-[10px] text-gray-500 font-black uppercase">Meta Final</p>
+            <div className="text-sm font-bold text-gray-400">R$ {metaTotalGeral}</div>
+          </div>
+        </div>
+        <div className="w-full bg-gray-800 h-3 rounded-full overflow-hidden">
+          <div className="bg-green-500 h-full transition-all duration-1000" style={{ width: `${(totalArrecadadoGeral/metaTotalGeral)*100}%` }}></div>
+        </div>
+      </div>
 
-      {/* Lista de Membros com Saldo Devedor */}
+      {/* Lista Individual */}
       <section className="max-w-md mx-auto space-y-3">
-        <h2 className="text-xs font-black text-center text-gray-400 uppercase tracking-widest mb-6">Situação Individual</h2>
         {membros.map(m => {
           const pago = calcularPago(m.id);
-          const aPagar = metaIndividual - pago;
+          const metaInd = getMetaIndividual(m.nome);
+          const aPagar = metaInd - pago;
           return (
-            <div key={m.id} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col">
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-black text-gray-700">{m.nome}</span>
-                <span className={`text-[10px] font-black px-3 py-1 rounded-full ${aPagar <= 0 ? 'bg-green-100 text-green-700' : 'bg-orange-50 text-orange-600'}`}>
+            <div key={m.id} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
+              <div className="flex justify-between items-center mb-3">
+                <span className="font-black text-gray-700 uppercase italic text-sm">{m.nome}</span>
+                <span className={`text-[10px] font-black px-3 py-1 rounded-full ${aPagar <= 0 ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-500'}`}>
                   {aPagar <= 0 ? 'QUITADO' : `FALTA R$ ${aPagar}`}
                 </span>
               </div>
-              <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase">
-                <span>Pago: R$ {pago}</span>
-                <span>Meta: R$ {metaIndividual}</span>
+              <div className="flex justify-between items-center">
+                <div className="flex gap-4">
+                  <div>
+                    <p className="text-[8px] font-bold text-gray-400 uppercase">Pago</p>
+                    <p className="font-black text-xs text-green-600">R$ {pago}</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-bold text-gray-400 uppercase">Meta</p>
+                    <p className="font-black text-xs text-gray-400">R$ {metaInd}</p>
+                  </div>
+                </div>
+                {/* Barrinha de progresso individual */}
+                <div className="w-24 bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                   <div className="bg-[#D4A373] h-full" style={{ width: `${Math.min((pago/metaInd)*100, 100)}%` }}></div>
+                </div>
               </div>
             </div>
           );
         })}
       </section>
 
-      <footer className="mt-20 text-center">
-        <input type="password" placeholder="Admin" className="p-2 border rounded-lg text-xs" onChange={e => setSenha(e.target.value)} />
-        <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-2 text-[10px] font-black text-gray-400 uppercase">Painel</button>
+      <footer className="mt-20 text-center pb-10">
+        <div className="inline-block p-4 border-t border-dashed border-gray-200">
+          <input type="password" placeholder="Senha Admin" className="p-2 border rounded-xl text-xs bg-white" onChange={e => setSenha(e.target.value)} />
+          <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-2 text-[10px] font-black text-gray-400 uppercase hover:text-black">Acessar Painel</button>
+        </div>
       </footer>
     </div>
   );

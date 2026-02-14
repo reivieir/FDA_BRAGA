@@ -32,7 +32,7 @@ const App = () => {
   const [mesGlobal, setMesGlobal] = useState(mesAtual);
 
   const meses = ["Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-  const metaMensalGrupo = 1590; // Sua meta calibrada
+  const metaMensalGrupo = 1590; // Meta de R$ 1.590 conforme solicitado
 
   const gruposDef = [
     { titulo: "Grupo Adriana", nomes: ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"] },
@@ -105,14 +105,25 @@ const App = () => {
   if (selectedMonth) {
     const pagsMes = historico.filter(p => p.mes === selectedMonth);
     const gastoNoMes = saidas.filter(s => s.mes === selectedMonth).reduce((acc, s) => acc + Number(s.valor), 0);
+    const pagantesCount = new Set(pagsMes.map(p => p.membro_id)).size; // Conta membros únicos que pagaram
+
     return (
       <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans">
         <button onClick={() => setSelectedMonth(null)} className="mb-8 font-black text-[#D4A373] uppercase text-xs">← Voltar</button>
         <div className="max-w-xl mx-auto space-y-6">
-          <div className="bg-black text-white p-8 rounded-[40px] shadow-xl border-b-8 border-red-500 text-center">
-            <h2 className="text-4xl font-black uppercase italic">{selectedMonth}</h2>
-            <p className="text-[10px] text-gray-500 uppercase mt-2">Saldo Real do Mês</p>
-            <p className="text-2xl font-black text-green-500 italic">R$ {(pagsMes.reduce((acc, p) => acc + Number(p.valor), 0) - gastoNoMes).toLocaleString('pt-BR')}</p>
+          <div className="bg-black text-white p-8 rounded-[40px] shadow-xl border-b-8 border-red-500 text-center italic">
+            <h2 className="text-4xl font-black uppercase italic tracking-tighter">{selectedMonth}</h2>
+            <div className="mt-4 border-t border-gray-800 pt-4 flex justify-between items-end">
+              <div className="text-left">
+                <p className="text-[10px] text-gray-500 uppercase">Saldo do Mês</p>
+                <p className="text-2xl font-black text-green-500">R$ {(pagsMes.reduce((acc, p) => acc + Number(p.valor), 0) - gastoNoMes).toLocaleString('pt-BR')}</p>
+                <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1">{pagantesCount} de 27 pagaram</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-gray-500 uppercase">Meta Fixa</p>
+                <p className="text-sm font-bold text-gray-400">R$ {metaMensalGrupo}</p>
+              </div>
+            </div>
           </div>
           <div className="space-y-2">
             {pagsMes.map(p => (
@@ -131,6 +142,8 @@ const App = () => {
     const m = membros.find(x => x.id === selectedMembroId);
     const pags = historico.filter(h => h.membro_id === selectedMembroId);
     const pagouMes = pags.some(p => p.mes === mesAtual);
+    
+    // Regras das mensagens de caloteiros reintegradas
     const statusText = pagouMes ? "✨ Parabens! Até que enfim pagou" : diaDoMes > 15 ? "⚠️ Paga o que deve caloteiro" : "⏳ Aguardando Pix até dia 15";
     const statusColor = pagouMes ? 'bg-green-100 text-green-700' : diaDoMes > 15 ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-500';
     
@@ -138,11 +151,11 @@ const App = () => {
       <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans">
         <button onClick={() => setSelectedMembroId(null)} className="mb-8 font-black text-[#D4A373] uppercase text-xs">← Voltar</button>
         <div className="max-w-xl mx-auto bg-white p-8 rounded-[40px] shadow-xl border-b-8 border-green-700">
-          <h2 className="text-3xl font-black italic uppercase text-gray-800">{m?.nome}</h2>
+          <h2 className="text-3xl font-black italic uppercase text-gray-800 tracking-tighter">{m?.nome}</h2>
           <div className={`mt-4 p-4 rounded-2xl text-center font-black uppercase text-xs italic ${statusColor}`}>
             {statusText}
           </div>
-          <div className="flex justify-between mt-8 text-sm font-bold">
+          <div className="flex justify-between mt-8 text-sm font-bold italic">
             <span className="text-green-600 font-black text-xl italic">R$ {calcPago(selectedMembroId)}</span>
             <span className="text-gray-400 pt-2 uppercase italic text-xs">Meta R$ {getMeta(m?.nome || '')}</span>
           </div>
@@ -170,9 +183,9 @@ const App = () => {
         </div>
 
         <div className="space-y-6 max-w-2xl mx-auto">
-          {/* BLOCO 1: GESTÃO DE DOCUMENTOS */}
-          <div className="bg-blue-900 text-white p-6 rounded-3xl shadow-lg border-b-4 border-blue-400">
-            <h2 className="text-[10px] font-black uppercase mb-4 italic tracking-widest">1. Auditoria (Extratos/Comprovantes)</h2>
+          {/* GESTÃO DE DOCUMENTOS */}
+          <div className="bg-blue-900 text-white p-6 rounded-3xl shadow-lg border-b-4 border-blue-400 italic">
+            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest">1. Auditoria (Documentos)</h2>
             <div className="flex gap-2 mb-4">
               <input type="text" placeholder="Nome do arquivo" className="flex-1 p-3 rounded-xl text-black text-xs" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
               <input type="file" className="w-24 text-[8px] pt-3" onChange={e => setFileToUpload(e.target.files?.[0] || null)} />
@@ -180,7 +193,7 @@ const App = () => {
             </div>
             <div className="space-y-2 border-t border-blue-800 pt-3">
               {docs.map(d => (
-                <div key={d.id} className="flex justify-between items-center bg-blue-800/30 p-2 rounded-lg text-[9px] italic">
+                <div key={d.id} className="flex justify-between items-center bg-blue-800/30 p-2 rounded-lg text-[9px]">
                   <span>{d.mes}: {d.nome_exibicao}</span>
                   <button onClick={() => excluirDoc(d.id, d.url_arquivo)} className="text-red-400 font-black">X</button>
                 </div>
@@ -188,9 +201,9 @@ const App = () => {
             </div>
           </div>
 
-          {/* BLOCO 2: LANÇAR SAÍDA */}
-          <div className="bg-black text-white p-6 rounded-3xl shadow-lg border-b-4 border-red-500">
-            <h2 className="text-[10px] font-black uppercase mb-4 italic tracking-widest">2. Lançar Gasto Bragança City</h2>
+          {/* LANÇAR SAÍDA */}
+          <div className="bg-black text-white p-6 rounded-3xl shadow-lg border-b-4 border-red-500 italic">
+            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest">2. Lançar Saída</h2>
             <div className="space-y-3">
               <input type="text" placeholder="Descrição" className="w-full p-3 rounded-xl text-black text-sm" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
               <div className="flex gap-2">
@@ -200,7 +213,7 @@ const App = () => {
             </div>
           </div>
 
-          {/* BLOCO 3: LANÇAR PAGAMENTO E FILTRO (SEU CÓDIGO ORIGINAL) */}
+          {/* PAINEL DE PAGAMENTOS (IDÊNTICO AO SEU CÓDIGO) */}
           {gruposDef.map((g, idx) => (
             <div key={idx} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-200">
               <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">{g.titulo}</h2>
@@ -233,13 +246,13 @@ const App = () => {
             </div>
           ))}
 
-          {/* BLOCO 4: EXCLUIR SAÍDAS */}
-          <div className="bg-white p-5 rounded-3xl border border-red-200">
+          {/* EXCLUIR GASTOS */}
+          <div className="bg-white p-5 rounded-3xl border border-red-200 italic">
             <h2 className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-3 italic">3. Histórico de Gastos (Excluir)</h2>
             {saidas.map(s => (
-              <div key={s.id} className="flex justify-between items-center p-3 border-b last:border-0 text-[10px] italic">
+              <div key={s.id} className="flex justify-between items-center p-3 border-b last:border-0 text-[10px]">
                 <span className="flex-1"><b>{s.descricao}</b> ({s.mes})</span>
-                <span className="text-red-500 font-black mr-4">R$ {s.valor}</span>
+                <span className="text-red-500 font-black mr-4 italic">R$ {s.valor}</span>
                 <button onClick={() => excluirItem(s.id, 'saidas_caixa')} className="text-red-500 font-black">X</button>
               </div>
             ))}
@@ -260,20 +273,20 @@ const App = () => {
         <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6 italic">
           <div className="text-left">
             <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest">Saldo Disponível</p>
-            <div className="text-5xl md:text-7xl font-black text-green-500">R$ {saldoAtual.toLocaleString('pt-BR')}</div>
-            <p className="text-[10px] font-black uppercase opacity-50 mt-2">Arrecadado: R$ {totalArrecadado} | Saídas: R$ {totalSaidas}</p>
+            <div className="text-5xl md:text-7xl font-black text-green-500 italic">R$ {saldoAtual.toLocaleString('pt-BR')}</div>
+            <p className="text-[10px] font-black uppercase opacity-50 mt-2 italic">Arrecadado: R$ {totalArrecadado} | Saídas: R$ {totalSaidas}</p>
           </div>
           <div className="text-right">
             <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Meta Bragança</p>
-            <div className="text-xl font-bold text-gray-400">R$ {membros.reduce((acc, m) => acc + getMeta(m.nome), 0).toLocaleString('pt-BR')}</div>
+            <div className="text-xl font-bold text-gray-400 italic">R$ {membros.reduce((acc, m) => acc + getMeta(m.nome), 0).toLocaleString('pt-BR')}</div>
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 border-t border-gray-800 pt-6">
           {meses.map(mes => {
             const sum = historico.filter(h => h.mes === mes).reduce((acc, h) => acc + Number(h.valor), 0);
             return sum > 0 ? (
-              <div key={mes} onClick={() => setSelectedMonth(mes)} className="bg-gray-900/50 p-3 rounded-2xl border border-gray-800 cursor-pointer hover:bg-gray-800 transition-all text-center group">
-                <p className="text-[8px] font-black text-gray-500 uppercase italic">{mes}</p>
+              <div key={mes} onClick={() => setSelectedMonth(mes)} className="bg-gray-900/50 p-3 rounded-2xl border border-gray-800 cursor-pointer hover:bg-gray-800 transition-all text-center group italic">
+                <p className="text-[8px] font-black text-gray-500 uppercase">{mes}</p>
                 <p className="text-sm font-black text-[#D4A373] group-hover:scale-110 transition-transform">R$ {sum}</p>
                 <p className="text-[7px] font-bold text-gray-600 uppercase mt-1 italic tracking-tighter">Meta R$ {metaMensalGrupo}</p>
               </div>
@@ -285,12 +298,12 @@ const App = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20 italic">
         {/* COLUNA 1: FAMILIARES */}
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Estrutura Familiar</h2>
+          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4 italic">Estrutura Familiar</h2>
           {gruposDef.map((g, gIdx) => (
             <div key={gIdx} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
               <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-5 flex justify-between items-center hover:bg-gray-50 transition-all">
                 <div className="text-left">
-                  <h2 className="text-sm font-black text-gray-800 uppercase tracking-tighter">{g.titulo}</h2>
+                  <h2 className="text-sm font-black text-gray-800 uppercase italic tracking-tighter">{g.titulo}</h2>
                   <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest italic tracking-tighter">
                     {g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtual)).length} de {g.nomes.length} QUITADOS NO MÊS
                   </p>
@@ -305,7 +318,7 @@ const App = () => {
                     return (
                       <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="bg-[#FDFCF0]/50 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-white border transition-all group">
                         <span className="font-black text-[10px] uppercase text-gray-700 group-hover:text-green-700 italic">{nome}</span>
-                        <span className="text-[10px] font-black text-green-600 italic">R$ {pagoMembro}</span>
+                        <span className="text-[10px] font-black text-green-600 italic italic">R$ {pagoMembro}</span>
                       </div>
                     );
                   })}
@@ -317,15 +330,15 @@ const App = () => {
 
         {/* COLUNA 2: GASTOS */}
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Extrato de Saídas - Locação e Despesas</h2>
+          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4 italic">Gastos em Bragança</h2>
           <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 min-h-[150px]">
             {saidas.map(s => (
               <div key={s.id} className="mb-4 last:mb-0 border-b border-gray-50 pb-4 last:border-0 italic">
-                <div className="flex justify-between items-start mb-1">
-                   <span className="text-[8px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase italic tracking-tighter">{s.mes}</span>
+                <div className="flex justify-between items-start mb-1 italic">
+                   <span className="text-[8px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-tighter">{s.mes}</span>
                    <span className="text-xs font-black text-red-600">- R$ {s.valor}</span>
                 </div>
-                <p className="text-[10px] font-bold text-gray-700 italic leading-snug">{s.descricao}</p>
+                <p className="text-[10px] font-bold text-gray-700 leading-snug">{s.descricao}</p>
               </div>
             ))}
           </div>
@@ -333,11 +346,11 @@ const App = () => {
 
         {/* COLUNA 3: AUDITORIA */}
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-4 italic">Extrato de Depósitos</h2>
+          <h2 className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-4 italic">Auditoria e Extratos</h2>
           <div className="bg-blue-50/50 rounded-[40px] p-6 shadow-sm border border-blue-100 min-h-[150px]">
             {docs.map(d => (
-              <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 mb-3 bg-white rounded-2xl shadow-sm border border-blue-50 hover:bg-blue-600 group transition-all">
-                <span className="text-[10px] font-black text-gray-700 uppercase italic group-hover:text-white tracking-tighter">{d.nome_exibicao}</span>
+              <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 mb-3 bg-white rounded-2xl shadow-sm border border-blue-50 hover:bg-blue-600 group transition-all italic">
+                <span className="text-[10px] font-black text-gray-700 uppercase group-hover:text-white tracking-tighter italic">{d.nome_exibicao}</span>
                 <span className="text-blue-600 font-black group-hover:text-white italic">↓</span>
               </a>
             ))}
@@ -346,8 +359,8 @@ const App = () => {
       </div>
 
       <footer className="mt-20 text-center pb-20 pt-10 border-t border-dashed border-gray-200">
-        <input type="password" placeholder="Senha" className="p-3 border rounded-2xl text-xs bg-white shadow-sm focus:outline-none" onChange={e => setSenha(e.target.value)} />
-        <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-black transition-colors italic italic">Acessar Painel</button>
+        <input type="password" placeholder="Admin" className="p-3 border rounded-2xl text-xs bg-white shadow-sm focus:outline-none" onChange={e => setSenha(e.target.value)} />
+        <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-black transition-colors italic">Acessar Painel</button>
       </footer>
     </div>
   );

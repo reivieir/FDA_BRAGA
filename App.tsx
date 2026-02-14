@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 
-// Inicialização estável
+// Inicialização segura das chaves do Axiocrata
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -18,8 +18,8 @@ const App = () => {
   const [expandedGrupo, setExpandedGrupo] = useState<number | null>(null);
   const [senha, setSenha] = useState('');
   
-  const [filtrosGrupos, setFiltrosGrupos] = useState<any>({ 0: 'Todos', 1: 'Todos', 2: 'Todos', 3: 'Todos', 4: 'Todos' });
   const [valoresLote, setValoresLote] = useState<any>({});
+  const [filtroExclusaoMembro, setFiltroExclusaoMembro] = useState<string>('Todos');
   const [valorSaida, setValorSaida] = useState('');
   const [descSaida, setDescSaida] = useState('');
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
@@ -27,12 +27,13 @@ const App = () => {
 
   const hoje = new Date();
   const diaDoMes = hoje.getDate();
-  const mesAtualBr = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(hoje);
-  const mesAtual = mesAtualBr.charAt(0).toUpperCase() + mesAtualBr.slice(1);
+  const mesAtual = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(hoje).replace(/^\w/, c => c.toUpperCase());
   const [mesGlobal, setMesGlobal] = useState(mesAtual);
 
   const meses = ["Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-  const metaMensalGrupo = 1590; // Sua meta calibrada
+  
+  // META MENSAL AJUSTADA PARA R$ 1.590
+  const metaMensalGrupo = 1590; 
 
   const gruposDef = [
     { titulo: "Grupo Adriana", nomes: ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"] },
@@ -42,21 +43,19 @@ const App = () => {
     { titulo: "Grupo Julia", nomes: ["Julia", "Juan"] }
   ];
 
-  const getMeta = (nome: string) => nome === 'Pablo' ? 330 : 660;
+  const getMetaInd = (nome: string) => nome === 'Pablo' ? 330 : 660;
 
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
     try {
       const { data: m } = await supabase.from('membros').select('*').order('nome');
-      const { data: p } = await supabase.from('pagamentos_detalhes').select('*, membros(nome)');
+      const { data: h } = await supabase.from('pagamentos_detalhes').select('*, membros(nome)');
       const { data: s } = await supabase.from('saidas_caixa').select('*').order('data_registro', { ascending: false });
       const { data: d } = await supabase.from('documentos_familia').select('*').order('data_upload', { ascending: false });
-      setMembros(m || []); setHistorico(p || []); setSaidas(s || []); setDocs(d || []);
+      setMembros(m || []); setHistorico(h || []); setSaidas(s || []); setDocs(d || []);
     } catch (e) { console.error(e); }
   };
-
-  // --- FUNÇÕES DE AÇÃO ---
 
   const handleUpload = async () => {
     if (!fileToUpload || !nomeDoc) return alert("Preencha nome e arquivo!");
@@ -65,30 +64,30 @@ const App = () => {
     if (up) {
       const { data: url } = supabase.storage.from('documentos').getPublicUrl(fileName);
       await supabase.from('documentos_familia').insert([{ nome_exibicao: nomeDoc, mes: mesGlobal, url_arquivo: url.publicUrl, tipo: 'extrato' }]);
-      setFileToUpload(null); setNomeDoc(''); fetchAll(); alert("Doc Carregado!");
+      setFileToUpload(null); setNomeDoc(''); fetchAll(); alert("Upload Concluído!");
     }
   };
 
-  const lancarPagamento = async (id: number, valor: string) => {
-    if (!valor || parseFloat(valor) <= 0) return;
-    await supabase.from('pagamentos_detalhes').insert([{ membro_id: id, valor: parseFloat(valor), mes: mesGlobal }]);
+  const lancarPagamento = async (id: number, val: string) => {
+    if (!val) return;
+    await supabase.from('pagamentos_detalhes').insert([{ membro_id: id, valor: parseFloat(val), mes: mesGlobal }]);
     setValoresLote({ ...valoresLote, [id]: '' }); fetchAll();
   };
 
   const lancarSaida = async () => {
     if (!valorSaida || !descSaida) return;
     await supabase.from('saidas_caixa').insert([{ valor: parseFloat(valorSaida), mes: mesGlobal, descricao: descSaida }]);
-    setValorSaida(''); setDescSaida(''); fetchAll(); alert("Gasto Salvo!");
+    setValorSaida(''); setDescSaida(''); fetchAll();
   };
 
   const excluirItem = async (id: number, tabela: string) => {
-    if (window.confirm("Deseja realmente excluir?")) {
+    if (window.confirm("Confirmar exclusão definitiva?")) {
       await supabase.from(tabela).delete().eq('id', id); fetchAll();
     }
   };
 
   const excluirDoc = async (id: number, url: string) => {
-    if (window.confirm("Excluir extrato permanentemente?")) {
+    if (window.confirm("Apagar este documento do servidor?")) {
       const fileName = url.split('/').pop();
       if (fileName) await supabase.storage.from('documentos').remove([fileName]);
       await supabase.from('documentos_familia').delete().eq('id', id); fetchAll();
@@ -100,24 +99,36 @@ const App = () => {
   const totalSaidas = saidas.reduce((acc, s) => acc + Number(s.valor), 0);
   const saldoAtual = totalArrecadado - totalSaidas;
 
-  // --- RENDERS CONDICIONAIS ---
-
+  // --- RENDER: DETALHES DO MÊS (CONTADOR DE PAGANTES ADICIONADO) ---
   if (selectedMonth) {
     const pagsMes = historico.filter(p => p.mes === selectedMonth);
     const gastoNoMes = saidas.filter(s => s.mes === selectedMonth).reduce((acc, s) => acc + Number(s.valor), 0);
+    const pagantesUnicosCount = new Set(pagsMes.map(p => p.membro_id)).size; // Lógica de 27 pagantes
+
     return (
       <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans">
         <button onClick={() => setSelectedMonth(null)} className="mb-8 font-black text-[#D4A373] uppercase text-xs">← Voltar</button>
         <div className="max-w-xl mx-auto space-y-6">
-          <div className="bg-black text-white p-8 rounded-[40px] shadow-xl border-b-8 border-red-500 text-center">
-            <h2 className="text-4xl font-black uppercase italic">{selectedMonth}</h2>
-            <p className="text-[10px] text-gray-500 uppercase mt-2">Saldo Real do Mês</p>
-            <p className="text-2xl font-black text-green-500 italic">R$ {(pagsMes.reduce((acc, p) => acc + Number(p.valor), 0) - gastoNoMes).toLocaleString('pt-BR')}</p>
+          <div className="bg-black text-white p-8 rounded-[40px] shadow-xl border-b-8 border-red-500 italic">
+            <h2 className="text-4xl font-black uppercase tracking-tighter">{selectedMonth}</h2>
+            <div className="mt-4 flex justify-between items-end border-t border-gray-800 pt-4">
+              <div>
+                <p className="text-[10px] text-gray-500 font-black uppercase">Saldo no Período</p>
+                <p className="text-2xl font-black text-green-500">R$ {(pagsMes.reduce((a, b) => a + Number(b.valor), 0) - gastoNoMes).toLocaleString('pt-BR')}</p>
+                <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1 tracking-tighter">
+                  {pagantesUnicosCount} de 27 pagaram
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-gray-500 font-black uppercase">Meta do Fundo</p>
+                <p className="text-sm font-bold text-gray-400">R$ {metaMensalGrupo}</p>
+              </div>
+            </div>
           </div>
           <div className="space-y-2">
             {pagsMes.map(p => (
               <div key={p.id} className="bg-white p-4 rounded-2xl flex justify-between border italic">
-                <span className="font-black text-gray-700 uppercase text-xs">{p.membros?.nome}</span>
+                <span className="font-black text-gray-700 uppercase text-xs italic">{p.membros?.nome}</span>
                 <span className="font-black text-green-600 text-xs">R$ {p.valor}</span>
               </div>
             ))}
@@ -127,29 +138,30 @@ const App = () => {
     );
   }
 
+  // --- RENDER: DETALHES MEMBRO (MENSAGEM CALOTEIRO REATIVADA) ---
   if (selectedMembroId) {
     const m = membros.find(x => x.id === selectedMembroId);
     const pags = historico.filter(h => h.membro_id === selectedMembroId);
     const pagouMes = pags.some(p => p.mes === mesAtual);
-    const statusText = pagouMes ? "✨ Parabens! Até que enfim pagou" : diaDoMes > 15 ? "⚠️ Paga o que deve caloteiro" : "⏳ Aguardando Pix até dia 15";
+    const statusText = pagouMes ? "✨ parabens, até que em fim pagou" : diaDoMes > 15 ? "⚠️ Paga o que deve caloteiro" : "⏳ Aguardando Pix até dia 15";
     const statusColor = pagouMes ? 'bg-green-100 text-green-700' : diaDoMes > 15 ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-500';
-    
+
     return (
-      <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans">
+      <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans text-gray-800">
         <button onClick={() => setSelectedMembroId(null)} className="mb-8 font-black text-[#D4A373] uppercase text-xs">← Voltar</button>
         <div className="max-w-xl mx-auto bg-white p-8 rounded-[40px] shadow-xl border-b-8 border-green-700">
-          <h2 className="text-3xl font-black italic uppercase text-gray-800">{m?.nome}</h2>
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter">{m?.nome}</h2>
           <div className={`mt-4 p-4 rounded-2xl text-center font-black uppercase text-xs italic ${statusColor}`}>
             {statusText}
           </div>
-          <div className="flex justify-between mt-8 text-sm font-bold">
-            <span className="text-green-600 font-black text-xl italic">R$ {calcPago(selectedMembroId)}</span>
-            <span className="text-gray-400 pt-2 uppercase italic text-xs">Meta R$ {getMeta(m?.nome || '')}</span>
+          <div className="flex justify-between mt-8 text-sm font-bold italic">
+            <span className="text-green-600 font-black text-xl">R$ {calcPago(selectedMembroId)}</span>
+            <span className="text-gray-400 pt-2 uppercase text-xs">Meta Natal R$ {getMetaInd(m?.nome || '')}</span>
           </div>
           <div className="mt-8 space-y-3">
             {pags.map(p => (
               <div key={p.id} className="flex justify-between p-4 bg-gray-50 rounded-2xl border italic">
-                <span className="font-bold text-gray-600 uppercase text-xs">{p.mes}</span>
+                <span className="font-bold text-gray-600 uppercase text-xs tracking-widest">{p.mes}</span>
                 <span className="font-black text-green-600">R$ {p.valor}</span>
               </div>
             ))}
@@ -159,28 +171,29 @@ const App = () => {
     );
   }
 
+  // --- RENDER: ADMIN INTEGRADO ---
   if (isAdmin) {
     return (
       <div className="p-4 bg-gray-100 min-h-screen font-sans pb-20">
-        <div className="flex justify-between items-center mb-6 max-w-2xl mx-auto">
-           <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold text-xs uppercase italic">← Site</button>
+        <div className="flex justify-between items-center mb-6 max-w-2xl mx-auto italic">
+           <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold text-xs uppercase tracking-widest">← Site</button>
            <select className="p-2 border rounded-xl text-xs font-bold bg-white" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
              {meses.map(m => <option key={m} value={m}>{m}</option>)}
            </select>
         </div>
 
         <div className="space-y-6 max-w-2xl mx-auto">
-          {/* BLOCO 1: GESTÃO DE DOCUMENTOS */}
-          <div className="bg-blue-900 text-white p-6 rounded-3xl shadow-lg border-b-4 border-blue-400">
-            <h2 className="text-[10px] font-black uppercase mb-4 italic tracking-widest">1. Auditoria (Extratos/Comprovantes)</h2>
+          {/* GESTÃO DE ARQUIVOS */}
+          <div className="bg-blue-900 text-white p-6 rounded-3xl shadow-lg border-b-4 border-blue-400 italic">
+            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest">1. Auditoria (Docs)</h2>
             <div className="flex gap-2 mb-4">
-              <input type="text" placeholder="Nome do arquivo" className="flex-1 p-3 rounded-xl text-black text-xs" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
+              <input type="text" placeholder="Nome do Extrato" className="flex-1 p-3 rounded-xl text-black text-xs" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
               <input type="file" className="w-24 text-[8px] pt-3" onChange={e => setFileToUpload(e.target.files?.[0] || null)} />
               <button onClick={handleUpload} className="bg-blue-500 px-4 rounded-xl text-[10px] font-black italic">SUBIR</button>
             </div>
             <div className="space-y-2 border-t border-blue-800 pt-3">
               {docs.map(d => (
-                <div key={d.id} className="flex justify-between items-center bg-blue-800/30 p-2 rounded-lg text-[9px] italic">
+                <div key={d.id} className="flex justify-between items-center bg-blue-800/30 p-2 rounded-lg text-[9px]">
                   <span>{d.mes}: {d.nome_exibicao}</span>
                   <button onClick={() => excluirDoc(d.id, d.url_arquivo)} className="text-red-400 font-black">X</button>
                 </div>
@@ -188,58 +201,62 @@ const App = () => {
             </div>
           </div>
 
-          {/* BLOCO 2: LANÇAR SAÍDA */}
-          <div className="bg-black text-white p-6 rounded-3xl shadow-lg border-b-4 border-red-500">
-            <h2 className="text-[10px] font-black uppercase mb-4 italic tracking-widest">2. Lançar Gasto Bragança City</h2>
+          {/* LANÇAR GASTO */}
+          <div className="bg-black text-white p-6 rounded-3xl shadow-lg border-b-4 border-red-500 italic">
+            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest">2. Lançar Gasto Bragança</h2>
             <div className="space-y-3">
               <input type="text" placeholder="Descrição" className="w-full p-3 rounded-xl text-black text-sm" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
               <div className="flex gap-2">
-                <input type="number" placeholder="R$" className="w-1/2 p-3 rounded-xl text-black text-sm font-bold" value={valorSaida} onChange={e => setValorSaida(e.target.value)} />
-                <button onClick={lancarSaida} className="w-1/2 bg-red-600 font-black rounded-xl text-xs uppercase italic">Registrar</button>
+                <input type="number" placeholder="Valor" className="w-1/2 p-3 rounded-xl text-black text-sm font-bold" value={valorSaida} onChange={e => setValorSaida(e.target.value)} />
+                <button onClick={lancarSaida} className="w-1/2 bg-red-600 font-black rounded-xl text-xs uppercase italic tracking-widest">Registrar</button>
               </div>
             </div>
           </div>
 
-          {/* BLOCO 3: LANÇAR PAGAMENTO E FILTRO (SEU CÓDIGO ORIGINAL) */}
+          {/* EXCLUIR PIX FILTRADO */}
+          <div className="bg-white p-6 rounded-3xl border-2 border-green-100 italic">
+             <h2 className="text-[10px] font-black text-green-700 uppercase mb-4 tracking-widest">Excluir Lançamento (PIX)</h2>
+             <select className="w-full p-3 border rounded-xl mb-4 bg-gray-50 text-xs font-bold" value={filtroExclusaoMembro} onChange={e => setFiltroExclusaoMembro(e.target.value)}>
+                <option value="Todos">Selecione Familiar para Filtrar</option>
+                {membros.map(m => <option key={m.id} value={m.nome}>{m.nome}</option>)}
+             </select>
+             <div className="space-y-2">
+                {historico.filter(h => h.membros?.nome === filtroExclusaoMembro || filtroExclusaoMembro === 'Todos').slice(0, 10).map(p => (
+                  <div key={p.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border text-[10px]">
+                    <span><b>{p.membros?.nome}</b> - {p.mes}: R$ {p.valor}</span>
+                    <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-red-500 font-black">Excluir</button>
+                  </div>
+                ))}
+             </div>
+          </div>
+
+          {/* LANÇAMENTO RÁPIDO */}
           {gruposDef.map((g, idx) => (
-            <div key={idx} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-200">
-              <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">{g.titulo}</h2>
-              <select className="w-full p-3 border rounded-xl mb-4 bg-gray-50 text-sm font-bold" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
-                <option value="Todos">Lançar Novo PIX</option>
-                {g.nomes.map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
+            <div key={idx} className="bg-white p-5 rounded-3xl shadow-sm border italic">
+              <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">Lançar Novo PIX - {g.titulo}</h2>
               <div className="space-y-2">
-                {g.nomes.filter(n => filtrosGrupos[idx] === 'Todos' || filtrosGrupos[idx] === n).map(nome => {
+                {g.nomes.map(nome => {
                   const m = membros.find(x => x.nome === nome);
                   if (!m) return null;
-                  if (filtrosGrupos[idx] === 'Todos') {
-                    return (
-                      <div key={m.id} className="flex items-center gap-2 border-t pt-2 border-gray-50">
-                        <span className="text-[10px] font-black w-24 truncate uppercase italic">{m.nome}</span>
-                        <input type="number" className="flex-1 p-2 border rounded-lg text-xs" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
-                        <button onClick={() => lancarPagamento(m.id, valoresLote[m.id])} className="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px] font-black italic">OK</button>
-                      </div>
-                    );
-                  } else {
-                    return historico.filter(h => h.membro_id === m.id).map(p => (
-                      <div key={p.id} className="flex justify-between items-center p-3 bg-red-50/30 rounded-xl border border-red-100">
-                        <span className="text-[10px] font-bold italic">{p.mes}: R$ {p.valor}</span>
-                        <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-red-500 font-black text-[10px] uppercase">Excluir</button>
-                      </div>
-                    ));
-                  }
+                  return (
+                    <div key={m.id} className="flex items-center gap-2 border-t pt-2 border-gray-50">
+                      <span className="text-[10px] font-black w-24 truncate uppercase italic">{m.nome}</span>
+                      <input type="number" className="flex-1 p-2 border rounded-lg text-xs" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
+                      <button onClick={() => lancarPagamento(m.id, valoresLote[m.id])} className="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px] font-black italic">OK</button>
+                    </div>
+                  );
                 })}
               </div>
             </div>
           ))}
 
-          {/* BLOCO 4: EXCLUIR SAÍDAS */}
-          <div className="bg-white p-5 rounded-3xl border border-red-200">
-            <h2 className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-3 italic">3. Histórico de Gastos (Excluir)</h2>
+          {/* EXCLUIR SAÍDA */}
+          <div className="bg-white p-5 rounded-3xl border border-red-200 italic">
+            <h2 className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-3 italic">Apagar Gastos Bragança</h2>
             {saidas.map(s => (
-              <div key={s.id} className="flex justify-between items-center p-3 border-b last:border-0 text-[10px] italic">
-                <span className="flex-1"><b>{s.descricao}</b> ({s.mes})</span>
-                <span className="text-red-500 font-black mr-4">R$ {s.valor}</span>
+              <div key={s.id} className="flex justify-between items-center p-3 border-b last:border-0 text-[10px]">
+                <span className="flex-1">{s.mes}: <b>{s.descricao}</b></span>
+                <span className="text-red-500 font-black mr-4 italic">R$ {s.valor}</span>
                 <button onClick={() => excluirItem(s.id, 'saidas_caixa')} className="text-red-500 font-black">X</button>
               </div>
             ))}
@@ -249,6 +266,7 @@ const App = () => {
     );
   }
 
+  // --- RENDER: TELA PRINCIPAL ---
   return (
     <div className="min-h-screen bg-[#FDFCF0] p-4 md:p-10 font-sans text-gray-800">
       <header className="text-center mb-12 italic">
@@ -259,13 +277,13 @@ const App = () => {
       <div className="max-w-6xl mx-auto bg-black text-white p-8 rounded-[40px] shadow-2xl mb-12 border-b-8 border-green-700">
         <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6 italic">
           <div className="text-left">
-            <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest">Saldo Disponível</p>
+            <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest">Saldo Atual Disponível</p>
             <div className="text-5xl md:text-7xl font-black text-green-500">R$ {saldoAtual.toLocaleString('pt-BR')}</div>
-            <p className="text-[10px] font-black uppercase opacity-50 mt-2">Arrecadado: R$ {totalArrecadado} | Saídas: R$ {totalSaidas}</p>
+            <p className="text-[10px] font-black uppercase opacity-50 mt-2 tracking-tighter italic">Arrecadado: R$ {totalArrecadado} | Gastos: R$ {totalSaidas}</p>
           </div>
           <div className="text-right">
             <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Meta Bragança</p>
-            <div className="text-xl font-bold text-gray-400">R$ {membros.reduce((acc, m) => acc + getMeta(m.nome), 0).toLocaleString('pt-BR')}</div>
+            <div className="text-xl font-bold text-gray-400 italic">R$ {membros.reduce((acc, m) => acc + getMetaInd(m.nome), 0).toLocaleString('pt-BR')}</div>
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 border-t border-gray-800 pt-6">
@@ -275,7 +293,7 @@ const App = () => {
               <div key={mes} onClick={() => setSelectedMonth(mes)} className="bg-gray-900/50 p-3 rounded-2xl border border-gray-800 cursor-pointer hover:bg-gray-800 transition-all text-center group">
                 <p className="text-[8px] font-black text-gray-500 uppercase italic">{mes}</p>
                 <p className="text-sm font-black text-[#D4A373] group-hover:scale-110 transition-transform">R$ {sum}</p>
-                <p className="text-[7px] font-bold text-gray-600 uppercase mt-1 italic tracking-tighter">Meta R$ {metaMensalGrupo}</p>
+                <p className="text-[7px] font-bold text-gray-600 uppercase mt-1 tracking-tighter">Meta R$ {metaMensalGrupo}</p>
               </div>
             ) : null;
           })}
@@ -283,14 +301,14 @@ const App = () => {
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20 italic">
-        {/* COLUNA 1: FAMILIARES */}
+        {/* GRUPOS RECOLHIDOS */}
         <div className="space-y-4">
           <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Estrutura Familiar</h2>
           {gruposDef.map((g, gIdx) => (
             <div key={gIdx} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
               <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-5 flex justify-between items-center hover:bg-gray-50 transition-all">
                 <div className="text-left">
-                  <h2 className="text-sm font-black text-gray-800 uppercase tracking-tighter">{g.titulo}</h2>
+                  <h2 className="text-sm font-black text-gray-800 uppercase tracking-tighter italic">{g.titulo}</h2>
                   <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest italic tracking-tighter">
                     {g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtual)).length} de {g.nomes.length} QUITADOS NO MÊS
                   </p>
@@ -304,7 +322,7 @@ const App = () => {
                     const pagoMembro = m ? historico.filter(h => h.membro_id === m.id).reduce((acc, h) => acc + Number(h.valor), 0) : 0;
                     return (
                       <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="bg-[#FDFCF0]/50 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-white border transition-all group">
-                        <span className="font-black text-[10px] uppercase text-gray-700 group-hover:text-green-700 italic">{nome}</span>
+                        <span className="font-black text-[10px] uppercase italic text-gray-700 group-hover:text-green-700 italic">{nome}</span>
                         <span className="text-[10px] font-black text-green-600 italic">R$ {pagoMembro}</span>
                       </div>
                     );
@@ -315,15 +333,15 @@ const App = () => {
           ))}
         </div>
 
-        {/* COLUNA 2: GASTOS */}
+        {/* GASTOS BRAGANÇA */}
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Extrato de Saídas - Locação e Despesas</h2>
+          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Gastos em Bragança</h2>
           <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 min-h-[150px]">
             {saidas.map(s => (
-              <div key={s.id} className="mb-4 last:mb-0 border-b border-gray-50 pb-4 last:border-0 italic">
+              <div key={s.id} className="mb-4 last:mb-0 border-b border-gray-50 pb-4 last:border-0">
                 <div className="flex justify-between items-start mb-1">
-                   <span className="text-[8px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase italic tracking-tighter">{s.mes}</span>
-                   <span className="text-xs font-black text-red-600">- R$ {s.valor}</span>
+                   <span className="text-[8px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-tighter">{s.mes}</span>
+                   <span className="text-xs font-black text-red-600 italic">- R$ {s.valor}</span>
                 </div>
                 <p className="text-[10px] font-bold text-gray-700 italic leading-snug">{s.descricao}</p>
               </div>
@@ -331,14 +349,14 @@ const App = () => {
           </div>
         </div>
 
-        {/* COLUNA 3: AUDITORIA */}
+        {/* EXTRATOS */}
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-4 italic">Extrato de Depósitos</h2>
+          <h2 className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-4">Auditoria e Extratos</h2>
           <div className="bg-blue-50/50 rounded-[40px] p-6 shadow-sm border border-blue-100 min-h-[150px]">
             {docs.map(d => (
               <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 mb-3 bg-white rounded-2xl shadow-sm border border-blue-50 hover:bg-blue-600 group transition-all">
-                <span className="text-[10px] font-black text-gray-700 uppercase italic group-hover:text-white tracking-tighter">{d.nome_exibicao}</span>
-                <span className="text-blue-600 font-black group-hover:text-white italic">↓</span>
+                <span className="text-[10px] font-black text-gray-700 uppercase group-hover:text-white tracking-tighter italic">{d.nome_exibicao}</span>
+                <span className="text-blue-600 font-black group-hover:text-white">↓</span>
               </a>
             ))}
           </div>
@@ -346,7 +364,7 @@ const App = () => {
       </div>
 
       <footer className="mt-20 text-center pb-20 pt-10 border-t border-dashed border-gray-200">
-        <input type="password" placeholder="Senha" className="p-3 border rounded-2xl text-xs bg-white shadow-sm focus:outline-none" onChange={e => setSenha(e.target.value)} />
+        <input type="password" placeholder="Admin" className="p-3 border rounded-2xl text-xs bg-white shadow-sm focus:outline-none" onChange={e => setSenha(e.target.value)} />
         <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-black transition-colors italic italic">Acessar Painel</button>
       </footer>
     </div>

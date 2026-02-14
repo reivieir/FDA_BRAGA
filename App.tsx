@@ -148,8 +148,8 @@ const App = () => {
   return (
     <div className="min-h-screen bg-[#FDFCF0] p-4 md:p-10 font-sans text-gray-800">
       <header className="text-center mb-12">
-        <h1 className="text-4xl md:text-6xl font-black text-[#D4A373] italic uppercase tracking-tighter">Família <span className="text-green-700">FDA</span></h1>
-        <p className="text-[10px] font-bold text-gray-400 tracking-[0.4em] mt-2 italic">Controle Axiocrata 2026</p>
+        <h1 className="text-4xl md:text-6xl font-black text-[#D4A373] italic uppercase tracking-tighter">FAMILIA <span className="text-green-700">ALEGRIA</span></h1>
+        <p className="text-[10px] font-bold text-gray-400 tracking-[0.4em] mt-2 italic">NATAL 2026 BRAGANÇA CITY</p>
       </header>
 
       <div className="max-w-6xl mx-auto bg-black text-white p-8 rounded-[40px] shadow-2xl mb-12 border-b-8 border-green-700">

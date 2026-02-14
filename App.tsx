@@ -131,7 +131,7 @@ const App = () => {
     const m = membros.find(x => x.id === selectedMembroId);
     const pags = historico.filter(h => h.membro_id === selectedMembroId);
     const pagouMes = pags.some(p => p.mes === mesAtual);
-    const statusText = pagouMes ? "✨ parabens, até que em fim pagou" : diaDoMes > 15 ? "⚠️ Paga o que deve caloteiro" : "⏳ Aguardando Pix até dia 15";
+    const statusText = pagouMes ? "✨ Parabens! Até que enfim pagou" : diaDoMes > 15 ? "⚠️ Paga o que deve caloteiro" : "⏳ Aguardando Pix até dia 15";
     const statusColor = pagouMes ? 'bg-green-100 text-green-700' : diaDoMes > 15 ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-500';
     
     return (

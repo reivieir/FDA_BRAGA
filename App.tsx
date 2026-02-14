@@ -12,9 +12,8 @@ const App = () => {
   
   const [selectedMembro, setSelectedMembro] = useState('');
   const [valorInput, setValorInput] = useState('');
-  const [mesInput, setMesInput] = useState('Fevereiro');
+  const [mesInput, setMesInput] = useState(new Intl.DateTimeFormat('pt-BR', { month: 'Long' }).format(new Date()));
 
-  // Definição dos grupos conforme a sua imagem
   const grupos = [
     ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"],
     ["Helena", "Antonio", "Paty", "Jair", "Giovana", "Manu", "Pablo"],
@@ -25,7 +24,6 @@ const App = () => {
 
   const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
-  // Regra de meta
   const getMetaIndividual = (nome: string) => nome === 'Pablo' ? 330 : 660;
 
   useEffect(() => { fetchData(); }, []);
@@ -55,7 +53,7 @@ const App = () => {
     return (
       <div className="p-4 bg-gray-100 min-h-screen font-sans">
         <button onClick={() => setIsAdmin(false)} className="mb-4 text-xs font-bold text-blue-600 uppercase tracking-widest">← Voltar ao Site</button>
-        <h1 className="text-xl font-black mb-6">LANÇAMENTOS - ADMIN</h1>
+        <h1 className="text-xl font-black mb-6 italic">PAINEL DO AXIOCRATA</h1>
         
         <div className="bg-white p-6 rounded-3xl shadow-sm mb-6 space-y-3">
           <select className="w-full p-3 border rounded-xl font-bold bg-gray-50" onChange={e => setSelectedMembro(e.target.value)}>
@@ -64,18 +62,18 @@ const App = () => {
           </select>
           <div className="flex gap-2">
             <input type="number" placeholder="Valor R$" className="w-1/2 p-3 border rounded-xl" value={valorInput} onChange={e => setValorInput(e.target.value)} />
-            <select className="w-1/2 p-3 border rounded-xl" value={mesInput} onChange={e => setMesInput(e.target.value)}>
+            <select className="w-1/2 p-3 border rounded-xl capitalize" value={mesInput} onChange={e => setMesInput(e.target.value)}>
               {meses.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
-          <button onClick={registrarPagamento} className="w-full bg-green-600 text-white font-black p-4 rounded-xl shadow-lg active:scale-95 transition-all">CONFIRMAR</button>
+          <button onClick={registrarPagamento} className="w-full bg-green-600 text-white font-black p-4 rounded-xl shadow-lg active:scale-95 transition-all">LANÇAR PAGAMENTO</button>
         </div>
 
         <div className="space-y-2">
           {historico.slice().reverse().map(p => (
             <div key={p.id} className="bg-white p-3 rounded-xl flex justify-between shadow-sm text-xs border-l-4 border-green-500">
               <span className="font-bold">{p.membros?.nome}</span>
-              <span className="text-gray-500">R$ {p.valor} <span className="text-gray-300">({p.mes})</span></span>
+              <span className="text-gray-500 font-black">R$ {p.valor} <span className="text-gray-300 ml-1">({p.mes})</span></span>
             </div>
           ))}
         </div>
@@ -87,30 +85,42 @@ const App = () => {
     <div className="min-h-screen bg-[#FDFCF0] p-4 md:p-10 font-sans text-gray-800">
       <header className="text-center mb-12">
         <h1 className="text-4xl md:text-6xl font-black text-[#D4A373] italic uppercase tracking-tighter">Família <span className="text-green-700">FDA</span></h1>
-        <p className="text-[10px] font-bold text-gray-400 tracking-[0.4em] mt-2">SISTEMA DE CONTROLE FINANCEIRO 2026</p>
+        <p className="text-[10px] font-bold text-gray-400 tracking-[0.4em] mt-2 italic">Axiocracia Familiar 2026</p>
       </header>
 
       {/* Card de Progresso Geral */}
       <div className="max-w-6xl mx-auto bg-black text-white p-8 rounded-[40px] shadow-2xl mb-12 border-b-8 border-green-700">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div className="text-center md:text-left">
-            <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest">Total Arrecadado</p>
-            <div className="text-4xl md:text-6xl font-black">R$ {totalArrecadadoGeral}</div>
+            <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest">Arrecadação Total</p>
+            <div className="text-5xl md:text-7xl font-black">R$ {totalArrecadadoGeral.toLocaleString('pt-BR')}</div>
           </div>
           <div className="text-center md:text-right">
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Meta Final da Festa</p>
-            <div className="text-xl font-bold text-gray-400">R$ {metaTotalGeral}</div>
+            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Meta de Dezembro</p>
+            <div className="text-xl font-bold text-gray-400">R$ {metaTotalGeral.toLocaleString('pt-BR')}</div>
           </div>
         </div>
-        <div className="w-full bg-gray-800 h-4 rounded-full overflow-hidden">
+        
+        <div className="w-full bg-gray-800 h-4 rounded-full overflow-hidden mb-6">
           <div className="bg-green-500 h-full transition-all duration-1000 shadow-[0_0_20px_rgba(34,197,94,0.5)]" style={{ width: `${(totalArrecadadoGeral/metaTotalGeral)*100}%` }}></div>
         </div>
-        <p className="text-right text-[10px] font-black mt-3 text-green-500 uppercase italic tracking-widest">
-          {((totalArrecadadoGeral / metaTotalGeral) * 100).toFixed(1)}% Concluído
-        </p>
+
+        {/* NOVA SEÇÃO: Totais Mensais */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 border-t border-gray-800 pt-6">
+          {meses.map(mes => {
+            const totalMes = historico.filter(p => p.mes === mes).reduce((acc, p) => acc + p.valor, 0);
+            if (totalMes === 0) return null; // Não mostra meses vazios
+            return (
+              <div key={mes} className="text-center p-2 rounded-2xl bg-gray-900/50">
+                <p className="text-[8px] font-black text-gray-500 uppercase">{mes}</p>
+                <p className="text-xs font-black text-[#D4A373]">R$ {totalMes}</p>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Grade de Grupos (5 Colunas conforme a imagem) */}
+      {/* Grade de Grupos (5 Colunas) */}
       <main className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {grupos.map((grupo, gIdx) => (
           <div key={gIdx} className="space-y-3">
@@ -125,10 +135,10 @@ const App = () => {
               const porcentagem = Math.min((pago / metaInd) * 100, 100);
 
               return (
-                <div key={nome} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div key={nome} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                   <div className="flex justify-between items-start mb-2">
                     <span className="font-black text-xs text-gray-700 uppercase italic truncate">{nome}</span>
-                    <div className={`h-2 w-2 rounded-full ${aPagar <= 0 ? 'bg-green-500' : 'bg-red-400'}`}></div>
+                    <div className={`h-2 w-2 rounded-full ${aPagar <= 0 ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-400'}`}></div>
                   </div>
                   
                   <div className="flex justify-between items-end mb-2">
@@ -137,7 +147,7 @@ const App = () => {
                       <p className={`text-xs font-black ${pago > 0 ? 'text-green-600' : 'text-gray-400'}`}>R$ {pago}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[8px] font-bold text-gray-300 uppercase">Falta</p>
+                      <p className="text-[8px] font-bold text-gray-300 uppercase">A Pagar</p>
                       <p className={`text-xs font-black ${aPagar <= 0 ? 'text-green-600' : 'text-red-500'}`}>
                         {aPagar <= 0 ? 'QUITADO' : `R$ ${aPagar}`}
                       </p>
@@ -145,10 +155,7 @@ const App = () => {
                   </div>
 
                   <div className="w-full bg-gray-50 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full transition-all duration-500 ${aPagar <= 0 ? 'bg-green-500' : 'bg-[#D4A373]'}`} 
-                      style={{ width: `${porcentagem}%` }}
-                    ></div>
+                    <div className={`h-full transition-all duration-500 ${aPagar <= 0 ? 'bg-green-500' : 'bg-[#D4A373]'}`} style={{ width: `${porcentagem}%` }}></div>
                   </div>
                 </div>
               );

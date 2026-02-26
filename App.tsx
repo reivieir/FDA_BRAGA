@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 
-// Inicialização estável do Axiocrata
+// Inicialização estável do ecossistema
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -44,8 +44,8 @@ const App = () => {
     { titulo: "Grupo Julia", nomes: ["Julia", "Juan"] }
   ];
 
-  // METAS PESSOAIS ATUALIZADAS (R$ 700 / R$ 330)
-  const getMetaInd = (nome: string) => nome === 'Pablo' ? 330 : 700;
+  // METAS PESSOAIS ATUALIZADAS (R$ 760 / R$ 330)
+  const getMetaInd = (nome: string) => nome === 'Pablo' ? 330 : 760;
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -108,7 +108,7 @@ const App = () => {
     const arrecadadoTotalMes = pagsMes.reduce((acc, p) => acc + Number(p.valor), 0);
     const gastoNoMes = saidas.filter(s => s.mes === selectedMonth).reduce((acc, s) => acc + Number(s.valor), 0);
     const pagantesUnicos = new Set(pagsMes.map(p => p.membro_id)).size;
-    const currentMeta = getMetaMensal(selectedMonth);
+    const currentMonthMeta = getMetaMensal(selectedMonth);
 
     return (
       <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans">
@@ -120,14 +120,13 @@ const App = () => {
               <div className="text-left">
                 <p className="text-[10px] text-gray-500 uppercase">Saldo Real do Mês</p>
                 <p className="text-2xl font-black text-green-500 italic">R$ {(arrecadadoTotalMes - gastoNoMes).toLocaleString('pt-BR')}</p>
-                {/* INDICADOR DE ADESÃO */}
                 <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1">
                    {pagantesUnicos} de 27 pagaram
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] text-gray-500 uppercase">Meta Fixa</p>
-                <p className="text-sm font-bold text-gray-400">R$ {currentMeta}</p>
+                <p className="text-sm font-bold text-gray-400">R$ {currentMonthMeta}</p>
               </div>
             </div>
           </div>
@@ -213,7 +212,7 @@ const App = () => {
             </div>
           </div>
           {gruposDef.map((g, idx) => (
-            <div key={idx} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-200">
+            <div key={idx} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-200 italic">
               <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">{g.titulo}</h2>
               <select className="w-full p-3 border rounded-xl mb-4 bg-gray-50 text-sm font-bold" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
                 <option value="Todos">Lançar Novo PIX</option>
@@ -243,7 +242,7 @@ const App = () => {
               </div>
             </div>
           ))}
-          <div className="bg-white p-5 rounded-3xl border border-red-200">
+          <div className="bg-white p-5 rounded-3xl border border-red-200 italic">
             <h2 className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-3 italic">3. Histórico de Gastos (Excluir)</h2>
             {saidas.map(s => (
               <div key={s.id} className="flex justify-between items-center p-3 border-b last:border-0 text-[10px]">
@@ -274,7 +273,7 @@ const App = () => {
           </div>
           <div className="text-right">
             <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest italic">Meta Global Bragança</p>
-            <div className="text-xl font-bold text-gray-400 italic">R$ 18.530</div>
+            <div className="text-xl font-bold text-gray-400 italic">R$ 20.090</div>
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 border-t border-gray-800 pt-6 italic">
@@ -289,7 +288,6 @@ const App = () => {
                 <p className={`text-[7px] font-bold uppercase mt-1 tracking-tighter italic ${metAttained ? 'text-green-500' : 'text-gray-600'}`}>
                    Meta R$ {metaMonth}
                 </p>
-                {/* MENSAGEM DE META ATINGIDA */}
                 {metAttained && (
                   <p className="text-[6px] font-black text-green-400 uppercase mt-1 leading-tight italic animate-pulse">
                     Parabens Famia! Arrecaddação do mes completa
@@ -326,7 +324,7 @@ const App = () => {
                         <span className="font-black text-[10px] uppercase text-gray-700 group-hover:text-green-700 italic">{nome}</span>
                         <div className="flex items-center gap-3 italic">
                           <span className="text-[10px] font-black text-green-600">R$ {pagoMembroTotal}</span>
-                          <div className={`h-1.5 w-1.5 rounded-full ${metaMembro-pagoMembroTotal <= 0 ? 'bg-green-500' : 'bg-red-400'}`}></div>
+                          <div className={`h-1.5 w-1.5 rounded-full ${metaMembro-pagoMembroTotal <= 0 ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-400'}`}></div>
                         </div>
                       </div>
                     );

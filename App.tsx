@@ -33,8 +33,10 @@ const App = () => {
 
   const meses = ["Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
   
-  // LÓGICA DE METAS MENSAIS
+  // REGRAS DE NEGÓCIO
   const getMetaMensal = (mes: string) => mes === "Fevereiro" ? 1590 : 1850;
+  const getMetaInd = (nome: string) => nome === 'Pablo' ? 330 : 760;
+  const metaGlobalBragança = 20090;
 
   const gruposDef = [
     { titulo: "Grupo Adriana", nomes: ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"] },
@@ -43,9 +45,6 @@ const App = () => {
     { titulo: "Grupo Katia", nomes: ["Katia", "Giovani", "Cintia", "Rafael", "Ju", "Bia"] },
     { titulo: "Grupo Julia", nomes: ["Julia", "Juan"] }
   ];
-
-  // METAS PESSOAIS ATUALIZADAS (R$ 760 / R$ 330)
-  const getMetaInd = (nome: string) => nome === 'Pablo' ? 330 : 760;
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -108,7 +107,7 @@ const App = () => {
     const arrecadadoTotalMes = pagsMes.reduce((acc, p) => acc + Number(p.valor), 0);
     const gastoNoMes = saidas.filter(s => s.mes === selectedMonth).reduce((acc, s) => acc + Number(s.valor), 0);
     const pagantesUnicos = new Set(pagsMes.map(p => p.membro_id)).size;
-    const currentMonthMeta = getMetaMensal(selectedMonth);
+    const currentMeta = getMetaMensal(selectedMonth);
 
     return (
       <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans">
@@ -120,13 +119,11 @@ const App = () => {
               <div className="text-left">
                 <p className="text-[10px] text-gray-500 uppercase">Saldo Real do Mês</p>
                 <p className="text-2xl font-black text-green-500 italic">R$ {(arrecadadoTotalMes - gastoNoMes).toLocaleString('pt-BR')}</p>
-                <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1">
-                   {pagantesUnicos} de 27 pagaram
-                </p>
+                <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1">{pagantesUnicos} de 27 pagaram</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] text-gray-500 uppercase">Meta Fixa</p>
-                <p className="text-sm font-bold text-gray-400">R$ {currentMonthMeta}</p>
+                <p className="text-sm font-bold text-gray-400">R$ {currentMeta}</p>
               </div>
             </div>
           </div>
@@ -158,14 +155,14 @@ const App = () => {
           <div className={`mt-4 p-4 rounded-2xl text-center font-black uppercase text-xs italic ${statusColor}`}>
             {statusText}
           </div>
-          <div className="flex justify-between mt-8 text-sm font-bold">
+          <div className="flex justify-between mt-8 text-sm font-bold italic">
             <span className="text-green-600 font-black text-xl italic">R$ {calcPago(selectedMembroId)}</span>
-            <span className="text-gray-400 pt-2 uppercase italic text-xs">Meta Natal R$ {getMetaInd(m?.nome || '')}</span>
+            <span className="text-gray-400 pt-2 uppercase italic text-xs tracking-tighter">Meta Natal R$ {getMetaInd(m?.nome || '')}</span>
           </div>
           <div className="mt-8 space-y-3">
             {pags.map(p => (
               <div key={p.id} className="flex justify-between p-4 bg-gray-50 rounded-2xl border italic">
-                <span className="font-bold text-gray-600 uppercase text-xs">{p.mes}</span>
+                <span className="font-bold text-gray-600 uppercase text-xs tracking-widest">{p.mes}</span>
                 <span className="font-black text-green-600">R$ {p.valor}</span>
               </div>
             ))}
@@ -178,15 +175,15 @@ const App = () => {
   if (isAdmin) {
     return (
       <div className="p-4 bg-gray-100 min-h-screen font-sans pb-20 text-gray-800 italic">
-        <div className="flex justify-between items-center mb-6 max-w-2xl mx-auto">
-           <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold text-xs uppercase italic tracking-widest">← Site</button>
+        <div className="flex justify-between items-center mb-6 max-w-2xl mx-auto italic">
+           <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold text-xs uppercase tracking-widest">← Site</button>
            <select className="p-2 border rounded-xl text-xs font-bold bg-white" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
              {meses.map(m => <option key={m} value={m}>{m}</option>)}
            </select>
         </div>
         <div className="space-y-6 max-w-2xl mx-auto">
           <div className="bg-blue-900 text-white p-6 rounded-3xl shadow-lg border-b-4 border-blue-400 italic">
-            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest">1. Auditoria (Documentos)</h2>
+            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest italic">1. Auditoria (Documentos)</h2>
             <div className="flex gap-2 mb-4">
               <input type="text" placeholder="Nome do arquivo" className="flex-1 p-3 rounded-xl text-black text-xs" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
               <input type="file" className="w-24 text-[8px] pt-3" onChange={e => setFileToUpload(e.target.files?.[0] || null)} />
@@ -226,15 +223,15 @@ const App = () => {
                     return (
                       <div key={m.id} className="flex items-center gap-2 border-t pt-2 border-gray-50">
                         <span className="text-[10px] font-black w-24 truncate uppercase italic">{m.nome}</span>
-                        <input type="number" className="flex-1 p-2 border rounded-lg text-xs" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
+                        <input type="number" className="flex-1 p-2 border rounded-lg text-xs font-bold" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
                         <button onClick={() => lancarPagamento(m.id, valoresLote[m.id])} className="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px] font-black italic">OK</button>
                       </div>
                     );
                   } else {
                     return historico.filter(h => h.membro_id === m.id).map(p => (
-                      <div key={p.id} className="flex justify-between items-center p-3 bg-red-50/30 rounded-xl border border-red-100">
-                        <span className="text-[10px] font-bold italic">{p.mes}: R$ {p.valor}</span>
-                        <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-red-500 font-black text-[10px] uppercase">Excluir</button>
+                      <div key={p.id} className="flex justify-between items-center p-3 bg-red-50/30 rounded-xl border border-red-100 italic">
+                        <span className="text-[10px] font-bold">{p.mes}: R$ {p.valor}</span>
+                        <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-red-500 font-black text-[10px] uppercase italic">Excluir</button>
                       </div>
                     ));
                   }
@@ -257,57 +254,101 @@ const App = () => {
     );
   }
 
+  // --- RENDER PRINCIPAL (DESIGN DO PRINT) ---
   return (
-    <div className="min-h-screen bg-[#FDFCF0] p-4 md:p-10 font-sans text-gray-800">
-      <header className="text-center mb-12 italic">
-        <h1 className="text-4xl md:text-7xl font-black text-[#D4A373] uppercase tracking-tighter italic">FAMILIA da <span className="text-green-700">ALEGRIA</span></h1>
-        <p className="text-[10px] md:text-sm font-bold text-gray-400 tracking-[0.4em] mt-2 uppercase italic">NATAL 2026 BRAGANÇA CITY</p>
-      </header>
-
-      <div className="max-w-6xl mx-auto bg-black text-white p-8 rounded-[40px] shadow-2xl mb-12 border-b-8 border-green-700">
-        <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6 italic">
-          <div className="text-left">
-            <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest italic">Saldo Disponível em Caixa</p>
-            <div className="text-5xl md:text-7xl font-black text-green-500 italic">R$ {saldoAtual.toLocaleString('pt-BR')}</div>
-            <p className="text-[10px] font-black uppercase opacity-50 mt-2 italic">Arrecadado: R$ {totalArrecadado} | Saídas: R$ {totalSaidas}</p>
+    <div className="min-h-screen bg-[#0B0C10] p-4 md:p-8 font-sans text-white">
+      {/* CABEÇALHO DASHBOARD */}
+      <div className="max-w-4xl mx-auto bg-[#121418] rounded-[40px] p-8 shadow-2xl border border-gray-800 mb-10">
+        <div className="flex flex-col md:flex-row justify-between gap-8 mb-10">
+          <div className="flex-1">
+            <p className="text-[11px] text-[#D4A373] font-black uppercase tracking-widest mb-1 italic">SALDO EM CAIXA</p>
+            <h1 className="text-5xl md:text-7xl font-black text-[#22c55e] italic tracking-tighter">R$ {saldoAtual.toLocaleString('pt-BR')}</h1>
           </div>
-          <div className="text-right">
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest italic">Meta Global Bragança</p>
-            <div className="text-xl font-bold text-gray-400 italic">R$ 20.090</div>
+          <div className="bg-[#1A1D23] p-6 rounded-3xl border border-gray-800 self-center">
+            <p className="text-[9px] text-gray-500 font-black uppercase mb-1 italic">ARRECADADO NO PERÍODO:</p>
+            <p className="text-2xl font-black italic">R$ {totalArrecadado.toLocaleString('pt-BR')}</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 border-t border-gray-800 pt-6 italic">
-          {meses.map(mes => {
-            const sumMonth = historico.filter(h => h.mes === mes).reduce((acc, h) => acc + Number(h.valor), 0);
-            const metaMonth = getMetaMensal(mes);
-            const metAttained = sumMonth >= metaMonth;
-            return sumMonth > 0 ? (
-              <div key={mes} onClick={() => setSelectedMonth(mes)} className="bg-gray-900/50 p-3 rounded-2xl border border-gray-800 cursor-pointer hover:bg-gray-800 transition-all text-center group">
-                <p className="text-[8px] font-black text-gray-500 uppercase italic">{mes}</p>
-                <p className="text-sm font-black text-[#D4A373] group-hover:scale-110 transition-transform italic">R$ {sumMonth}</p>
-                <p className={`text-[7px] font-bold uppercase mt-1 tracking-tighter italic ${metAttained ? 'text-green-500' : 'text-gray-600'}`}>
-                   Meta R$ {metaMonth}
-                </p>
-                {metAttained && (
-                  <p className="text-[6px] font-black text-green-400 uppercase mt-1 leading-tight italic animate-pulse">
-                    Parabens Famia! Arrecaddação do mes completa
-                  </p>
-                )}
+
+        {/* BARRA DE PROGRESSO */}
+        <div className="mb-10">
+           <div className="flex justify-between items-end mb-2">
+              <div>
+                <p className="text-[10px] text-gray-500 font-black uppercase italic">META GLOBAL BRAGANÇA</p>
+                <p className="text-2xl font-black italic">R$ {metaGlobalBragança.toLocaleString('pt-BR')}</p>
               </div>
-            ) : null;
-          })}
+              <div className="text-right">
+                <p className="text-[10px] text-gray-500 font-black uppercase italic tracking-widest">BR 2.090</p>
+                <p className="text-2xl font-black text-[#22c55e] italic">{( (totalArrecadado/metaGlobalBragança)*100 ).toFixed(1)}%</p>
+              </div>
+           </div>
+           <div className="w-full bg-[#1A1D23] h-4 rounded-full overflow-hidden border border-gray-800">
+              <div className="bg-[#22c55e] h-full transition-all duration-1000 shadow-[0_0_15px_rgba(34,197,94,0.3)]" style={{ width: `${(totalArrecadado/metaGlobalBragança)*100}%` }}></div>
+           </div>
+           <p className="text-[9px] text-gray-600 font-black uppercase mt-2 italic tracking-tighter">PERCENTUAL ATINGIDO:</p>
+        </div>
+
+        {/* TABELA EVOLUÇÃO */}
+        <div className="mt-12">
+           <h2 className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-6 italic">EVOLUÇÃO DA ARRECADAÇÃO MENSAL</h2>
+           <div className="overflow-x-auto">
+             <table className="w-full text-left border-collapse">
+               <thead>
+                 <tr className="border-b border-gray-800 text-[10px] text-gray-600 font-black uppercase italic">
+                   <th className="pb-4">MÊS</th>
+                   <th className="pb-4">META (R$)</th>
+                   <th className="pb-4">ARRECADADO (R$)</th>
+                   <th className="pb-4">% META</th>
+                   <th className="pb-4">STATUS</th>
+                 </tr>
+               </thead>
+               <tbody className="text-xs font-bold italic">
+                 {meses.map(mes => {
+                   const arrec = historico.filter(h => h.mes === mes).reduce((acc, h) => acc + Number(h.valor), 0);
+                   const meta = getMetaMensal(mes);
+                   const perc = ((arrec/meta)*100).toFixed(0);
+                   const isMet = arrec >= meta;
+                   
+                   return (
+                     <tr key={mes} onClick={() => setSelectedMonth(mes)} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-all cursor-pointer group">
+                       <td className="py-5 text-gray-300 group-hover:text-white">{mes}</td>
+                       <td className="py-5 text-gray-300">R$ {meta}</td>
+                       <td className="py-5 text-gray-300">{arrec > 0 ? `R$ ${arrec}` : '—'}</td>
+                       <td className={`py-5 ${isMet ? 'text-[#22c55e]' : 'text-gray-600'}`}>{arrec > 0 ? `${perc}%` : '—'}</td>
+                       <td className="py-5">
+                         {isMet ? (
+                           <div className="flex items-center gap-2 text-[#22c55e] text-[9px] uppercase italic">
+                             <span className="w-4 h-4 border border-[#22c55e] rounded-full flex items-center justify-center">✓</span> Meta Atingida
+                           </div>
+                         ) : arrec > 0 ? (
+                           <div className="flex items-center gap-2 text-orange-500 text-[9px] uppercase italic">
+                             <span className="text-[14px]">⌛</span> Em andamento
+                           </div>
+                         ) : (
+                           <div className="flex items-center gap-2 text-gray-600 text-[9px] uppercase italic">
+                             <span className="text-[14px]">⌛</span> Previsto
+                           </div>
+                         )}
+                       </td>
+                     </tr>
+                   );
+                 })}
+               </tbody>
+             </table>
+           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20 italic">
+      {/* ESTRUTURA POR GRUPO (ABAIXO DO CABEÇALHO) */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 pb-24 italic">
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4 italic">Estrutura Familiar</h2>
+          <h2 className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-4">Estrutura Familiar</h2>
           {gruposDef.map((g, gIdx) => (
-            <div key={gIdx} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-5 flex justify-between items-center hover:bg-gray-50 transition-all">
+            <div key={gIdx} className="bg-[#121418] rounded-3xl shadow-sm border border-gray-800 overflow-hidden">
+              <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-5 flex justify-between items-center hover:bg-gray-800 transition-all">
                 <div className="text-left">
-                  <h2 className="text-sm font-black text-gray-800 uppercase tracking-tighter italic">{g.titulo}</h2>
-                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest italic tracking-tighter">
+                  <h2 className="text-sm font-black text-gray-300 uppercase tracking-tighter italic">{g.titulo}</h2>
+                  <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest mt-1">
                     {g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtual)).length} de {g.nomes.length} QUITADOS NO MÊS
                   </p>
                 </div>
@@ -317,14 +358,14 @@ const App = () => {
                 <div className="grid grid-cols-1 gap-2">
                   {g.nomes.map(nome => {
                     const m = membros.find(x => x.nome === nome);
-                    const pagoMembroTotal = m ? historico.filter(h => h.membro_id === m.id).reduce((acc, h) => acc + Number(h.valor), 0) : 0;
+                    const pagoMembro = m ? historico.filter(h => h.membro_id === m.id).reduce((acc, h) => acc + Number(h.valor), 0) : 0;
                     const metaMembro = getMetaInd(nome);
                     return (
-                      <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="bg-[#FDFCF0]/50 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-white border transition-all group">
-                        <span className="font-black text-[10px] uppercase text-gray-700 group-hover:text-green-700 italic">{nome}</span>
-                        <div className="flex items-center gap-3 italic">
-                          <span className="text-[10px] font-black text-green-600">R$ {pagoMembroTotal}</span>
-                          <div className={`h-1.5 w-1.5 rounded-full ${metaMembro-pagoMembroTotal <= 0 ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-400'}`}></div>
+                      <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="bg-[#1A1D23] p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-gray-800 border border-gray-800 transition-all group">
+                        <span className="font-black text-[10px] uppercase text-gray-500 group-hover:text-[#D4A373]">{nome}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-black text-[#22c55e] italic">R$ {pagoMembro}</span>
+                          <div className={`h-1.5 w-1.5 rounded-full ${pagoMembro >= metaMembro ? 'bg-[#22c55e] shadow-[0_0_8px_#22c55e]' : 'bg-red-900'}`}></div>
                         </div>
                       </div>
                     );
@@ -334,36 +375,38 @@ const App = () => {
             </div>
           ))}
         </div>
+
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4 italic">Saídas de Caixa</h2>
-          <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 min-h-[150px]">
+          <h2 className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-4">Saídas de Caixa</h2>
+          <div className="bg-[#121418] rounded-[40px] p-8 shadow-sm border border-gray-800 min-h-[150px]">
             {saidas.map(s => (
-              <div key={s.id} className="mb-4 last:mb-0 border-b border-gray-50 pb-4 last:border-0 italic">
+              <div key={s.id} className="mb-4 last:mb-0 border-b border-gray-800 pb-4 last:border-0 italic">
                 <div className="flex justify-between items-start mb-1">
-                   <span className="text-[8px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-tighter italic">{s.mes}</span>
-                   <span className="text-xs font-black text-red-600 italic">- R$ {s.valor}</span>
+                   <span className="text-[8px] font-black bg-red-900/30 text-red-500 px-2 py-0.5 rounded-full uppercase tracking-tighter">{s.mes}</span>
+                   <span className="text-xs font-black text-red-500">- R$ {s.valor}</span>
                 </div>
-                <p className="text-[10px] font-bold text-gray-700 leading-snug italic">{s.descricao}</p>
+                <p className="text-[10px] font-bold text-gray-400 leading-snug">{s.descricao}</p>
               </div>
             ))}
           </div>
         </div>
+
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-4 italic">Extratos Bancários</h2>
-          <div className="bg-blue-50/50 rounded-[40px] p-6 shadow-sm border border-blue-100 min-h-[150px]">
+          <h2 className="text-[10px] font-black text-blue-900 uppercase tracking-widest ml-4">Extratos Bancários</h2>
+          <div className="bg-blue-950/10 rounded-[40px] p-6 shadow-sm border border-blue-900/30 min-h-[150px]">
             {docs.map(d => (
-              <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 mb-3 bg-white rounded-2xl shadow-sm border border-blue-50 hover:bg-blue-600 group transition-all italic">
-                <span className="text-[10px] font-black text-gray-700 uppercase group-hover:text-white tracking-tighter italic">{d.nome_exibicao}</span>
-                <span className="text-blue-600 font-black group-hover:text-white italic">↓</span>
+              <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 mb-3 bg-[#121418] rounded-2xl shadow-sm border border-gray-800 hover:bg-blue-900/20 group transition-all italic">
+                <span className="text-[10px] font-black text-gray-500 uppercase group-hover:text-white tracking-tighter">{d.nome_exibicao}</span>
+                <span className="text-blue-900 font-black group-hover:text-blue-400">↓</span>
               </a>
             ))}
           </div>
         </div>
       </div>
 
-      <footer className="mt-20 text-center pb-20 pt-10 border-t border-dashed border-gray-200 italic">
-        <input type="password" placeholder="Admin" className="p-3 border rounded-2xl text-xs bg-white shadow-sm focus:outline-none" onChange={e => setSenha(e.target.value)} />
-        <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-black transition-colors italic">Acessar Painel</button>
+      <footer className="mt-10 text-center pb-20 pt-10 border-t border-dashed border-gray-800 italic">
+        <input type="password" placeholder="Admin" className="p-3 border border-gray-800 rounded-2xl text-xs bg-[#121418] text-white focus:outline-none" onChange={e => setSenha(e.target.value)} />
+        <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-3 text-[10px] font-black text-gray-600 uppercase tracking-widest hover:text-white transition-colors">Painel Admin</button>
       </footer>
     </div>
   );

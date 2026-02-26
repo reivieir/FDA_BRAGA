@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 
-// Inicialização estável
+// Inicialização estável do Axiocrata
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -32,7 +32,9 @@ const App = () => {
   const [mesGlobal, setMesGlobal] = useState(mesAtual);
 
   const meses = ["Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-  const metaMensalGrupo = 1590; // Sua meta calibrada
+  
+  // LÓGICA DE METAS MENSAIS
+  const getMetaMensal = (mes: string) => mes === "Fevereiro" ? 1590 : 1850;
 
   const gruposDef = [
     { titulo: "Grupo Adriana", nomes: ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"] },
@@ -42,7 +44,8 @@ const App = () => {
     { titulo: "Grupo Julia", nomes: ["Julia", "Juan"] }
   ];
 
-  const getMeta = (nome: string) => nome === 'Pablo' ? 330 : 660;
+  // METAS PESSOAIS ATUALIZADAS (R$ 700 / R$ 330)
+  const getMetaInd = (nome: string) => nome === 'Pablo' ? 330 : 700;
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -57,7 +60,6 @@ const App = () => {
   };
 
   // --- FUNÇÕES DE AÇÃO ---
-
   const handleUpload = async () => {
     if (!fileToUpload || !nomeDoc) return alert("Preencha nome e arquivo!");
     const fileName = `${Date.now()}_${fileToUpload.name.replace(/\s/g, '_')}`;
@@ -101,30 +103,31 @@ const App = () => {
   const saldoAtual = totalArrecadado - totalSaidas;
 
   // --- RENDERS CONDICIONAIS ---
-
   if (selectedMonth) {
     const pagsMes = historico.filter(p => p.mes === selectedMonth);
     const arrecadadoTotalMes = pagsMes.reduce((acc, p) => acc + Number(p.valor), 0);
     const gastoNoMes = saidas.filter(s => s.mes === selectedMonth).reduce((acc, s) => acc + Number(s.valor), 0);
-    const pagantesUnicos = new Set(pagsMes.map(p => p.membro_id)).size; // Lógica de 27 pagantes
+    const pagantesUnicos = new Set(pagsMes.map(p => p.membro_id)).size;
+    const currentMeta = getMetaMensal(selectedMonth);
 
     return (
       <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans">
         <button onClick={() => setSelectedMonth(null)} className="mb-8 font-black text-[#D4A373] uppercase text-xs">← Voltar</button>
         <div className="max-w-xl mx-auto space-y-6">
           <div className="bg-black text-white p-8 rounded-[40px] shadow-xl border-b-8 border-red-500 text-center italic">
-            <h2 className="text-4xl font-black uppercase italic tracking-tighter">{selectedMonth}</h2>
+            <h2 className="text-4xl font-black uppercase tracking-tighter">{selectedMonth}</h2>
             <div className="mt-4 border-t border-gray-800 pt-4 flex justify-between items-end">
               <div className="text-left">
                 <p className="text-[10px] text-gray-500 uppercase">Saldo Real do Mês</p>
                 <p className="text-2xl font-black text-green-500 italic">R$ {(arrecadadoTotalMes - gastoNoMes).toLocaleString('pt-BR')}</p>
+                {/* INDICADOR DE ADESÃO */}
                 <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1">
                    {pagantesUnicos} de 27 pagaram
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] text-gray-500 uppercase">Meta Fixa</p>
-                <p className="text-sm font-bold text-gray-400">R$ {metaMensalGrupo}</p>
+                <p className="text-sm font-bold text-gray-400">R$ {currentMeta}</p>
               </div>
             </div>
           </div>
@@ -156,14 +159,14 @@ const App = () => {
           <div className={`mt-4 p-4 rounded-2xl text-center font-black uppercase text-xs italic ${statusColor}`}>
             {statusText}
           </div>
-          <div className="flex justify-between mt-8 text-sm font-bold italic">
+          <div className="flex justify-between mt-8 text-sm font-bold">
             <span className="text-green-600 font-black text-xl italic">R$ {calcPago(selectedMembroId)}</span>
-            <span className="text-gray-400 pt-2 uppercase italic text-xs">Meta R$ {getMeta(m?.nome || '')}</span>
+            <span className="text-gray-400 pt-2 uppercase italic text-xs">Meta Natal R$ {getMetaInd(m?.nome || '')}</span>
           </div>
           <div className="mt-8 space-y-3">
             {pags.map(p => (
               <div key={p.id} className="flex justify-between p-4 bg-gray-50 rounded-2xl border italic">
-                <span className="font-bold text-gray-600 uppercase text-xs tracking-widest">{p.mes}</span>
+                <span className="font-bold text-gray-600 uppercase text-xs">{p.mes}</span>
                 <span className="font-black text-green-600">R$ {p.valor}</span>
               </div>
             ))}
@@ -175,18 +178,16 @@ const App = () => {
 
   if (isAdmin) {
     return (
-      <div className="p-4 bg-gray-100 min-h-screen font-sans pb-20">
-        <div className="flex justify-between items-center mb-6 max-w-2xl mx-auto italic">
-           <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold text-xs uppercase tracking-widest">← Site</button>
+      <div className="p-4 bg-gray-100 min-h-screen font-sans pb-20 text-gray-800 italic">
+        <div className="flex justify-between items-center mb-6 max-w-2xl mx-auto">
+           <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold text-xs uppercase italic tracking-widest">← Site</button>
            <select className="p-2 border rounded-xl text-xs font-bold bg-white" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
              {meses.map(m => <option key={m} value={m}>{m}</option>)}
            </select>
         </div>
-
         <div className="space-y-6 max-w-2xl mx-auto">
-          {/* GESTÃO DE DOCUMENTOS */}
           <div className="bg-blue-900 text-white p-6 rounded-3xl shadow-lg border-b-4 border-blue-400 italic">
-            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest">1. Auditoria (Extratos/Comprovantes)</h2>
+            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest">1. Auditoria (Documentos)</h2>
             <div className="flex gap-2 mb-4">
               <input type="text" placeholder="Nome do arquivo" className="flex-1 p-3 rounded-xl text-black text-xs" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
               <input type="file" className="w-24 text-[8px] pt-3" onChange={e => setFileToUpload(e.target.files?.[0] || null)} />
@@ -194,17 +195,15 @@ const App = () => {
             </div>
             <div className="space-y-2 border-t border-blue-800 pt-3">
               {docs.map(d => (
-                <div key={d.id} className="flex justify-between items-center bg-blue-800/30 p-2 rounded-lg text-[9px] italic">
+                <div key={d.id} className="flex justify-between items-center bg-blue-800/30 p-2 rounded-lg text-[9px]">
                   <span>{d.mes}: {d.nome_exibicao}</span>
                   <button onClick={() => excluirDoc(d.id, d.url_arquivo)} className="text-red-400 font-black">X</button>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* LANÇAR SAÍDA */}
           <div className="bg-black text-white p-6 rounded-3xl shadow-lg border-b-4 border-red-500 italic">
-            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest">2. Lançar Saída</h2>
+            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest">2. Lançar Gasto Bragança City</h2>
             <div className="space-y-3">
               <input type="text" placeholder="Descrição" className="w-full p-3 rounded-xl text-black text-sm" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
               <div className="flex gap-2">
@@ -213,10 +212,8 @@ const App = () => {
               </div>
             </div>
           </div>
-
-          {/* PAINEL DE PAGAMENTOS (ESTRUTURA FILTRADA) */}
           {gruposDef.map((g, idx) => (
-            <div key={idx} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-200 italic">
+            <div key={idx} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-200">
               <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">{g.titulo}</h2>
               <select className="w-full p-3 border rounded-xl mb-4 bg-gray-50 text-sm font-bold" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
                 <option value="Todos">Lançar Novo PIX</option>
@@ -246,9 +243,7 @@ const App = () => {
               </div>
             </div>
           ))}
-
-          {/* EXCLUIR GASTOS */}
-          <div className="bg-white p-5 rounded-3xl border border-red-200 italic">
+          <div className="bg-white p-5 rounded-3xl border border-red-200">
             <h2 className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-3 italic">3. Histórico de Gastos (Excluir)</h2>
             {saidas.map(s => (
               <div key={s.id} className="flex justify-between items-center p-3 border-b last:border-0 text-[10px]">
@@ -266,34 +261,33 @@ const App = () => {
   return (
     <div className="min-h-screen bg-[#FDFCF0] p-4 md:p-10 font-sans text-gray-800">
       <header className="text-center mb-12 italic">
-        <h1 className="text-4xl md:text-7xl font-black text-[#D4A373] uppercase tracking-tighter">FAMILIA da <span className="text-green-700">ALEGRIA</span></h1>
-        <p className="text-[10px] md:text-sm font-bold text-gray-400 tracking-[0.4em] mt-2 uppercase">NATAL 2026 BRAGANÇA CITY</p>
+        <h1 className="text-4xl md:text-7xl font-black text-[#D4A373] uppercase tracking-tighter italic">FAMILIA da <span className="text-green-700">ALEGRIA</span></h1>
+        <p className="text-[10px] md:text-sm font-bold text-gray-400 tracking-[0.4em] mt-2 uppercase italic">NATAL 2026 BRAGANÇA CITY</p>
       </header>
 
       <div className="max-w-6xl mx-auto bg-black text-white p-8 rounded-[40px] shadow-2xl mb-12 border-b-8 border-green-700">
         <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6 italic">
           <div className="text-left">
-            <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest">Saldo Disponível em Caixa</p>
+            <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest italic">Saldo Disponível em Caixa</p>
             <div className="text-5xl md:text-7xl font-black text-green-500 italic">R$ {saldoAtual.toLocaleString('pt-BR')}</div>
             <p className="text-[10px] font-black uppercase opacity-50 mt-2 italic">Arrecadado: R$ {totalArrecadado} | Saídas: R$ {totalSaidas}</p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Meta de Bragança</p>
-            <div className="text-xl font-bold text-gray-400 italic">R$ {membros.reduce((acc, m) => acc + getMeta(m.nome), 0).toLocaleString('pt-BR')}</div>
+            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest italic">Meta Global Bragança</p>
+            <div className="text-xl font-bold text-gray-400 italic">R$ 18.530</div>
           </div>
         </div>
-        
-        {/* CARDS MENSAIS NA HOME COM MENSAGEM DE SUCESSO */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 border-t border-gray-800 pt-6 italic">
           {meses.map(mes => {
             const sumMonth = historico.filter(h => h.mes === mes).reduce((acc, h) => acc + Number(h.valor), 0);
-            const metAttained = sumMonth >= metaMensalGrupo;
+            const metaMonth = getMetaMensal(mes);
+            const metAttained = sumMonth >= metaMonth;
             return sumMonth > 0 ? (
               <div key={mes} onClick={() => setSelectedMonth(mes)} className="bg-gray-900/50 p-3 rounded-2xl border border-gray-800 cursor-pointer hover:bg-gray-800 transition-all text-center group">
                 <p className="text-[8px] font-black text-gray-500 uppercase italic">{mes}</p>
                 <p className="text-sm font-black text-[#D4A373] group-hover:scale-110 transition-transform italic">R$ {sumMonth}</p>
                 <p className={`text-[7px] font-bold uppercase mt-1 tracking-tighter italic ${metAttained ? 'text-green-500' : 'text-gray-600'}`}>
-                   Meta R$ {metaMensalGrupo}
+                   Meta R$ {metaMonth}
                 </p>
                 {/* MENSAGEM DE META ATINGIDA */}
                 {metAttained && (
@@ -309,14 +303,14 @@ const App = () => {
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20 italic">
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Estrutura Familiar</h2>
+          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4 italic">Estrutura Familiar</h2>
           {gruposDef.map((g, gIdx) => (
             <div key={gIdx} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
               <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-5 flex justify-between items-center hover:bg-gray-50 transition-all">
                 <div className="text-left">
                   <h2 className="text-sm font-black text-gray-800 uppercase tracking-tighter italic">{g.titulo}</h2>
                   <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest italic tracking-tighter">
-                    {g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtual)).length} de {g.nomes.length} PAGOS EM {mesAtual.toUpperCase()}
+                    {g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtual)).length} de {g.nomes.length} QUITADOS NO MÊS
                   </p>
                 </div>
                 <span className="text-[#D4A373] font-black">{expandedGrupo === gIdx ? '−' : '+'}</span>
@@ -326,10 +320,14 @@ const App = () => {
                   {g.nomes.map(nome => {
                     const m = membros.find(x => x.nome === nome);
                     const pagoMembroTotal = m ? historico.filter(h => h.membro_id === m.id).reduce((acc, h) => acc + Number(h.valor), 0) : 0;
+                    const metaMembro = getMetaInd(nome);
                     return (
                       <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="bg-[#FDFCF0]/50 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-white border transition-all group">
                         <span className="font-black text-[10px] uppercase text-gray-700 group-hover:text-green-700 italic">{nome}</span>
-                        <span className="text-[10px] font-black text-green-600 italic">R$ {pagoMembroTotal}</span>
+                        <div className="flex items-center gap-3 italic">
+                          <span className="text-[10px] font-black text-green-600">R$ {pagoMembroTotal}</span>
+                          <div className={`h-1.5 w-1.5 rounded-full ${metaMembro-pagoMembroTotal <= 0 ? 'bg-green-500' : 'bg-red-400'}`}></div>
+                        </div>
                       </div>
                     );
                   })}
@@ -338,22 +336,20 @@ const App = () => {
             </div>
           ))}
         </div>
-
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Saídas de Caixa</h2>
+          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4 italic">Saídas de Caixa</h2>
           <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100 min-h-[150px]">
             {saidas.map(s => (
               <div key={s.id} className="mb-4 last:mb-0 border-b border-gray-50 pb-4 last:border-0 italic">
                 <div className="flex justify-between items-start mb-1">
-                   <span className="text-[8px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-tighter">{s.mes}</span>
+                   <span className="text-[8px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-tighter italic">{s.mes}</span>
                    <span className="text-xs font-black text-red-600 italic">- R$ {s.valor}</span>
                 </div>
-                <p className="text-[10px] font-bold text-gray-700 leading-snug">{s.descricao}</p>
+                <p className="text-[10px] font-bold text-gray-700 leading-snug italic">{s.descricao}</p>
               </div>
             ))}
           </div>
         </div>
-
         <div className="space-y-4">
           <h2 className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-4 italic">Extratos Bancários</h2>
           <div className="bg-blue-50/50 rounded-[40px] p-6 shadow-sm border border-blue-100 min-h-[150px]">
@@ -367,7 +363,7 @@ const App = () => {
         </div>
       </div>
 
-      <footer className="mt-20 text-center pb-20 pt-10 border-t border-dashed border-gray-200">
+      <footer className="mt-20 text-center pb-20 pt-10 border-t border-dashed border-gray-200 italic">
         <input type="password" placeholder="Admin" className="p-3 border rounded-2xl text-xs bg-white shadow-sm focus:outline-none" onChange={e => setSenha(e.target.value)} />
         <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-black transition-colors italic">Acessar Painel</button>
       </footer>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 
-// Inicialização estável
+// Inicialização segura do ecossistema
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -113,7 +113,6 @@ const App = () => {
     const pagsMes = historico.filter(p => p.mes === mesDb);
     const arrecMes = pagsMes.reduce((acc, p) => acc + Number(p.valor), 0);
     const saidaMes = saidas.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
-    // Lógica para contar familiares únicos que pagaram no mês selecionado
     const pagantesUnicosCount = new Set(pagsMes.map(p => p.membro_id)).size;
 
     return (
@@ -125,7 +124,6 @@ const App = () => {
             <div className="text-left italic">
               <p className="text-[10px] text-gray-500 uppercase italic">Saldo Período</p>
               <p className="text-2xl font-black text-green-500 italic">R$ {(arrecMes - saidaMes).toLocaleString('pt-BR')}</p>
-              {/* CONTADOR DE ADESÃO RESTAURADO */}
               <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1 tracking-tighter italic">
                 {pagantesUnicosCount} de 27 pagaram
               </p>
@@ -264,6 +262,16 @@ const App = () => {
   // --- RENDER PRINCIPAL ---
   return (
     <div className="min-h-screen bg-[#0B0C10] p-4 md:p-8 font-sans text-white italic">
+      {/* NOVO CABEÇALHO PERSONALIZADO */}
+      <header className="text-center mb-8 pt-4 italic">
+        <h1 className="text-3xl md:text-5xl font-black text-[#D4A373] uppercase tracking-tighter italic mb-2">
+          FAMILIA DA ALEGRIA
+        </h1>
+        <p className="text-xs md:text-sm font-black tracking-[0.3em] uppercase italic">
+          <span className="text-[#22c55e]">NATAL</span> <span className="text-gray-400">BRAGANÇA CITY</span>
+        </p>
+      </header>
+
       <div className="max-w-4xl mx-auto bg-[#121418] rounded-[40px] p-6 md:p-8 shadow-2xl border border-gray-800 mb-8 italic">
         <div className="flex flex-col md:flex-row justify-between gap-6 mb-8 italic">
           <div className="flex-1 italic">

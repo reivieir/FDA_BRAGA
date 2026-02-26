@@ -33,7 +33,7 @@ const App = () => {
 
   const meses = ["Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
   
-  // REGRAS DE NEGÓCIO
+  // REGRAS DE NEGÓCIO CALIBRADAS
   const getMetaMensal = (mes: string) => mes === "Fevereiro" ? 1590 : 1850;
   const getMetaInd = (nome: string) => nome === 'Pablo' ? 330 : 760;
   const metaGlobalBragança = 20090;
@@ -58,7 +58,7 @@ const App = () => {
     } catch (e) { console.error(e); }
   };
 
-  // --- FUNÇÕES DE AÇÃO ---
+  // --- FUNÇÕES DE ADMIN ---
   const handleUpload = async () => {
     if (!fileToUpload || !nomeDoc) return alert("Preencha nome e arquivo!");
     const fileName = `${Date.now()}_${fileToUpload.name.replace(/\s/g, '_')}`;
@@ -104,13 +104,12 @@ const App = () => {
   // --- RENDERS CONDICIONAIS ---
   if (selectedMonth) {
     const pagsMes = historico.filter(p => p.mes === selectedMonth);
-    const arrecadadoTotalMes = pagsMes.reduce((acc, p) => acc + Number(p.valor), 0);
-    const gastoNoMes = saidas.filter(s => s.mes === selectedMonth).reduce((acc, s) => acc + Number(s.valor), 0);
-    const pagantesUnicos = new Set(pagsMes.map(p => p.membro_id)).size;
-    const currentMeta = getMetaMensal(selectedMonth);
+    const arrecMes = pagsMes.reduce((acc, p) => acc + Number(p.valor), 0);
+    const saidaMes = saidas.filter(s => s.mes === selectedMonth).reduce((acc, s) => acc + Number(s.valor), 0);
+    const pagantesCount = new Set(pagsMes.map(p => p.membro_id)).size;
 
     return (
-      <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans">
+      <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans text-gray-800">
         <button onClick={() => setSelectedMonth(null)} className="mb-8 font-black text-[#D4A373] uppercase text-xs">← Voltar</button>
         <div className="max-w-xl mx-auto space-y-6">
           <div className="bg-black text-white p-8 rounded-[40px] shadow-xl border-b-8 border-red-500 text-center italic">
@@ -118,19 +117,19 @@ const App = () => {
             <div className="mt-4 border-t border-gray-800 pt-4 flex justify-between items-end">
               <div className="text-left">
                 <p className="text-[10px] text-gray-500 uppercase">Saldo Real do Mês</p>
-                <p className="text-2xl font-black text-green-500 italic">R$ {(arrecadadoTotalMes - gastoNoMes).toLocaleString('pt-BR')}</p>
-                <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1">{pagantesUnicos} de 27 pagaram</p>
+                <p className="text-2xl font-black text-green-500 italic">R$ {(arrecMes - saidaMes).toLocaleString('pt-BR')}</p>
+                <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1">{pagantesCount} de 27 pagaram</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] text-gray-500 uppercase">Meta Fixa</p>
-                <p className="text-sm font-bold text-gray-400">R$ {currentMeta}</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest">Saída Mês: R$ {saidaMes}</p>
+                <p className="text-sm font-bold text-gray-400">Meta: R$ {getMetaMensal(selectedMonth)}</p>
               </div>
             </div>
           </div>
           <div className="space-y-2">
             {pagsMes.map(p => (
               <div key={p.id} className="bg-white p-4 rounded-2xl flex justify-between border italic">
-                <span className="font-black text-gray-700 uppercase text-xs italic">{p.membros?.nome}</span>
+                <span className="font-black text-gray-700 uppercase text-xs">{p.membros?.nome}</span>
                 <span className="font-black text-green-600 text-xs">R$ {p.valor}</span>
               </div>
             ))}
@@ -146,23 +145,20 @@ const App = () => {
     const pagouMes = pags.some(p => p.mes === mesAtual);
     const statusText = pagouMes ? "✨ Parabens! Até que enfim pagou" : diaDoMes > 15 ? "⚠️ Paga o que deve caloteiro" : "⏳ Aguardando Pix até dia 15";
     const statusColor = pagouMes ? 'bg-green-100 text-green-700' : diaDoMes > 15 ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-500';
-    
     return (
-      <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans">
+      <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans text-gray-800">
         <button onClick={() => setSelectedMembroId(null)} className="mb-8 font-black text-[#D4A373] uppercase text-xs">← Voltar</button>
         <div className="max-w-xl mx-auto bg-white p-8 rounded-[40px] shadow-xl border-b-8 border-green-700">
           <h2 className="text-3xl font-black italic uppercase text-gray-800 tracking-tighter">{m?.nome}</h2>
-          <div className={`mt-4 p-4 rounded-2xl text-center font-black uppercase text-xs italic ${statusColor}`}>
-            {statusText}
-          </div>
-          <div className="flex justify-between mt-8 text-sm font-bold italic">
+          <div className={`mt-4 p-4 rounded-2xl text-center font-black uppercase text-xs italic ${statusColor}`}>{statusText}</div>
+          <div className="flex justify-between mt-8 text-sm font-bold">
             <span className="text-green-600 font-black text-xl italic">R$ {calcPago(selectedMembroId)}</span>
-            <span className="text-gray-400 pt-2 uppercase italic text-xs tracking-tighter">Meta Natal R$ {getMetaInd(m?.nome || '')}</span>
+            <span className="text-gray-400 pt-2 uppercase text-xs">Meta Natal R$ {getMetaInd(m?.nome || '')}</span>
           </div>
           <div className="mt-8 space-y-3">
             {pags.map(p => (
-              <div key={p.id} className="flex justify-between p-4 bg-gray-50 rounded-2xl border italic">
-                <span className="font-bold text-gray-600 uppercase text-xs tracking-widest">{p.mes}</span>
+              <div key={p.id} className="flex justify-between p-4 bg-gray-50 rounded-2xl border italic text-xs">
+                <span className="font-bold text-gray-600 uppercase">{p.mes}</span>
                 <span className="font-black text-green-600">R$ {p.valor}</span>
               </div>
             ))}
@@ -175,7 +171,7 @@ const App = () => {
   if (isAdmin) {
     return (
       <div className="p-4 bg-gray-100 min-h-screen font-sans pb-20 text-gray-800 italic">
-        <div className="flex justify-between items-center mb-6 max-w-2xl mx-auto italic">
+        <div className="flex justify-between items-center mb-6 max-w-2xl mx-auto">
            <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold text-xs uppercase tracking-widest">← Site</button>
            <select className="p-2 border rounded-xl text-xs font-bold bg-white" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
              {meses.map(m => <option key={m} value={m}>{m}</option>)}
@@ -183,7 +179,7 @@ const App = () => {
         </div>
         <div className="space-y-6 max-w-2xl mx-auto">
           <div className="bg-blue-900 text-white p-6 rounded-3xl shadow-lg border-b-4 border-blue-400 italic">
-            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest italic">1. Auditoria (Documentos)</h2>
+            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest">1. Auditoria (Documentos)</h2>
             <div className="flex gap-2 mb-4">
               <input type="text" placeholder="Nome do arquivo" className="flex-1 p-3 rounded-xl text-black text-xs" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
               <input type="file" className="w-24 text-[8px] pt-3" onChange={e => setFileToUpload(e.target.files?.[0] || null)} />
@@ -191,7 +187,7 @@ const App = () => {
             </div>
             <div className="space-y-2 border-t border-blue-800 pt-3">
               {docs.map(d => (
-                <div key={d.id} className="flex justify-between items-center bg-blue-800/30 p-2 rounded-lg text-[9px]">
+                <div key={d.id} className="flex justify-between items-center bg-blue-800/30 p-2 rounded-lg text-[9px] italic">
                   <span>{d.mes}: {d.nome_exibicao}</span>
                   <button onClick={() => excluirDoc(d.id, d.url_arquivo)} className="text-red-400 font-black">X</button>
                 </div>
@@ -200,16 +196,14 @@ const App = () => {
           </div>
           <div className="bg-black text-white p-6 rounded-3xl shadow-lg border-b-4 border-red-500 italic">
             <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest">2. Lançar Gasto Bragança City</h2>
-            <div className="space-y-3">
-              <input type="text" placeholder="Descrição" className="w-full p-3 rounded-xl text-black text-sm" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
-              <div className="flex gap-2">
+            <input type="text" placeholder="Descrição" className="w-full p-3 rounded-xl text-black text-sm mb-3" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
+            <div className="flex gap-2">
                 <input type="number" placeholder="R$" className="w-1/2 p-3 rounded-xl text-black text-sm font-bold" value={valorSaida} onChange={e => setValorSaida(e.target.value)} />
                 <button onClick={lancarSaida} className="w-1/2 bg-red-600 font-black rounded-xl text-xs uppercase italic">Registrar</button>
-              </div>
             </div>
           </div>
           {gruposDef.map((g, idx) => (
-            <div key={idx} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-200 italic">
+            <div key={idx} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-200">
               <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">{g.titulo}</h2>
               <select className="w-full p-3 border rounded-xl mb-4 bg-gray-50 text-sm font-bold" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
                 <option value="Todos">Lançar Novo PIX</option>
@@ -223,15 +217,15 @@ const App = () => {
                     return (
                       <div key={m.id} className="flex items-center gap-2 border-t pt-2 border-gray-50">
                         <span className="text-[10px] font-black w-24 truncate uppercase italic">{m.nome}</span>
-                        <input type="number" className="flex-1 p-2 border rounded-lg text-xs font-bold" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
-                        <button onClick={() => lancarPagamento(m.id, valoresLote[m.id])} className="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px] font-black italic">OK</button>
+                        <input type="number" className="flex-1 p-2 border rounded-lg text-xs" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
+                        <button onClick={() => lancarPagamento(m.id, valoresLote[m.id])} className="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px] font-black">OK</button>
                       </div>
                     );
                   } else {
                     return historico.filter(h => h.membro_id === m.id).map(p => (
                       <div key={p.id} className="flex justify-between items-center p-3 bg-red-50/30 rounded-xl border border-red-100 italic">
                         <span className="text-[10px] font-bold">{p.mes}: R$ {p.valor}</span>
-                        <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-red-500 font-black text-[10px] uppercase italic">Excluir</button>
+                        <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-red-500 font-black text-[10px] uppercase">Excluir</button>
                       </div>
                     ));
                   }
@@ -239,12 +233,12 @@ const App = () => {
               </div>
             </div>
           ))}
-          <div className="bg-white p-5 rounded-3xl border border-red-200 italic">
+          <div className="bg-white p-5 rounded-3xl border border-red-200">
             <h2 className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-3 italic">3. Histórico de Gastos (Excluir)</h2>
             {saidas.map(s => (
-              <div key={s.id} className="flex justify-between items-center p-3 border-b last:border-0 text-[10px]">
+              <div key={s.id} className="flex justify-between items-center p-3 border-b last:border-0 text-[10px] italic">
                 <span className="flex-1"><b>{s.descricao}</b> ({s.mes})</span>
-                <span className="text-red-500 font-black mr-4 italic">R$ {s.valor}</span>
+                <span className="text-red-500 font-black mr-4">R$ {s.valor}</span>
                 <button onClick={() => excluirItem(s.id, 'saidas_caixa')} className="text-red-500 font-black">X</button>
               </div>
             ))}
@@ -254,7 +248,7 @@ const App = () => {
     );
   }
 
-  // --- RENDER PRINCIPAL (DESIGN DO PRINT) ---
+  // --- RENDER PRINCIPAL (DESIGN PREMIUM) ---
   return (
     <div className="min-h-screen bg-[#0B0C10] p-4 md:p-8 font-sans text-white">
       {/* CABEÇALHO DASHBOARD */}
@@ -270,7 +264,6 @@ const App = () => {
           </div>
         </div>
 
-        {/* BARRA DE PROGRESSO */}
         <div className="mb-10">
            <div className="flex justify-between items-end mb-2">
               <div>
@@ -278,17 +271,16 @@ const App = () => {
                 <p className="text-2xl font-black italic">R$ {metaGlobalBragança.toLocaleString('pt-BR')}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] text-gray-500 font-black uppercase italic tracking-widest">BR 2.090</p>
-                <p className="text-2xl font-black text-[#22c55e] italic">{( (totalArrecadado/metaGlobalBragança)*100 ).toFixed(1)}%</p>
+                <p className="text-[10px] text-gray-500 font-black uppercase italic">{( (totalArrecadado/metaGlobalBragança)*100 ).toFixed(1)}%</p>
               </div>
            </div>
            <div className="w-full bg-[#1A1D23] h-4 rounded-full overflow-hidden border border-gray-800">
-              <div className="bg-[#22c55e] h-full transition-all duration-1000 shadow-[0_0_15px_rgba(34,197,94,0.3)]" style={{ width: `${(totalArrecadado/metaGlobalBragança)*100}%` }}></div>
+              <div className="bg-[#22c55e] h-full transition-all duration-1000" style={{ width: `${(totalArrecadado/metaGlobalBragança)*100}%` }}></div>
            </div>
-           <p className="text-[9px] text-gray-600 font-black uppercase mt-2 italic tracking-tighter">PERCENTUAL ATINGIDO:</p>
+           <p className="text-[9px] text-gray-600 font-black uppercase mt-2 italic">PERCENTUAL ATINGIDO:</p>
         </div>
 
-        {/* TABELA EVOLUÇÃO */}
+        {/* TABELA EVOLUÇÃO (NOVA COLUNA SAÍDA) */}
         <div className="mt-12">
            <h2 className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-6 italic">EVOLUÇÃO DA ARRECADAÇÃO MENSAL</h2>
            <div className="overflow-x-auto">
@@ -298,6 +290,7 @@ const App = () => {
                    <th className="pb-4">MÊS</th>
                    <th className="pb-4">META (R$)</th>
                    <th className="pb-4">ARRECADADO (R$)</th>
+                   <th className="pb-4 text-red-500">SAÍDA (R$)</th> {/* Coluna Saída */}
                    <th className="pb-4">% META</th>
                    <th className="pb-4">STATUS</th>
                  </tr>
@@ -306,6 +299,7 @@ const App = () => {
                  {meses.map(mes => {
                    const arrec = historico.filter(h => h.mes === mes).reduce((acc, h) => acc + Number(h.valor), 0);
                    const meta = getMetaMensal(mes);
+                   const saidaMes = saidas.filter(s => s.mes === mes).reduce((acc, s) => acc + Number(s.valor), 0);
                    const perc = ((arrec/meta)*100).toFixed(0);
                    const isMet = arrec >= meta;
                    
@@ -314,6 +308,7 @@ const App = () => {
                        <td className="py-5 text-gray-300 group-hover:text-white">{mes}</td>
                        <td className="py-5 text-gray-300">R$ {meta}</td>
                        <td className="py-5 text-gray-300">{arrec > 0 ? `R$ ${arrec}` : '—'}</td>
+                       <td className="py-5 text-red-400">{saidaMes > 0 ? `R$ ${saidaMes}` : '—'}</td> {/* Valor Saída */}
                        <td className={`py-5 ${isMet ? 'text-[#22c55e]' : 'text-gray-600'}`}>{arrec > 0 ? `${perc}%` : '—'}</td>
                        <td className="py-5">
                          {isMet ? (
@@ -321,13 +316,9 @@ const App = () => {
                              <span className="w-4 h-4 border border-[#22c55e] rounded-full flex items-center justify-center">✓</span> Meta Atingida
                            </div>
                          ) : arrec > 0 ? (
-                           <div className="flex items-center gap-2 text-orange-500 text-[9px] uppercase italic">
-                             <span className="text-[14px]">⌛</span> Em andamento
-                           </div>
+                           <div className="flex items-center gap-2 text-orange-500 text-[9px] uppercase italic">⌛ Em andamento</div>
                          ) : (
-                           <div className="flex items-center gap-2 text-gray-600 text-[9px] uppercase italic">
-                             <span className="text-[14px]">⌛</span> Previsto
-                           </div>
+                           <div className="flex items-center gap-2 text-gray-600 text-[9px] uppercase italic">⌛ Previsto</div>
                          )}
                        </td>
                      </tr>
@@ -339,17 +330,17 @@ const App = () => {
         </div>
       </div>
 
-      {/* ESTRUTURA POR GRUPO (ABAIXO DO CABEÇALHO) */}
+      {/* ESTRUTURA POR GRUPO */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 pb-24 italic">
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-4">Estrutura Familiar</h2>
+          <h2 className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-4 italic">Estrutura Familiar</h2>
           {gruposDef.map((g, gIdx) => (
-            <div key={gIdx} className="bg-[#121418] rounded-3xl shadow-sm border border-gray-800 overflow-hidden">
+            <div key={gIdx} className="bg-[#121418] rounded-3xl border border-gray-800 overflow-hidden shadow-sm">
               <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-5 flex justify-between items-center hover:bg-gray-800 transition-all">
                 <div className="text-left">
-                  <h2 className="text-sm font-black text-gray-300 uppercase tracking-tighter italic">{g.titulo}</h2>
+                  <h2 className="text-sm font-black text-gray-300 uppercase tracking-tighter">{g.titulo}</h2>
                   <p className="text-[8px] font-black text-gray-600 uppercase tracking-widest mt-1">
-                    {g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtual)).length} de {g.nomes.length} QUITADOS NO MÊS
+                    {g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtualBr.charAt(0).toUpperCase() + mesAtualBr.slice(1))).length} de {g.nomes.length} QUITADOS NO MÊS
                   </p>
                 </div>
                 <span className="text-[#D4A373] font-black">{expandedGrupo === gIdx ? '−' : '+'}</span>
@@ -363,9 +354,9 @@ const App = () => {
                     return (
                       <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="bg-[#1A1D23] p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-gray-800 border border-gray-800 transition-all group">
                         <span className="font-black text-[10px] uppercase text-gray-500 group-hover:text-[#D4A373]">{nome}</span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-black text-[#22c55e] italic">R$ {pagoMembro}</span>
-                          <div className={`h-1.5 w-1.5 rounded-full ${pagoMembro >= metaMembro ? 'bg-[#22c55e] shadow-[0_0_8px_#22c55e]' : 'bg-red-900'}`}></div>
+                        <div className="flex items-center gap-3 italic">
+                          <span className="text-[10px] font-black text-[#22c55e]">R$ {pagoMembro}</span>
+                          <div className={`h-1.5 w-1.5 rounded-full ${pagoMembro >= metaMembro ? 'bg-[#22c55e]' : 'bg-red-900'}`}></div>
                         </div>
                       </div>
                     );
@@ -377,13 +368,13 @@ const App = () => {
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-4">Saídas de Caixa</h2>
-          <div className="bg-[#121418] rounded-[40px] p-8 shadow-sm border border-gray-800 min-h-[150px]">
+          <h2 className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-4 italic">Saídas Detalhadas</h2>
+          <div className="bg-[#121418] rounded-[40px] p-8 border border-gray-800 min-h-[150px]">
             {saidas.map(s => (
-              <div key={s.id} className="mb-4 last:mb-0 border-b border-gray-800 pb-4 last:border-0 italic">
-                <div className="flex justify-between items-start mb-1">
-                   <span className="text-[8px] font-black bg-red-900/30 text-red-500 px-2 py-0.5 rounded-full uppercase tracking-tighter">{s.mes}</span>
-                   <span className="text-xs font-black text-red-500">- R$ {s.valor}</span>
+              <div key={s.id} className="mb-4 border-b border-gray-800 pb-4 last:border-0 italic">
+                <div className="flex justify-between items-start mb-1 text-[8px] font-black italic">
+                   <span className="bg-red-900/30 text-red-500 px-2 py-0.5 rounded-full uppercase">{s.mes}</span>
+                   <span className="text-red-500 text-xs italic">- R$ {s.valor}</span>
                 </div>
                 <p className="text-[10px] font-bold text-gray-400 leading-snug">{s.descricao}</p>
               </div>
@@ -392,21 +383,21 @@ const App = () => {
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-blue-900 uppercase tracking-widest ml-4">Extratos Bancários</h2>
-          <div className="bg-blue-950/10 rounded-[40px] p-6 shadow-sm border border-blue-900/30 min-h-[150px]">
+          <h2 className="text-[10px] font-black text-blue-900 uppercase tracking-widest ml-4 italic">Depósitos (Links)</h2>
+          <div className="bg-blue-950/10 rounded-[40px] p-6 border border-blue-900/30 min-h-[150px] italic">
             {docs.map(d => (
-              <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 mb-3 bg-[#121418] rounded-2xl shadow-sm border border-gray-800 hover:bg-blue-900/20 group transition-all italic">
-                <span className="text-[10px] font-black text-gray-500 uppercase group-hover:text-white tracking-tighter">{d.nome_exibicao}</span>
-                <span className="text-blue-900 font-black group-hover:text-blue-400">↓</span>
+              <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 mb-3 bg-[#121418] rounded-2xl border border-gray-800 hover:bg-blue-900/20 group transition-all">
+                <span className="text-[10px] font-black text-gray-500 uppercase group-hover:text-white">{d.nome_exibicao}</span>
+                <span className="text-blue-900 font-black italic">↓</span>
               </a>
             ))}
           </div>
         </div>
       </div>
 
-      <footer className="mt-10 text-center pb-20 pt-10 border-t border-dashed border-gray-800 italic">
+      <footer className="mt-10 text-center pb-20 pt-10 border-t border-dashed border-gray-800">
         <input type="password" placeholder="Admin" className="p-3 border border-gray-800 rounded-2xl text-xs bg-[#121418] text-white focus:outline-none" onChange={e => setSenha(e.target.value)} />
-        <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-3 text-[10px] font-black text-gray-600 uppercase tracking-widest hover:text-white transition-colors">Painel Admin</button>
+        <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-3 text-[10px] font-black text-gray-600 uppercase tracking-widest hover:text-white transition-colors italic">PAINEL AXIOCRATA</button>
       </footer>
     </div>
   );

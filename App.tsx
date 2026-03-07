@@ -398,7 +398,7 @@ const App = () => {
 
       <footer className="mt-6 text-center pb-20 pt-6 border-t border-dashed border-gray-800 italic">
         <input type="password" placeholder="Axiocrata" className="p-2 border border-gray-800 rounded-xl text-[10px] bg-[#121418] text-white focus:outline-none w-24 italic" onChange={e => setSenha(e.target.value)} />
-        <button onClick={() => senha === 'FDA2026' && setIsAdmin(true)} className="ml-2 text-[9px] font-black text-gray-600 uppercase tracking-widest italic">Acessar Admin</button>
+        <button onClick={() => senha === '041252' && setIsAdmin(true)} className="ml-2 text-[9px] font-black text-gray-600 uppercase tracking-widest italic">Acessar Admin</button>
       </footer>
     </div>
   );

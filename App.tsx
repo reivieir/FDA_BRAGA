@@ -40,9 +40,9 @@ const App = () => {
   const [mesGlobal, setMesGlobal] = useState(mesAtualFull);
 
   // REGRAS FINANCEIRAS
-  const getMetaMensal = (mes: string) => (mes === "Fevereiro" || mes === "Fev") ? 1590 : 1850;
-  const getMetaInd = (nome: string) => nome === 'Pablo' ? 330 : 760;
-  const metaGlobalBragança = 20090;
+  const getMetaMensal = (mes: string) => (mes === "Fevereiro" || mes === "Fev") ? 1590 : 1855;
+  const getMetaInd = (nome: string) => nome === 'Pablo' ? 380 : 760;
+  const metaGlobalBragança = 20140;
 
   const gruposDef = [
     { titulo: "Grupo Adriana", nomes: ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"] },

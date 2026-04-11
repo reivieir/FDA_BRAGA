@@ -44,7 +44,7 @@
         .coluna { width: 50px; background-color: #5c6bc0; display: flex; align-items: flex-start; justify-content: center; color: white; font-weight: bold; padding-top: 5px; border-radius: 4px 4px 0 0; }
         .rotulo { margin-top: 10px; font-weight: bold; }
 
-        /* DINHEIRO - IMAGENS CORRIGIDAS */
+        /* DINHEIRO - IMAGENS CORRIGIDAS E REAIS */
         .dinheiro-grupo { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; align-items: center; }
         .img-nota { height: 45px; width: auto; border: 1px solid #ccc; border-radius: 3px; box-shadow: 1px 1px 3px rgba(0,0,0,0.2); object-fit: contain;}
         .img-nota-grande { height: 65px; width: auto; border: 1px solid #ccc; border-radius: 3px; box-shadow: 1px 1px 3px rgba(0,0,0,0.2); object-fit: contain;}
@@ -53,9 +53,11 @@
         .ligar-colunas { display: flex; justify-content: space-between; align-items: center; padding: 0 50px; }
         .coluna-din { display: flex; flex-direction: column; gap: 20px; }
 
-        /* FRUTAS E ESCOLA */
+        /* FRUTAS - GRUPOS DE 10 */
         .cesta { border: 2px solid #8d6e63; background-color: #d7ccc8; padding: 15px; border-radius: 10px; display: flex; flex-wrap: wrap; gap: 8px; width: 300px; margin: 15px auto; }
         .maca { width: 25px; height: 25px; background-color: #e53935; border-radius: 50%; box-shadow: inset -3px -3px 0 rgba(0,0,0,0.2); }
+
+        /* PLANTA BAIXA DA ESCOLA */
         .planta { display: grid; grid-template-columns: 1fr 100px 1fr; gap: 10px; background-color: #eee; padding: 20px; border: 3px solid #999; margin: 20px 0; }
         .sala { padding: 30px 10px; background-color: #fff; border: 2px solid #555; text-align: center; font-weight: bold; border-radius: 5px; }
         .corredor { grid-row: 1 / 4; grid-column: 2; background-color: #e0e0e0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 20px; font-weight: bold; color: #d32f2f; border: 2px dashed #999; }
@@ -67,20 +69,24 @@
         .onibus-lateral::after { content: ''; position: absolute; bottom: -10px; left: 20px; width: 20px; height: 20px; background: #333; border-radius: 50%; box-shadow: 100px 0 0 #333; }
         .janelas { display: flex; gap: 5px; padding: 5px; }
         .janela { width: 25px; height: 20px; background-color: #81d4fa; border: 1px solid #333; }
+        
         .onibus-frente { width: 60px; height: 60px; background-color: #ffca28; border-radius: 10px 10px 0 0; position: relative; border: 2px solid #333; display: flex; flex-direction: column; align-items: center; padding-top: 5px; }
         .parabrisa { width: 50px; height: 25px; background-color: #81d4fa; border: 1px solid #333; }
         .farois { display: flex; justify-content: space-between; width: 50px; margin-top: 10px; }
         .farol { width: 10px; height: 10px; background-color: #fff; border-radius: 50%; border: 1px solid #333; }
+        
         .onibus-cima { width: 160px; height: 50px; background-color: #ffca28; border: 2px solid #333; display: flex; justify-content: space-around; align-items: center; }
         .ar-cond { width: 30px; height: 30px; background-color: #ccc; border: 1px solid #333; }
 
-        /* GRID CONTINHAS E BOTÃO */
+        /* GRID CONTINHAS */
         .continhas-flex { display: flex; gap: 40px; flex-wrap: wrap; margin-top: 10px;}
         .grid-mat { border-collapse: collapse; text-align: center; font-size: 20px; }
         .grid-mat th { border: 2px solid #333; padding: 5px 15px; background-color: #ffcc80; }
         .grid-mat td { border-left: 2px solid #333; border-right: 2px solid #333; padding: 5px 15px; }
         .grid-mat .linha-soma { border-bottom: 3px solid #333; }
         .grid-mat .resultado { height: 40px; border-bottom: 2px solid #333; }
+
+        /* BOTÃO */
         .btn-print { display: block; width: 250px; margin: 40px auto 0; padding: 15px; background-color: #00897b; color: white; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-align: center; }
         .btn-print:hover { background-color: #00695c; }
         @media print { body { background-color: #fff; padding: 0; } .container { box-shadow: none; border: none; padding: 0; } .btn-print { display: none; } .quebra { page-break-before: always; } }
@@ -251,12 +257,12 @@
     <div class="questao">
         <p><strong>A) Conhecendo as Cédulas do Real:</strong></p>
         <div class="dinheiro-grupo">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/2_Brazil_real_Second_Obverse.jpg/400px-2_Brazil_real_Second_Obverse.jpg" class="img-nota-grande" alt="2 Reais">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/5_Brazil_real_Second_Obverse.jpg/400px-5_Brazil_real_Second_Obverse.jpg" class="img-nota-grande" alt="5 Reais">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/10_Brazil_real_Second_Obverse.jpg/400px-10_Brazil_real_Second_Obverse.jpg" class="img-nota-grande" alt="10 Reais">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/20_Brazil_real_Second_Obverse.jpg/400px-20_Brazil_real_Second_Obverse.jpg" class="img-nota-grande" alt="20 Reais">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/50_Brazil_real_Second_Obverse.jpg/400px-50_Brazil_real_Second_Obverse.jpg" class="img-nota-grande" alt="50 Reais">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/100_Brazil_real_Second_Obverse.jpg/400px-100_Brazil_real_Second_Obverse.jpg" class="img-nota-grande" alt="100 Reais">
+            <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/2/23/2_reais_frente.jpg&w=200" class="img-nota-grande" alt="2 Reais">
+            <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/5/52/5_reais_frente.jpg&w=200" class="img-nota-grande" alt="5 Reais">
+            <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/8/82/10_reais_frente.jpg&w=200" class="img-nota-grande" alt="10 Reais">
+            <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/d/da/20_reais_frente.jpg&w=200" class="img-nota-grande" alt="20 Reais">
+            <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/f/fb/50_reais_frente.jpg&w=200" class="img-nota-grande" alt="50 Reais">
+            <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/0/00/100_reais_frente.jpg&w=200" class="img-nota-grande" alt="100 Reais">
         </div>
     </div>
 
@@ -266,33 +272,33 @@
             <div class="coluna-din">
                 <div style="border:1px solid #ccc; padding: 10px; text-align: center;">
                     <div class="dinheiro-grupo" style="justify-content: center;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/5_Brazil_real_Second_Obverse.jpg/400px-5_Brazil_real_Second_Obverse.jpg" class="img-nota">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/5_Brazil_real_Second_Obverse.jpg/400px-5_Brazil_real_Second_Obverse.jpg" class="img-nota">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/5_Brazil_real_Second_Obverse.jpg/400px-5_Brazil_real_Second_Obverse.jpg" class="img-nota">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/5_Brazil_real_Second_Obverse.jpg/400px-5_Brazil_real_Second_Obverse.jpg" class="img-nota">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/5/52/5_reais_frente.jpg&w=150" class="img-nota" alt="5 Reais">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/5/52/5_reais_frente.jpg&w=150" class="img-nota" alt="5 Reais">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/5/52/5_reais_frente.jpg&w=150" class="img-nota" alt="5 Reais">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/5/52/5_reais_frente.jpg&w=150" class="img-nota" alt="5 Reais">
                     </div>
                 </div>
                 <div style="border:1px solid #ccc; padding: 10px; text-align: center;">
                     <div class="dinheiro-grupo" style="justify-content: center;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/10_Brazil_real_Second_Obverse.jpg/400px-10_Brazil_real_Second_Obverse.jpg" class="img-nota">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/10_Brazil_real_Second_Obverse.jpg/400px-10_Brazil_real_Second_Obverse.jpg" class="img-nota">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/10_Brazil_real_Second_Obverse.jpg/400px-10_Brazil_real_Second_Obverse.jpg" class="img-nota">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/8/82/10_reais_frente.jpg&w=150" class="img-nota" alt="10 Reais">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/8/82/10_reais_frente.jpg&w=150" class="img-nota" alt="10 Reais">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/8/82/10_reais_frente.jpg&w=150" class="img-nota" alt="10 Reais">
                     </div>
                 </div>
                 <div style="border:1px solid #ccc; padding: 10px; text-align: center;">
                     <div class="dinheiro-grupo" style="justify-content: center;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/2_Brazil_real_Second_Obverse.jpg/400px-2_Brazil_real_Second_Obverse.jpg" class="img-nota">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/2_Brazil_real_Second_Obverse.jpg/400px-2_Brazil_real_Second_Obverse.jpg" class="img-nota">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/2_Brazil_real_Second_Obverse.jpg/400px-2_Brazil_real_Second_Obverse.jpg" class="img-nota">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/2_Brazil_real_Second_Obverse.jpg/400px-2_Brazil_real_Second_Obverse.jpg" class="img-nota">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/2_Brazil_real_Second_Obverse.jpg/400px-2_Brazil_real_Second_Obverse.jpg" class="img-nota">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/2/23/2_reais_frente.jpg&w=150" class="img-nota" alt="2 Reais">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/2/23/2_reais_frente.jpg&w=150" class="img-nota" alt="2 Reais">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/2/23/2_reais_frente.jpg&w=150" class="img-nota" alt="2 Reais">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/2/23/2_reais_frente.jpg&w=150" class="img-nota" alt="2 Reais">
+                        <img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/2/23/2_reais_frente.jpg&w=150" class="img-nota" alt="2 Reais">
                     </div>
                 </div>
             </div>
             <div class="coluna-din" style="text-align: center;">
                 <div style="border:1px solid #ccc; padding: 20px; font-weight:bold; height: 45px; display:flex; align-items:center;">30 REAIS</div>
-                <div style="border:1px solid #ccc; padding: 10px;"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/20_Brazil_real_Second_Obverse.jpg/400px-20_Brazil_real_Second_Obverse.jpg" class="img-nota"></div>
-                <div style="border:1px solid #ccc; padding: 10px;"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/10_Brazil_real_Second_Obverse.jpg/400px-10_Brazil_real_Second_Obverse.jpg" class="img-nota"></div>
+                <div style="border:1px solid #ccc; padding: 10px;"><img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/d/da/20_reais_frente.jpg&w=150" class="img-nota" alt="20 Reais"></div>
+                <div style="border:1px solid #ccc; padding: 10px;"><img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/8/82/10_reais_frente.jpg&w=150" class="img-nota" alt="10 Reais"></div>
             </div>
         </div>
     </div>
@@ -302,17 +308,17 @@
         <div style="display: flex; justify-content: space-between; border: 1px solid #ccc; padding: 10px;">
             <div>
                 <p><strong>Dona Maria:</strong></p>
-                <div class="dinheiro-grupo"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/50_Brazil_real_Second_Obverse.jpg/400px-50_Brazil_real_Second_Obverse.jpg" class="img-nota"><div class="moeda">R$ 1</div><div class="moeda">R$ 1</div></div>
+                <div class="dinheiro-grupo"><img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/f/fb/50_reais_frente.jpg&w=150" class="img-nota" alt="50 Reais"><div class="moeda">R$ 1</div><div class="moeda">R$ 1</div></div>
                 <p>Total: R$ <span class="linha-resposta"></span></p>
             </div>
             <div>
                 <p><strong>Seu Antônio:</strong></p>
-                <div class="dinheiro-grupo"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/20_Brazil_real_Second_Obverse.jpg/400px-20_Brazil_real_Second_Obverse.jpg" class="img-nota"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/10_Brazil_real_Second_Obverse.jpg/400px-10_Brazil_real_Second_Obverse.jpg" class="img-nota"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/2_Brazil_real_Second_Obverse.jpg/400px-2_Brazil_real_Second_Obverse.jpg" class="img-nota"></div>
+                <div class="dinheiro-grupo"><img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/d/da/20_reais_frente.jpg&w=150" class="img-nota" alt="20 Reais"><img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/8/82/10_reais_frente.jpg&w=150" class="img-nota" alt="10 Reais"><img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/2/23/2_reais_frente.jpg&w=150" class="img-nota" alt="2 Reais"></div>
                 <p>Total: R$ <span class="linha-resposta"></span></p>
             </div>
             <div>
                 <p><strong>Aninha:</strong></p>
-                <div class="dinheiro-grupo"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/5_Brazil_real_Second_Obverse.jpg/400px-5_Brazil_real_Second_Obverse.jpg" class="img-nota"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/5_Brazil_real_Second_Obverse.jpg/400px-5_Brazil_real_Second_Obverse.jpg" class="img-nota"></div>
+                <div class="dinheiro-grupo"><img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/5/52/5_reais_frente.jpg&w=150" class="img-nota" alt="5 Reais"><img src="https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/pt/5/52/5_reais_frente.jpg&w=150" class="img-nota" alt="5 Reais"></div>
                 <p>Total: R$ <span class="linha-resposta"></span></p>
             </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
+import './style.css'; // <-- IMPORTAÇÃO DO CSS ADICIONADA AQUI
 
 // Inicialização segura do ecossistema
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -107,7 +108,7 @@ const App = () => {
 
   // --- RENDERS ---
 
-  // TELA 1: DETALHE DO MÊS (COM CONTADOR "X de 27")
+  // TELA 1: DETALHE DO MÊS
   if (selectedMonth) {
     const mesDb = mesesMap[selectedMonth] || selectedMonth;
     const pagsMes = historico.filter(p => p.mes === mesDb);
@@ -262,7 +263,6 @@ const App = () => {
   // --- RENDER PRINCIPAL ---
   return (
     <div className="min-h-screen bg-[#0B0C10] p-4 md:p-8 font-sans text-white italic">
-      {/* NOVO CABEÇALHO PERSONALIZADO */}
       <header className="text-center mb-8 pt-4 italic">
         <h1 className="text-3xl md:text-5xl font-black text-[#D4A373] uppercase tracking-tighter italic mb-2">
           FAMILIA DA ALEGRIA

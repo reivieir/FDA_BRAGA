@@ -417,6 +417,6 @@ const App = () => {
   );
 };
 
-const container = document.getElementById('root');
+/*const container = document.getElementById('root');
 if (container) { createRoot(container).render(<App />); }
-export default App;
+*/export default App;

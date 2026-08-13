@@ -347,7 +347,7 @@ const App = () => {
           </div>
         </div>
 
-       {/* RODAPÉ / ADMIN */}
+        {/* RODAPÉ */}
         <footer className="mt-6 text-center pb-20 pt-6 border-t border-gray-800 italic">
           <input type="password" placeholder="" className="p-2 border border-gray-700 bg-gray-900 text-xs rounded text-white" value={senha} onChange={e => setSenha(e.target.value)} />
           <button onClick={() => senha === '041252' && setIsAdmin(true)} className="ml-2 text-[9px] font-black text-gray-600 uppercase tracking-widest italic">
@@ -358,8 +358,8 @@ const App = () => {
       </div>
     </div>
   );
-};
-export default App;
-              
+}
+
+export default App;              
 
 

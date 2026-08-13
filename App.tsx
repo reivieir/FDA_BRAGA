@@ -297,40 +297,54 @@ const App = () => {
            </div>
         </div>
 
-        <div className="mt-8 italic">
-           <h2 className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-4 italic">EVOLUÇÃO MENSAL</h2>
-           <div className="overflow-x-auto -mx-6 px-6 italic">
-             <table className="w-full text-left border-collapse min-w-[280px] italic">
-               <thead>
-                 <tr className="border-b border-gray-800 text-[8px] text-gray-600 font-black uppercase italic">
-                   <th className="pb-3 italic">MÊS</th>
-                   <th className="pb-3 text-green-500 italic">ARREC.</th>
-                   <th className="pb-3 text-red-500 italic">SAÍDA</th>
-                   <th className="pb-3 text-right italic">STATUS (%)</th>
-                 </tr>
-               </thead>
-               <tbody className="text-[10px] font-bold italic">
-                 {mesesAbbr.map(mesAbbr => {
-                   const mesDb = mesesMap[mesAbbr];
-                   const arrec = historico.filter(h => h.mes === mesDb).reduce((acc, h) => acc + Number(h.valor), 0);
-                   const saidaM = saidas.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
-                   const meta = getMetaMensal(mesDb);
-                   return (
-                     <tr key={mesAbbr} onClick={() => setSelectedMonth(mesAbbr)} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-all cursor-pointer italic">
-                       <td className="py-4 text-gray-300 italic">{mesAbbr}</td>
-                       <td className="py-4 text-green-500 italic">{arrec > 0 ? `R$ ${arrec}` : '—'}</td>
-                       <td className="py-4 text-red-400 italic">{saidaM > 0 ? `R$ ${saidaM}` : '—'}</td>
-                       <td className={`py-4 text-right italic ${arrec >= meta ? 'text-[#22c55e]' : 'text-gray-600'}`}>
-                         {arrec > 0 ? `${((arrec/meta)*100).toFixed(0)}%` : '—'}
-                       </td>
-                     </tr>
-                   );
-                 })}
-               </tbody>
-             </table>
-           </div>
-        </div>
-      </div>
+      <div className="mt-8 italic">
+           <h2 className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-4 italic">EVOLUÇÃO MENSAL</h2>
+           <div className="overflow-x-auto -mx-6 px-6 italic">
+             <table className="w-full text-left border-collapse min-w-[280px] italic">
+               <thead>
+                 <tr className="border-b border-gray-800 text-[8px] text-gray-600 font-black uppercase italic">
+                   <th className="pb-3 italic">MÊS</th>
+                   <th className="pb-3 text-green-500 italic">ARREC.</th>
+                   <th className="pb-3 text-red-500 italic">SAÍDA</th>
+                   <th className="pb-3 text-blue-400 italic">SALDO BANCO</th>
+                   <th className="pb-3 text-right italic">STATUS (%)</th>
+                 </tr>
+               </thead>
+               <tbody className="text-[10px] font-bold italic">
+                 {(() => {
+                   let saldoAcumulado = 0;
+                   
+                   return mesesAbbr.map(mesAbbr => {
+                     const mesDb = mesesMap[mesAbbr];
+                     const arrec = historico.filter(h => h.mes === mesDb).reduce((acc, h) => acc + Number(h.valor), 0);
+                     const saidaM = saidas.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
+                     const meta = getMetaMensal(mesDb);
+                     
+                     saldoAcumulado = saldoAcumulado + arrec - saidaM;
+
+                     return (
+                       <tr key={mesAbbr} onClick={() => setSelectedMonth(mesAbbr)} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-all cursor-pointer italic">
+                         <td className="py-4 text-gray-300 italic">{mesAbbr}</td>
+                         <td className="py-4 text-green-500 italic">
+                           {arrec > 0 ? `R$ ${arrec.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}
+                         </td>
+                         <td className="py-4 text-red-400 italic">
+                           {saidaM > 0 ? `R$ ${saidaM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}
+                         </td>
+                         <td className="py-4 text-blue-400 italic">
+                           R$ {saldoAcumulado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                         </td>
+                         <td className={`py-4 text-right italic ${arrec >= meta ? 'text-[#22c55e]' : 'text-gray-600'}`}>
+                           {arrec > 0 ? `${((arrec/meta)*100).toFixed(0)}%` : '—'}
+                         </td>
+                       </tr>
+                     );
+                   });
+                 })()}
+               </tbody>
+             </table>
+           </div>
+        </div>
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 pb-24 italic">
         <div className="space-y-4 italic">
@@ -397,7 +411,7 @@ const App = () => {
       </div>
 
       <footer className="mt-6 text-center pb-20 pt-6 border-t border-dashed border-gray-800 italic">
-        <input type="password" placeholder="Axiocrata" className="p-2 border border-gray-800 rounded-xl text-[10px] bg-[#121418] text-white focus:outline-none w-24 italic" onChange={e => setSenha(e.target.value)} />
+        <input type="password" placeholder="" className="p-2 border border-gray-800 rounded-xl text-[10px] bg-[#121418] text-white focus:outline-none w-24 italic" onChange={e => setSenha(e.target.value)} />
         <button onClick={() => senha === '041252' && setIsAdmin(true)} className="ml-2 text-[9px] font-black text-gray-600 uppercase tracking-widest italic">Acessar Admin</button>
       </footer>
     </div>

@@ -37,12 +37,15 @@ const App = () => {
 
   const mesAtualBr = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(hoje);
   const mesAtualFull = mesAtualBr.charAt(0).toUpperCase() + mesAtualBr.slice(1);
-  const [mesGlobal, setMesGlobal] = useState(mesAtualFull);
+  
+  // Controle duplo de meses
+  const [mesGlobal, setMesGlobal] = useState(mesAtualFull); // Mês da Parcela
+  const [mesCaixaGlobal, setMesCaixaGlobal] = useState(mesAtualFull); // Mês que entrou no banco
 
   // REGRAS FINANCEIRAS
   const getMetaMensal = (mes: string) => (mes === "Fevereiro" || mes === "Fev") ? 1590 : 1855;
   const getMetaInd = (nome: string) => nome === 'Pablo' ? 380 : 760;
-  const metaGlobalBragança = 19510;
+  const metaGlobalBragança = 20140;
 
   const gruposDef = [
     { titulo: "Grupo Adriana", nomes: ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"] },
@@ -78,13 +81,14 @@ const App = () => {
 
   const lancarPagamento = async (id: number, valor: string) => {
     if (!valor || parseFloat(valor) <= 0) return;
-    await supabase.from('pagamentos_detalhes').insert([{ membro_id: id, valor: parseFloat(valor), mes: mesGlobal }]);
+    // Agora insere tanto o mês da dívida quanto o mês do caixa!
+    await supabase.from('pagamentos_detalhes').insert([{ membro_id: id, valor: parseFloat(valor), mes: mesGlobal, mes_caixa: mesCaixaGlobal }]);
     setValoresLote({ ...valoresLote, [id]: '' }); fetchAll();
   };
 
   const lancarSaida = async () => {
     if (!valorSaida || !descSaida) return;
-    await supabase.from('saidas_caixa').insert([{ valor: parseFloat(valorSaida), mes: mesGlobal, descricao: descSaida }]);
+    await supabase.from('saidas_caixa').insert([{ valor: parseFloat(valorSaida), mes: mesCaixaGlobal, descricao: descSaida }]);
     setValorSaida(''); setDescSaida(''); fetchAll();
   };
 
@@ -107,10 +111,11 @@ const App = () => {
 
   // --- RENDERS ---
 
-  // TELA 1: DETALHE DO MÊS (COM CONTADOR "X de 26")
+  // TELA 1: DETALHE DO MÊS (COM CONTADOR "X de 27")
   if (selectedMonth) {
     const mesDb = mesesMap[selectedMonth] || selectedMonth;
-    const pagsMes = historico.filter(p => p.mes === mesDb);
+    // Filtra pelo caixa (ou pelo mês normal se for registro antigo)
+    const pagsMes = historico.filter(p => (p.mes_caixa || p.mes) === mesDb);
     const arrecMes = pagsMes.reduce((acc, p) => acc + Number(p.valor), 0);
     const saidaMes = saidas.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
     const pagantesUnicosCount = new Set(pagsMes.map(p => p.membro_id)).size;
@@ -125,19 +130,23 @@ const App = () => {
               <p className="text-[10px] text-gray-500 uppercase italic">Saldo Período</p>
               <p className="text-2xl font-black text-green-500 italic">R$ {(arrecMes - saidaMes).toLocaleString('pt-BR')}</p>
               <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1 tracking-tighter italic">
-                {pagantesUnicosCount} de 27 pagaram
+                Entraram {pagantesUnicosCount} depósitos
               </p>
             </div>
             <div className="text-right italic">
               <p className="text-[10px] text-gray-500 uppercase italic">Saída: R$ {saidaMes}</p>
-              <p className="text-sm font-bold text-gray-400 italic">Meta: R$ {getMetaMensal(mesDb)}</p>
+              <p className="text-sm font-bold text-gray-400 italic">Meta Caixa: R$ {getMetaMensal(mesDb)}</p>
             </div>
           </div>
         </div>
         <div className="max-w-xl mx-auto mt-6 space-y-2">
             {pagsMes.map(p => (
-              <div key={p.id} className="bg-white p-4 rounded-2xl flex justify-between border italic shadow-sm">
-                <span className="font-black text-gray-700 uppercase text-xs italic">{p.membros?.nome}</span>
+              <div key={p.id} className="bg-white p-4 rounded-2xl flex justify-between items-center border italic shadow-sm">
+                <div>
+                  <span className="font-black text-gray-700 uppercase text-xs italic block">{p.membros?.nome}</span>
+                  {/* Se for dívida atrasada, mostra um aviso vermelho! */}
+                  {p.mes !== mesDb && <span className="text-[9px] text-red-500 uppercase font-bold italic">Referente à parcela de {p.mes}</span>}
+                </div>
                 <span className="font-black text-green-600 text-xs italic">R$ {p.valor}</span>
               </div>
             ))}
@@ -171,8 +180,11 @@ const App = () => {
           </div>
           <div className="mt-8 space-y-3 italic">
             {pags.map(p => (
-              <div key={p.id} className="flex justify-between p-4 bg-gray-50 rounded-2xl border italic text-xs italic">
-                <span className="font-bold text-gray-600 uppercase italic italic">{p.mes}</span>
+              <div key={p.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border italic text-xs italic">
+                <div className="flex flex-col">
+                  <span className="font-bold text-gray-600 uppercase italic italic">Ref: {p.mes}</span>
+                  {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[8px] text-gray-400 font-bold uppercase italic">Pago em: {p.mes_caixa}</span>}
+                </div>
                 <span className="font-black text-green-600 italic italic">R$ {p.valor}</span>
               </div>
             ))}
@@ -188,10 +200,24 @@ const App = () => {
       <div className="p-4 bg-gray-100 min-h-screen font-sans pb-20 text-gray-800 italic">
         <div className="flex justify-between items-center mb-6 max-w-2xl mx-auto italic">
            <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold text-xs uppercase tracking-widest italic">← Site</button>
-           <select className="p-2 border rounded-xl text-xs font-bold bg-white italic" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
-             {Object.values(mesesMap).map(m => <option key={m} value={m}>{m}</option>)}
-           </select>
+           
+           {/* NOVOS SELETORES DE MÊS DUPLO */}
+           <div className="flex gap-2">
+             <div className="flex flex-col text-right">
+                <span className="text-[7px] text-gray-500 font-black uppercase mb-1">Referente à (Parcela)</span>
+                <select className="p-2 border rounded-xl text-xs font-bold bg-white italic" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
+                  {Object.values(mesesMap).map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+             </div>
+             <div className="flex flex-col text-right">
+                <span className="text-[7px] text-green-600 font-black uppercase mb-1">Caiu na conta em (Caixa)</span>
+                <select className="p-2 border border-green-500 rounded-xl text-xs font-bold bg-white italic" value={mesCaixaGlobal} onChange={e => setMesCaixaGlobal(e.target.value)}>
+                  {Object.values(mesesMap).map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+             </div>
+           </div>
         </div>
+
         <div className="space-y-6 max-w-2xl mx-auto italic">
           <div className="bg-blue-900 text-white p-6 rounded-3xl shadow-lg border-b-4 border-blue-400 italic">
             <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest italic italic">1. Auditoria (Docs)</h2>
@@ -245,8 +271,14 @@ const App = () => {
                   } else {
                     return historico.filter(h => h.membro_id === m.id).map(p => (
                       <div key={p.id} className="flex justify-between items-center p-3 bg-red-50/30 rounded-xl border border-red-100 italic">
-                        <span className="text-[10px] font-bold italic italic">{p.mes}: R$ {p.valor}</span>
-                        <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-red-500 font-black text-[10px] uppercase italic">Excluir</button>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold italic italic">Ref: {p.mes}</span>
+                          {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[8px] text-gray-500 font-bold uppercase italic">Caiu em: {p.mes_caixa}</span>}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-bold text-green-700 italic">R$ {p.valor}</span>
+                          <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-red-500 font-black text-[10px] uppercase italic">Excluir</button>
+                        </div>
                       </div>
                     ));
                   }
@@ -261,23 +293,21 @@ const App = () => {
 
   // --- RENDER PRINCIPAL ---
   
-  // PRÉ-CÁLCULO DA EVOLUÇÃO MENSAL (Isolado para não gerar erro no HTML)
+  // PRÉ-CÁLCULO DA EVOLUÇÃO MENSAL (Usa o mes_caixa para a contabilidade!)
   let saldoAcumuladoLoop = 0;
   const dadosEvolucao = mesesAbbr.map(mesAbbr => {
     const mesDb = mesesMap[mesAbbr];
-    const arrec = historico.filter(h => h.mes === mesDb).reduce((acc, h) => acc + Number(h.valor), 0);
+    // Se o mes_caixa não existir (registros antigos), ele usa o mes da parcela para não quebrar
+    const arrec = historico.filter(h => (h.mes_caixa || h.mes) === mesDb).reduce((acc, h) => acc + Number(h.valor), 0);
     const saidaM = saidas.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
     const meta = getMetaMensal(mesDb);
     
-    // Atualiza o saldo do banco (Saldo Anterior + Arrecadação - Saídas)
     saldoAcumuladoLoop = saldoAcumuladoLoop + arrec - saidaM;
-    
     return { mesAbbr, arrec, saidaM, saldo: saldoAcumuladoLoop, meta };
   });
 
   return (
     <div className="min-h-screen bg-[#0B0C10] p-4 md:p-8 font-sans text-white italic">
-      {/* CABEÇALHO */}
       <header className="text-center mb-8 pt-4 italic">
         <h1 className="text-3xl md:text-5xl font-black text-[#D4A373] uppercase tracking-tighter italic mb-2">
           FAMILIA DA ALEGRIA
@@ -312,7 +342,6 @@ const App = () => {
            </div>
         </div>
 
-        {/* EVOLUÇÃO MENSAL COM NOVA COLUNA SALDO BANCO */}
         <div className="mt-8 italic">
            <h2 className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-4 italic">EVOLUÇÃO MENSAL</h2>
            <div className="overflow-x-auto -mx-6 px-6 italic">

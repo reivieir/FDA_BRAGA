@@ -310,7 +310,7 @@ const App = () => {
                   <th className="pb-3 text-right italic">STATUS (%)</th>
                 </tr>
               </thead>
-              <tbody className="text-[10px] font-bold italic">
+             <tbody className="text-[10px] font-bold italic">
                 {(() => {
                   let saldoAcumulado = 0;
                   
@@ -345,77 +345,19 @@ const App = () => {
             </table>
           </div>
         </div>
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 pb-24 italic">
-        <div className="space-y-4 italic">
-          <h2 className="text-[9px] font-black text-gray-600 uppercase tracking-widest ml-4 italic">Membros e Metas</h2>
-          {gruposDef.map((g, gIdx) => (
-            <div key={gIdx} className="bg-[#121418] rounded-3xl border border-gray-800 overflow-hidden shadow-sm italic">
-              <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-4 flex justify-between items-center hover:bg-gray-800 transition-all italic">
-                <div className="text-left italic">
-                  <h2 className="text-xs font-black text-gray-300 uppercase italic">{g.titulo}</h2>
-                  <p className="text-[7px] font-black text-gray-600 uppercase mt-1 italic">
-                    {g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtualFull)).length} de {g.nomes.length} QUITADOS NO MÊS
-                  </p>
-                </div>
-                <span className="text-[#D4A373] text-sm font-black italic">{expandedGrupo === gIdx ? '−' : '+'}</span>
-              </button>
-              <div className={`transition-all duration-300 ${expandedGrupo === gIdx ? 'max-h-[800px] p-4' : 'max-h-0'} overflow-hidden italic`}>
-                <div className="grid grid-cols-1 gap-2 italic">
-                  {g.nomes.map(nome => {
-                    const m = membros.find(x => x.nome === nome);
-                    const pg = m ? calcPago(m.id) : 0;
-                    const meta = getMetaInd(nome);
-                    return (
-                      <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="bg-[#1A1D23] p-3 rounded-xl flex justify-between items-center border border-gray-800 hover:bg-gray-800 cursor-pointer italic">
-                        <span className="font-black text-[9px] uppercase text-gray-500 italic">{nome}</span>
-                        <div className="flex items-center gap-2 italic">
-                          <span className="text-[9px] font-black text-[#22c55e] italic">R$ {pg}</span>
-                          <div className={`h-1 w-1 rounded-full italic ${pg >= meta ? 'bg-[#22c55e]' : 'bg-red-900'}`}></div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
 
-        <div className="space-y-4 italic">
-          <h2 className="text-[9px] font-black text-blue-900 uppercase tracking-widest ml-4 italic">Auditoria e Extratos</h2>
-          <div className="bg-blue-950/10 rounded-[30px] p-6 border border-blue-900/30 min-h-[120px] italic">
-            {docs.map(d => (
-              <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-3 mb-2 bg-[#121418] rounded-xl border border-gray-800 hover:bg-blue-900/20 transition-all italic">
-                <span className="text-[9px] font-black text-gray-500 uppercase truncate pr-2 italic">{d.nome_exibicao}</span>
-                <span className="text-blue-900 font-black italic">↓</span>
-              </a>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4 italic">
-          <h2 className="text-[9px] font-black text-red-900 uppercase tracking-widest ml-4 italic">Saídas Detalhadas</h2>
-          <div className="bg-[#121418] rounded-[30px] p-6 border border-gray-800 min-h-[120px] italic">
-            {saidas.slice(0, 5).map(s => (
-              <div key={s.id} className="mb-3 border-b border-gray-800 pb-3 last:border-0 italic">
-                <div className="flex justify-between items-start mb-1 text-[7px] font-black italic">
-                   <span className="bg-red-900/30 text-red-500 px-2 py-0.5 rounded-full uppercase italic">{s.mes}</span>
-                   <span className="text-red-500 italic">R$ {s.valor}</span>
-                </div>
-                <p className="text-[9px] font-bold text-gray-400 italic">{s.descricao}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <footer className="mt-6 text-center pb-20 pt-6 border-t border-dashed border-gray-800 italic">
-        <input type="password" placeholder="" className="p-2 border border-gray-800 rounded-xl text-[10px] bg-[#121418] text-white focus:outline-none w-24 italic" onChange={e => setSenha(e.target.value)} />
-        <button onClick={() => senha === '041252' && setIsAdmin(true)} className="ml-2 text-[9px] font-black text-gray-600 uppercase tracking-widest italic">Acessar Admin</button>
-      </footer>
-    </div>
-  );
+          <footer className="mt-6 text-center pb-20 pt-6 border-t border-gray-800 italic">
+            <input type="password" placeholder="" className="p-2 border border-gray-700 bg-gray-900 text-xs rounded text-white" value={senha} onChange={e => setSenha(e.target.value)} />
+            <button onClick={() => senha === '041252' && setIsAdmin(true)} className="ml-2 text-[9px] font-black text-gray-600 uppercase tracking-widest italic">
+              Acessar Admin
+            </button>
+          </footer>
+        </div>
+      </div>
+    </div>
+  );
 };
+
 export default App;
               
 

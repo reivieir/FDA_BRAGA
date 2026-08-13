@@ -297,7 +297,8 @@ const App = () => {
            </div>
         </div>
 
-      <div className="mt-8 italic">
+     {/* EVOLUÇÃO MENSAL */}
+        <div className="mt-8 italic">
           <h2 className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-4 italic">EVOLUÇÃO MENSAL</h2>
           <div className="overflow-x-auto -mx-6 px-6 italic">
             <table className="w-full text-left border-collapse min-w-[280px] italic">
@@ -310,7 +311,7 @@ const App = () => {
                   <th className="pb-3 text-right italic">STATUS (%)</th>
                 </tr>
               </thead>
-             <tbody className="text-[10px] font-bold italic">
+              <tbody className="text-[10px] font-bold italic">
                 {(() => {
                   let saldoAcumulado = 0;
                   
@@ -346,13 +347,14 @@ const App = () => {
           </div>
         </div>
 
-          <footer className="mt-6 text-center pb-20 pt-6 border-t border-gray-800 italic">
-            <input type="password" placeholder="" className="p-2 border border-gray-700 bg-gray-900 text-xs rounded text-white" value={senha} onChange={e => setSenha(e.target.value)} />
-            <button onClick={() => senha === '041252' && setIsAdmin(true)} className="ml-2 text-[9px] font-black text-gray-600 uppercase tracking-widest italic">
-              Acessar Admin
-            </button>
-          </footer>
-        </div>
+        {/* RODAPÉ / ADMIN */}
+        <footer className="mt-6 text-center pb-20 pt-6 border-t border-gray-800 italic">
+          <input type="password" placeholder="" className="p-2 border border-gray-700 bg-gray-900 text-xs rounded text-white" value={senha} onChange={e => setSenha(e.target.value)} />
+          <button onClick={() => senha === '041252' && setIsAdmin(true)} className="ml-2 text-[9px] font-black text-gray-600 uppercase tracking-widest italic">
+            Acessar Admin
+          </button>
+        </footer>
+
       </div>
     </div>
   );

@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 
 // Inicialização segura do ecossistema
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = 'https://jqpdampcglodtmfmeivk.supabase.co/rest/v1/';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcGRhbXBjZ2xvZHRtZm1laXZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTE1MjYsImV4cCI6MjA4NjU4NzUyNn0.yjEPWO1bEq0LxCW5gECXOyIwsO9ol3IS_1KfueHdEKs';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const App = () => {

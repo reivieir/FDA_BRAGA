@@ -42,7 +42,7 @@ const App = () => {
   // REGRAS FINANCEIRAS
   const getMetaMensal = (mes: string) => (mes === "Fevereiro" || mes === "Fev") ? 1590 : 1855;
   const getMetaInd = (nome: string) => nome === 'Pablo' ? 380 : 760;
-  const metaGlobalBragança = 20140;
+  const metaGlobalBragança = 19510;
 
   const gruposDef = [
     { titulo: "Grupo Adriana", nomes: ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"] },
@@ -107,7 +107,7 @@ const App = () => {
 
   // --- RENDERS ---
 
-  // TELA 1: DETALHE DO MÊS (COM CONTADOR "X de 27")
+  // TELA 1: DETALHE DO MÊS (COM CONTADOR "X de 26")
   if (selectedMonth) {
     const mesDb = mesesMap[selectedMonth] || selectedMonth;
     const pagsMes = historico.filter(p => p.mes === mesDb);

@@ -338,6 +338,7 @@ const App = () => {
              </table>
            </div>
         </div>
+        </div>
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 pb-24 italic">
         <div className="space-y-4 italic">

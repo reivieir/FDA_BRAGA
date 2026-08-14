@@ -28,8 +28,9 @@ const App = () => {
   // Controle de Tipo de Movimentação no Admin
   const [tipoFluxo, setTipoFluxo] = useState('saida'); 
   
-  // Controle do Pop-up de Histórico
+  // Controle dos Pop-ups (Modais)
   const [showAllMovimentacoes, setShowAllMovimentacoes] = useState(false);
+  const [showAllDocs, setShowAllDocs] = useState(false);
 
   const hoje = new Date();
   const diaDoMes = hoje.getDate();
@@ -258,7 +259,6 @@ const App = () => {
                 <button onClick={lancarMovimentacao} className="w-1/2 bg-blue-600 font-black rounded-xl text-xs uppercase italic">Registrar</button>
             </div>
             
-            {/* HISTÓRICO COM SCROLL NO ADMIN */}
             <div className="mt-4 space-y-1 border-t border-gray-800 pt-3 max-h-[250px] overflow-y-auto pr-2 italic">
                {saidas.map(s => (
                  <div key={s.id} className="flex justify-between items-center text-[9px] italic border-b border-gray-900 pb-1">
@@ -318,6 +318,7 @@ const App = () => {
 
   // --- RENDER PRINCIPAL ---
   
+  // PRÉ-CÁLCULO DA EVOLUÇÃO MENSAL
   let saldoAcumuladoLoop = 0;
   const dadosEvolucao = mesesAbbr.map(mesAbbr => {
     const mesDb = mesesMap[mesAbbr];
@@ -441,18 +442,28 @@ const App = () => {
           ))}
         </div>
 
+        {/* NOVA CAIXA DE AUDITORIA COM POP-UP */}
         <div className="space-y-4 italic">
           <h2 className="text-[9px] font-black text-blue-900 uppercase tracking-widest ml-4 italic">Auditoria e Extratos</h2>
-          <div className="bg-blue-950/10 rounded-[30px] p-6 border border-blue-900/30 min-h-[120px] italic">
-            {docs.map(d => (
-              <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-3 mb-2 bg-[#121418] rounded-xl border border-gray-800 hover:bg-blue-900/20 transition-all italic">
-                <span className="text-[9px] font-black text-gray-500 uppercase truncate pr-2 italic">{d.nome_exibicao}</span>
-                <span className="text-blue-900 font-black italic">↓</span>
-              </a>
-            ))}
+          <div className="bg-blue-950/10 rounded-[30px] p-6 border border-blue-900/30 min-h-[120px] flex flex-col justify-between italic">
+            <div>
+              {docs.slice(0, 5).map(d => (
+                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-3 mb-2 bg-[#121418] rounded-xl border border-gray-800 hover:bg-blue-900/20 transition-all italic">
+                  <span className="text-[9px] font-black text-gray-500 uppercase truncate pr-2 italic">{d.nome_exibicao}</span>
+                  <span className="text-blue-900 font-black italic">↓</span>
+                </a>
+              ))}
+            </div>
+            
+            {docs.length > 5 && (
+              <button onClick={() => setShowAllDocs(true)} className="w-full mt-4 py-3 border border-blue-900/30 rounded-xl text-[9px] font-black text-blue-800 uppercase tracking-widest hover:bg-blue-900 hover:text-white transition-all italic">
+                Ver Todos os Extratos ({docs.length})
+              </button>
+            )}
           </div>
         </div>
 
+        {/* CAIXA DE MOVIMENTAÇÕES DA CONTA COM POP-UP */}
         <div className="space-y-4 italic">
           <h2 className="text-[9px] font-black text-gray-600 uppercase tracking-widest ml-4 italic">Movimentações da Conta</h2>
           <div className="bg-[#121418] rounded-[30px] p-6 border border-gray-800 min-h-[120px] italic flex flex-col justify-between">
@@ -481,7 +492,7 @@ const App = () => {
         </div>
       </div>
 
-      {/* POP-UP (MODAL) DO HISTÓRICO COMPLETO */}
+      {/* POP-UP (MODAL) DO HISTÓRICO DE MOVIMENTAÇÕES */}
       {showAllMovimentacoes && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm italic">
           <div className="bg-[#0B0C10] border border-gray-800 rounded-[30px] w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[80vh]">
@@ -503,6 +514,30 @@ const App = () => {
                   </div>
                   <p className="text-[10px] font-bold text-gray-400 italic">{s.descricao}</p>
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POP-UP (MODAL) DE TODOS OS EXTRATOS */}
+      {showAllDocs && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm italic">
+          <div className="bg-[#0B0C10] border border-gray-800 rounded-[30px] w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[80vh]">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-[10px] font-black text-blue-500 uppercase tracking-widest italic">Todos os Extratos</h2>
+              <button onClick={() => setShowAllDocs(false)} className="text-red-500 font-black text-3xl leading-none hover:scale-110 transition-transform">×</button>
+            </div>
+            
+            <div className="overflow-y-auto pr-2 space-y-3 flex-1 italic scrollbar-hide">
+              {docs.map(d => (
+                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 bg-[#121418] rounded-2xl border border-gray-800 hover:bg-blue-900/20 transition-all italic">
+                  <div className="flex flex-col">
+                     <span className="text-[10px] font-black text-gray-300 uppercase truncate italic">{d.nome_exibicao}</span>
+                     <span className="text-[8px] font-bold text-gray-500 uppercase mt-1 italic">Ref: {d.mes}</span>
+                  </div>
+                  <span className="text-blue-500 font-black text-lg italic pl-4">↓</span>
+                </a>
               ))}
             </div>
           </div>

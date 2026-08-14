@@ -31,6 +31,9 @@ const App = () => {
   // Controle dos Pop-ups (Modais)
   const [showAllMovimentacoes, setShowAllMovimentacoes] = useState(false);
   const [showAllDocs, setShowAllDocs] = useState(false);
+  
+  // Controle do Login no Topo
+  const [showLogin, setShowLogin] = useState(false);
 
   const hoje = new Date();
   const diaDoMes = hoje.getDate();
@@ -49,10 +52,22 @@ const App = () => {
   const [mesGlobal, setMesGlobal] = useState(mesAtualFull); // Mês da Parcela
   const [mesCaixaGlobal, setMesCaixaGlobal] = useState(mesAtualFull); // Mês que entrou no banco
 
-  // REGRAS FINANCEIRAS
-  const getMetaMensal = (mes: string) => (mes === "Fevereiro" || mes === "Fev") ? 1590 : 1855;
-  const getMetaInd = (nome: string) => nome === 'Pablo' ? 380 : 760;
-  const metaGlobalBragança = 20140;
+  // REGRAS FINANCEIRAS E TRATAMENTO DA "MANU"
+  const isManuActive = (mes: string) => ["Fevereiro", "Março", "Fev", "Mar"].includes(mes);
+
+  const getMetaMensal = (mes: string) => {
+    if (mes === "Fevereiro" || mes === "Fev") return 1590;
+    if (mes === "Março" || mes === "Mar") return 1855;
+    return 1785; // A partir de Abril a meta cai em R$ 70 por causa da Manu
+  };
+  
+  const getMetaInd = (nome: string) => {
+    if (nome === 'Pablo') return 380;
+    if (nome === 'Manu') return 130; // Congelado no que ela pagou (60 + 70)
+    return 760;
+  };
+  
+  const metaGlobalBragança = 19510; // Reduzida de 20140 para 19510
 
   const gruposDef = [
     { titulo: "Grupo Adriana", nomes: ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"] },
@@ -131,6 +146,7 @@ const App = () => {
     const rendMes = rendimentosConta.filter(r => r.mes === mesDb).reduce((acc, r) => acc + Number(r.valor), 0);
     const saidaMes = saidasReais.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
     const pagantesUnicosCount = new Set(pagsMes.map(p => p.membro_id)).size;
+    const totalEsperadoMes = isManuActive(mesDb) ? 27 : 26; // Desconta a Manu a partir de Abril
 
     return (
       <div className="min-h-screen bg-[#FDFCF0] p-6 font-sans text-gray-800 italic">
@@ -142,7 +158,7 @@ const App = () => {
               <p className="text-[10px] text-gray-500 uppercase italic">Saldo Período</p>
               <p className="text-2xl font-black text-green-500 italic">R$ {(arrecMes + rendMes - saidaMes).toLocaleString('pt-BR')}</p>
               <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1 tracking-tighter italic">
-                Entraram {pagantesUnicosCount} PIXs
+                Entraram {pagantesUnicosCount} PIXs (de {totalEsperadoMes} previstos)
               </p>
             </div>
             <div className="text-right italic">
@@ -279,10 +295,14 @@ const App = () => {
               <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">{g.titulo}</h2>
               <select className="w-full p-3 border rounded-xl mb-4 bg-gray-50 text-sm font-bold italic" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
                 <option value="Todos">Lançar Novo PIX</option>
-                {g.nomes.map(n => <option key={n} value={n}>{n}</option>)}
+                {/* Remove a Manu da lista a partir de Abril */}
+                {g.nomes.filter(n => n !== 'Manu' || isManuActive(mesGlobal)).map(n => <option key={n} value={n}>{n}</option>)}
               </select>
               <div className="space-y-2 italic">
-                {g.nomes.filter(n => filtrosGrupos[idx] === 'Todos' || filtrosGrupos[idx] === n).map(nome => {
+                {g.nomes
+                  .filter(n => n !== 'Manu' || isManuActive(mesGlobal))
+                  .filter(n => filtrosGrupos[idx] === 'Todos' || filtrosGrupos[idx] === n)
+                  .map(nome => {
                   const m = membros.find(x => x.nome === nome);
                   if (!m) return null;
                   if (filtrosGrupos[idx] === 'Todos') {
@@ -333,7 +353,25 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-[#0B0C10] p-4 md:p-8 font-sans text-white italic relative">
-      <header className="text-center mb-8 pt-4 italic">
+      
+      {/* NOVO LOGIN NO CANTO SUPERIOR DIREITO */}
+      <div className="absolute top-4 right-4 z-50">
+        {!showLogin ? (
+           <button onClick={() => setShowLogin(true)} className="text-gray-600 hover:text-[#D4A373] transition-colors p-2" title="Acessar Admin">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
+           </button>
+        ) : (
+           <div className="flex items-center gap-2 bg-[#1A1D23] p-2 rounded-2xl border border-gray-800 shadow-2xl">
+              <input type="password" placeholder="Senha" className="p-2 w-24 border border-gray-800 bg-[#0B0C10] text-[10px] rounded-xl text-white focus:outline-none italic" value={senha} onChange={e => {
+                 setSenha(e.target.value);
+                 if (e.target.value === '041252') { setIsAdmin(true); setShowLogin(false); setSenha(''); }
+              }} autoFocus />
+              <button onClick={() => setShowLogin(false)} className="text-gray-500 hover:text-red-500 font-black px-2 text-xs">X</button>
+           </div>
+        )}
+      </div>
+
+      <header className="text-center mb-8 pt-4 md:pt-0 italic">
         <h1 className="text-3xl md:text-5xl font-black text-[#D4A373] uppercase tracking-tighter italic mb-2">
           FAMILIA DA ALEGRIA
         </h1>
@@ -409,40 +447,42 @@ const App = () => {
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 pb-24 italic">
         <div className="space-y-4 italic">
           <h2 className="text-[9px] font-black text-gray-600 uppercase tracking-widest ml-4 italic">Membros e Metas</h2>
-          {gruposDef.map((g, gIdx) => (
-            <div key={gIdx} className="bg-[#121418] rounded-3xl border border-gray-800 overflow-hidden shadow-sm italic">
-              <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-4 flex justify-between items-center hover:bg-gray-800 transition-all italic">
-                <div className="text-left italic">
-                  <h2 className="text-xs font-black text-gray-300 uppercase italic">{g.titulo}</h2>
-                  <p className="text-[7px] font-black text-gray-600 uppercase mt-1 italic">
-                    {g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtualFull)).length} de {g.nomes.length} QUITADOS NO MÊS
-                  </p>
-                </div>
-                <span className="text-[#D4A373] text-sm font-black italic">{expandedGrupo === gIdx ? '−' : '+'}</span>
-              </button>
-              <div className={`transition-all duration-300 ${expandedGrupo === gIdx ? 'max-h-[800px] p-4' : 'max-h-0'} overflow-hidden italic`}>
-                <div className="grid grid-cols-1 gap-2 italic">
-                  {g.nomes.map(nome => {
-                    const m = membros.find(x => x.nome === nome);
-                    const pg = m ? calcPago(m.id) : 0;
-                    const meta = getMetaInd(nome);
-                    return (
-                      <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="bg-[#1A1D23] p-3 rounded-xl flex justify-between items-center border border-gray-800 hover:bg-gray-800 cursor-pointer italic">
-                        <span className="font-black text-[9px] uppercase text-gray-500 italic">{nome}</span>
-                        <div className="flex items-center gap-2 italic">
-                          <span className="text-[9px] font-black text-[#22c55e] italic">R$ {pg}</span>
-                          <div className={`h-1 w-1 rounded-full italic ${pg >= meta ? 'bg-[#22c55e]' : 'bg-red-900'}`}></div>
+          {gruposDef.map((g, gIdx) => {
+            const expectCount = g.nomes.filter(n => n !== 'Manu' || isManuActive(mesAtualFull)).length;
+            return (
+              <div key={gIdx} className="bg-[#121418] rounded-3xl border border-gray-800 overflow-hidden shadow-sm italic">
+                <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-4 flex justify-between items-center hover:bg-gray-800 transition-all italic">
+                  <div className="text-left italic">
+                    <h2 className="text-xs font-black text-gray-300 uppercase italic">{g.titulo}</h2>
+                    <p className="text-[7px] font-black text-gray-600 uppercase mt-1 italic">
+                      {g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtualFull)).length} de {expectCount} QUITADOS NO MÊS
+                    </p>
+                  </div>
+                  <span className="text-[#D4A373] text-sm font-black italic">{expandedGrupo === gIdx ? '−' : '+'}</span>
+                </button>
+                <div className={`transition-all duration-300 ${expandedGrupo === gIdx ? 'max-h-[800px] p-4' : 'max-h-0'} overflow-hidden italic`}>
+                  <div className="grid grid-cols-1 gap-2 italic">
+                    {g.nomes.map(nome => {
+                      const m = membros.find(x => x.nome === nome);
+                      const pg = m ? calcPago(m.id) : 0;
+                      const meta = getMetaInd(nome);
+                      return (
+                        <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="bg-[#1A1D23] p-3 rounded-xl flex justify-between items-center border border-gray-800 hover:bg-gray-800 cursor-pointer italic">
+                          <span className="font-black text-[9px] uppercase text-gray-500 italic">{nome}</span>
+                          <div className="flex items-center gap-2 italic">
+                            <span className="text-[9px] font-black text-[#22c55e] italic">R$ {pg}</span>
+                            <div className={`h-1 w-1 rounded-full italic ${pg >= meta ? 'bg-[#22c55e]' : 'bg-red-900'}`}></div>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* NOVA CAIXA DE AUDITORIA COM POP-UP */}
         <div className="space-y-4 italic">
           <h2 className="text-[9px] font-black text-blue-900 uppercase tracking-widest ml-4 italic">Auditoria e Extratos</h2>
           <div className="bg-blue-950/10 rounded-[30px] p-6 border border-blue-900/30 min-h-[120px] flex flex-col justify-between italic">
@@ -463,7 +503,6 @@ const App = () => {
           </div>
         </div>
 
-        {/* CAIXA DE MOVIMENTAÇÕES DA CONTA COM POP-UP */}
         <div className="space-y-4 italic">
           <h2 className="text-[9px] font-black text-gray-600 uppercase tracking-widest ml-4 italic">Movimentações da Conta</h2>
           <div className="bg-[#121418] rounded-[30px] p-6 border border-gray-800 min-h-[120px] italic flex flex-col justify-between">
@@ -492,7 +531,6 @@ const App = () => {
         </div>
       </div>
 
-      {/* POP-UP (MODAL) DO HISTÓRICO DE MOVIMENTAÇÕES */}
       {showAllMovimentacoes && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm italic">
           <div className="bg-[#0B0C10] border border-gray-800 rounded-[30px] w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[80vh]">
@@ -520,7 +558,6 @@ const App = () => {
         </div>
       )}
 
-      {/* POP-UP (MODAL) DE TODOS OS EXTRATOS */}
       {showAllDocs && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm italic">
           <div className="bg-[#0B0C10] border border-gray-800 rounded-[30px] w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[80vh]">
@@ -544,10 +581,6 @@ const App = () => {
         </div>
       )}
 
-      <footer className="mt-6 text-center pb-20 pt-6 border-t border-dashed border-gray-800 italic relative z-10">
-        <input type="password" placeholder="" className="p-2 border border-gray-800 rounded-xl text-[10px] bg-[#121418] text-white focus:outline-none w-24 italic" onChange={e => setSenha(e.target.value)} />
-        <button onClick={() => senha === '041252' && setIsAdmin(true)} className="ml-2 text-[9px] font-black text-gray-600 uppercase tracking-widest italic">Acessar Admin</button>
-      </footer>
     </div>
   );
 };

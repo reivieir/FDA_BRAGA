@@ -258,7 +258,7 @@ const App = () => {
                 <button onClick={lancarMovimentacao} className="w-1/2 bg-blue-600 font-black rounded-xl text-xs uppercase italic">Registrar</button>
             </div>
             <div className="mt-4 space-y-1 border-t border-gray-800 pt-3 italic">
-               {saidas.slice(0, 10).map(s => (
+{saidas.map(s => (
                  <div key={s.id} className="flex justify-between items-center text-[9px] italic border-b border-gray-900 pb-1">
                    <span>
                      <span className={`mr-2 px-1 rounded uppercase font-black text-[7px] ${s.tipo === 'rendimento' ? 'bg-green-900/50 text-green-500' : 'bg-red-900/50 text-red-500'}`}>

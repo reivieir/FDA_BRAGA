@@ -25,8 +25,11 @@ const App = () => {
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [nomeDoc, setNomeDoc] = useState('');
 
-  // NOVO: Controle de Tipo de Movimentação no Admin
+  // Controle de Tipo de Movimentação no Admin
   const [tipoFluxo, setTipoFluxo] = useState('saida'); 
+  
+  // Controle do Pop-up de Histórico
+  const [showAllMovimentacoes, setShowAllMovimentacoes] = useState(false);
 
   const hoje = new Date();
   const diaDoMes = hoje.getDate();
@@ -88,7 +91,6 @@ const App = () => {
     setValoresLote({ ...valoresLote, [id]: '' }); fetchAll();
   };
 
-  // Alterado para aceitar Rendimento ou Saída
   const lancarMovimentacao = async () => {
     if (!valorSaida || !descSaida) return;
     await supabase.from('saidas_caixa').insert([{ valor: parseFloat(valorSaida), mes: mesCaixaGlobal, descricao: descSaida, tipo: tipoFluxo }]);
@@ -108,7 +110,6 @@ const App = () => {
   };
 
   // SEPARAÇÃO INTELIGENTE DO FLUXO DE CAIXA
-  // Se o tipo for null ou diferente de 'rendimento', é tratado como saída (Garante retrocompatibilidade)
   const rendimentosConta = saidas.filter(s => s.tipo === 'rendimento');
   const saidasReais = saidas.filter(s => s.tipo !== 'rendimento');
 
@@ -117,7 +118,6 @@ const App = () => {
   const totalRendimentos = rendimentosConta.reduce((acc, r) => acc + Number(r.valor), 0);
   const totalSaidas = saidasReais.reduce((acc, s) => acc + Number(s.valor), 0);
   
-  // Saldo banco leva em conta Arrecadado Familia + Rendimentos Banco - Saídas
   const saldoAtual = totalArrecadado + totalRendimentos - totalSaidas;
 
   // --- RENDERS ---
@@ -257,8 +257,10 @@ const App = () => {
                 <input type="number" placeholder="R$" className="w-1/2 p-3 rounded-xl text-black text-sm font-bold italic" value={valorSaida} onChange={e => setValorSaida(e.target.value)} />
                 <button onClick={lancarMovimentacao} className="w-1/2 bg-blue-600 font-black rounded-xl text-xs uppercase italic">Registrar</button>
             </div>
-            <div className="mt-4 space-y-1 border-t border-gray-800 pt-3 italic">
-{saidas.map(s => (
+            
+            {/* HISTÓRICO COM SCROLL NO ADMIN */}
+            <div className="mt-4 space-y-1 border-t border-gray-800 pt-3 max-h-[250px] overflow-y-auto pr-2 italic">
+               {saidas.map(s => (
                  <div key={s.id} className="flex justify-between items-center text-[9px] italic border-b border-gray-900 pb-1">
                    <span>
                      <span className={`mr-2 px-1 rounded uppercase font-black text-[7px] ${s.tipo === 'rendimento' ? 'bg-green-900/50 text-green-500' : 'bg-red-900/50 text-red-500'}`}>
@@ -316,7 +318,6 @@ const App = () => {
 
   // --- RENDER PRINCIPAL ---
   
-  // PRÉ-CÁLCULO DA EVOLUÇÃO MENSAL
   let saldoAcumuladoLoop = 0;
   const dadosEvolucao = mesesAbbr.map(mesAbbr => {
     const mesDb = mesesMap[mesAbbr];
@@ -330,7 +331,7 @@ const App = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#0B0C10] p-4 md:p-8 font-sans text-white italic">
+    <div className="min-h-screen bg-[#0B0C10] p-4 md:p-8 font-sans text-white italic relative">
       <header className="text-center mb-8 pt-4 italic">
         <h1 className="text-3xl md:text-5xl font-black text-[#D4A373] uppercase tracking-tighter italic mb-2">
           FAMILIA DA ALEGRIA
@@ -454,25 +455,61 @@ const App = () => {
 
         <div className="space-y-4 italic">
           <h2 className="text-[9px] font-black text-gray-600 uppercase tracking-widest ml-4 italic">Movimentações da Conta</h2>
-          <div className="bg-[#121418] rounded-[30px] p-6 border border-gray-800 min-h-[120px] italic">
-            {saidas.map(s => (
-              <div key={s.id} className="mb-3 border-b border-gray-800 pb-3 last:border-0 italic">
-                <div className="flex justify-between items-start mb-1 text-[7px] font-black italic">
-                   <span className={`${s.tipo === 'rendimento' ? 'bg-green-900/30 text-green-500' : 'bg-red-900/30 text-red-500'} px-2 py-0.5 rounded-full uppercase italic`}>
-                     {s.mes} • {s.tipo === 'rendimento' ? 'ENTRADA' : 'SAÍDA'}
-                   </span>
-                   <span className={s.tipo === 'rendimento' ? 'text-green-500' : 'text-red-500'}>
-                     {s.tipo === 'rendimento' ? '+' : '-'} R$ {s.valor}
-                   </span>
+          <div className="bg-[#121418] rounded-[30px] p-6 border border-gray-800 min-h-[120px] italic flex flex-col justify-between">
+            <div>
+              {saidas.slice(0, 5).map(s => (
+                <div key={s.id} className="mb-3 border-b border-gray-800 pb-3 last:border-0 italic">
+                  <div className="flex justify-between items-start mb-1 text-[7px] font-black italic">
+                     <span className={`${s.tipo === 'rendimento' ? 'bg-green-900/30 text-green-500' : 'bg-red-900/30 text-red-500'} px-2 py-0.5 rounded-full uppercase italic`}>
+                       {s.mes} • {s.tipo === 'rendimento' ? 'ENTRADA' : 'SAÍDA'}
+                     </span>
+                     <span className={s.tipo === 'rendimento' ? 'text-green-500' : 'text-red-500'}>
+                       {s.tipo === 'rendimento' ? '+' : '-'} R$ {s.valor}
+                     </span>
+                  </div>
+                  <p className="text-[9px] font-bold text-gray-400 italic">{s.descricao}</p>
                 </div>
-                <p className="text-[9px] font-bold text-gray-400 italic">{s.descricao}</p>
-              </div>
-            ))}
+              ))}
+            </div>
+            
+            {saidas.length > 5 && (
+              <button onClick={() => setShowAllMovimentacoes(true)} className="w-full mt-4 py-3 border border-gray-800 rounded-xl text-[9px] font-black text-gray-500 uppercase tracking-widest hover:bg-gray-800 hover:text-white transition-all italic">
+                Ver Todo o Histórico ({saidas.length})
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      <footer className="mt-6 text-center pb-20 pt-6 border-t border-dashed border-gray-800 italic">
+      {/* POP-UP (MODAL) DO HISTÓRICO COMPLETO */}
+      {showAllMovimentacoes && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm italic">
+          <div className="bg-[#0B0C10] border border-gray-800 rounded-[30px] w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[80vh]">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-[10px] font-black text-gray-300 uppercase tracking-widest italic">Histórico Completo da Conta</h2>
+              <button onClick={() => setShowAllMovimentacoes(false)} className="text-red-500 font-black text-3xl leading-none hover:scale-110 transition-transform">×</button>
+            </div>
+            
+            <div className="overflow-y-auto pr-2 space-y-4 flex-1 italic scrollbar-hide">
+              {saidas.map(s => (
+                <div key={s.id} className="border-b border-gray-800 pb-3 last:border-0 italic">
+                  <div className="flex justify-between items-start mb-1 text-[8px] font-black italic">
+                     <span className={`${s.tipo === 'rendimento' ? 'bg-green-900/30 text-green-500' : 'bg-red-900/30 text-red-500'} px-2 py-0.5 rounded-full uppercase italic`}>
+                       {s.mes} • {s.tipo === 'rendimento' ? 'ENTRADA' : 'SAÍDA'}
+                     </span>
+                     <span className={s.tipo === 'rendimento' ? 'text-green-500' : 'text-red-500'}>
+                       {s.tipo === 'rendimento' ? '+' : '-'} R$ {s.valor}
+                     </span>
+                  </div>
+                  <p className="text-[10px] font-bold text-gray-400 italic">{s.descricao}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <footer className="mt-6 text-center pb-20 pt-6 border-t border-dashed border-gray-800 italic relative z-10">
         <input type="password" placeholder="" className="p-2 border border-gray-800 rounded-xl text-[10px] bg-[#121418] text-white focus:outline-none w-24 italic" onChange={e => setSenha(e.target.value)} />
         <button onClick={() => senha === '041252' && setIsAdmin(true)} className="ml-2 text-[9px] font-black text-gray-600 uppercase tracking-widest italic">Acessar Admin</button>
       </footer>

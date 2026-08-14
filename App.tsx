@@ -25,6 +25,9 @@ const App = () => {
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [nomeDoc, setNomeDoc] = useState('');
 
+  // NOVO: Controle de Tipo de Movimentação no Admin
+  const [tipoFluxo, setTipoFluxo] = useState('saida'); 
+
   const hoje = new Date();
   const diaDoMes = hoje.getDate();
   
@@ -81,14 +84,14 @@ const App = () => {
 
   const lancarPagamento = async (id: number, valor: string) => {
     if (!valor || parseFloat(valor) <= 0) return;
-    // Agora insere tanto o mês da dívida quanto o mês do caixa!
     await supabase.from('pagamentos_detalhes').insert([{ membro_id: id, valor: parseFloat(valor), mes: mesGlobal, mes_caixa: mesCaixaGlobal }]);
     setValoresLote({ ...valoresLote, [id]: '' }); fetchAll();
   };
 
-  const lancarSaida = async () => {
+  // Alterado para aceitar Rendimento ou Saída
+  const lancarMovimentacao = async () => {
     if (!valorSaida || !descSaida) return;
-    await supabase.from('saidas_caixa').insert([{ valor: parseFloat(valorSaida), mes: mesCaixaGlobal, descricao: descSaida }]);
+    await supabase.from('saidas_caixa').insert([{ valor: parseFloat(valorSaida), mes: mesCaixaGlobal, descricao: descSaida, tipo: tipoFluxo }]);
     setValorSaida(''); setDescSaida(''); fetchAll();
   };
 
@@ -104,20 +107,28 @@ const App = () => {
     }
   };
 
+  // SEPARAÇÃO INTELIGENTE DO FLUXO DE CAIXA
+  // Se o tipo for null ou diferente de 'rendimento', é tratado como saída (Garante retrocompatibilidade)
+  const rendimentosConta = saidas.filter(s => s.tipo === 'rendimento');
+  const saidasReais = saidas.filter(s => s.tipo !== 'rendimento');
+
   const calcPago = (id: number) => historico.filter(h => h.membro_id === id).reduce((acc, h) => acc + Number(h.valor), 0);
   const totalArrecadado = historico.reduce((acc, h) => acc + Number(h.valor), 0);
-  const totalSaidas = saidas.reduce((acc, s) => acc + Number(s.valor), 0);
-  const saldoAtual = totalArrecadado - totalSaidas;
+  const totalRendimentos = rendimentosConta.reduce((acc, r) => acc + Number(r.valor), 0);
+  const totalSaidas = saidasReais.reduce((acc, s) => acc + Number(s.valor), 0);
+  
+  // Saldo banco leva em conta Arrecadado Familia + Rendimentos Banco - Saídas
+  const saldoAtual = totalArrecadado + totalRendimentos - totalSaidas;
 
   // --- RENDERS ---
 
-  // TELA 1: DETALHE DO MÊS (COM CONTADOR "X de 27")
+  // TELA 1: DETALHE DO MÊS
   if (selectedMonth) {
     const mesDb = mesesMap[selectedMonth] || selectedMonth;
-    // Filtra pelo caixa (ou pelo mês normal se for registro antigo)
     const pagsMes = historico.filter(p => (p.mes_caixa || p.mes) === mesDb);
     const arrecMes = pagsMes.reduce((acc, p) => acc + Number(p.valor), 0);
-    const saidaMes = saidas.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
+    const rendMes = rendimentosConta.filter(r => r.mes === mesDb).reduce((acc, r) => acc + Number(r.valor), 0);
+    const saidaMes = saidasReais.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
     const pagantesUnicosCount = new Set(pagsMes.map(p => p.membro_id)).size;
 
     return (
@@ -128,14 +139,15 @@ const App = () => {
           <div className="mt-4 border-t border-gray-800 pt-4 flex justify-between items-end italic">
             <div className="text-left italic">
               <p className="text-[10px] text-gray-500 uppercase italic">Saldo Período</p>
-              <p className="text-2xl font-black text-green-500 italic">R$ {(arrecMes - saidaMes).toLocaleString('pt-BR')}</p>
+              <p className="text-2xl font-black text-green-500 italic">R$ {(arrecMes + rendMes - saidaMes).toLocaleString('pt-BR')}</p>
               <p className="text-[11px] text-[#D4A373] font-black uppercase mt-1 tracking-tighter italic">
-                Entraram {pagantesUnicosCount} depósitos
+                Entraram {pagantesUnicosCount} PIXs
               </p>
             </div>
             <div className="text-right italic">
-              <p className="text-[10px] text-gray-500 uppercase italic">Saída: R$ {saidaMes}</p>
-              <p className="text-sm font-bold text-gray-400 italic">Meta Caixa: R$ {getMetaMensal(mesDb)}</p>
+              <p className="text-[10px] text-green-500 font-bold uppercase italic">Rendimentos: R$ {rendMes}</p>
+              <p className="text-[10px] text-red-500 font-bold uppercase italic">Saída: R$ {saidaMes}</p>
+              <p className="text-sm font-bold text-gray-400 mt-1 italic">Meta Caixa: R$ {getMetaMensal(mesDb)}</p>
             </div>
           </div>
         </div>
@@ -144,7 +156,6 @@ const App = () => {
               <div key={p.id} className="bg-white p-4 rounded-2xl flex justify-between items-center border italic shadow-sm">
                 <div>
                   <span className="font-black text-gray-700 uppercase text-xs italic block">{p.membros?.nome}</span>
-                  {/* Se for dívida atrasada, mostra um aviso vermelho! */}
                   {p.mes !== mesDb && <span className="text-[9px] text-red-500 uppercase font-bold italic">Referente à parcela de {p.mes}</span>}
                 </div>
                 <span className="font-black text-green-600 text-xs italic">R$ {p.valor}</span>
@@ -201,7 +212,6 @@ const App = () => {
         <div className="flex justify-between items-center mb-6 max-w-2xl mx-auto italic">
            <button onClick={() => setIsAdmin(false)} className="text-blue-600 font-bold text-xs uppercase tracking-widest italic">← Site</button>
            
-           {/* NOVOS SELETORES DE MÊS DUPLO */}
            <div className="flex gap-2">
              <div className="flex flex-col text-right">
                 <span className="text-[7px] text-gray-500 font-black uppercase mb-1">Referente à (Parcela)</span>
@@ -233,22 +243,35 @@ const App = () => {
               </div>
             ))}
           </div>
+
           <div className="bg-black text-white p-6 rounded-3xl shadow-lg border-b-4 border-red-500 italic">
-            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest italic">2. Lançar Gasto Bragança</h2>
-            <input type="text" placeholder="Descrição" className="w-full p-3 rounded-xl text-black text-sm mb-3 italic" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
+            <h2 className="text-[10px] font-black uppercase mb-4 tracking-widest italic">2. Fluxo da Conta Bancária</h2>
+            
+            <div className="flex gap-2 mb-3 italic">
+              <button onClick={() => setTipoFluxo('saida')} className={`flex-1 p-3 rounded-xl text-[10px] font-black uppercase transition-colors ${tipoFluxo === 'saida' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400'}`}>Saída (Gasto)</button>
+              <button onClick={() => setTipoFluxo('rendimento')} className={`flex-1 p-3 rounded-xl text-[10px] font-black uppercase transition-colors ${tipoFluxo === 'rendimento' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400'}`}>Rendimento</button>
+            </div>
+
+            <input type="text" placeholder="Descrição (ex: Rendimento CDB)" className="w-full p-3 rounded-xl text-black text-sm mb-3 italic" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
             <div className="flex gap-2 italic">
                 <input type="number" placeholder="R$" className="w-1/2 p-3 rounded-xl text-black text-sm font-bold italic" value={valorSaida} onChange={e => setValorSaida(e.target.value)} />
-                <button onClick={lancarSaida} className="w-1/2 bg-red-600 font-black rounded-xl text-xs uppercase italic">Registrar</button>
+                <button onClick={lancarMovimentacao} className="w-1/2 bg-blue-600 font-black rounded-xl text-xs uppercase italic">Registrar</button>
             </div>
             <div className="mt-4 space-y-1 border-t border-gray-800 pt-3 italic">
-               {saidas.slice(0, 5).map(s => (
-                 <div key={s.id} className="flex justify-between items-center text-[9px] italic">
-                   <span>{s.mes}: {s.descricao} (R$ {s.valor})</span>
-                   <button onClick={() => excluirItem(s.id, 'saidas_caixa')} className="text-red-500 italic italic">X</button>
+               {saidas.slice(0, 10).map(s => (
+                 <div key={s.id} className="flex justify-between items-center text-[9px] italic border-b border-gray-900 pb-1">
+                   <span>
+                     <span className={`mr-2 px-1 rounded uppercase font-black text-[7px] ${s.tipo === 'rendimento' ? 'bg-green-900/50 text-green-500' : 'bg-red-900/50 text-red-500'}`}>
+                       {s.tipo === 'rendimento' ? 'ENTRADA' : 'SAÍDA'}
+                     </span>
+                     {s.mes}: {s.descricao} (R$ {s.valor})
+                   </span>
+                   <button onClick={() => excluirItem(s.id, 'saidas_caixa')} className="text-red-500 italic italic px-2">X</button>
                  </div>
                ))}
             </div>
           </div>
+
           {gruposDef.map((g, idx) => (
             <div key={idx} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-200 italic">
               <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">{g.titulo}</h2>
@@ -293,17 +316,17 @@ const App = () => {
 
   // --- RENDER PRINCIPAL ---
   
-  // PRÉ-CÁLCULO DA EVOLUÇÃO MENSAL (Usa o mes_caixa para a contabilidade!)
+  // PRÉ-CÁLCULO DA EVOLUÇÃO MENSAL
   let saldoAcumuladoLoop = 0;
   const dadosEvolucao = mesesAbbr.map(mesAbbr => {
     const mesDb = mesesMap[mesAbbr];
-    // Se o mes_caixa não existir (registros antigos), ele usa o mes da parcela para não quebrar
     const arrec = historico.filter(h => (h.mes_caixa || h.mes) === mesDb).reduce((acc, h) => acc + Number(h.valor), 0);
-    const saidaM = saidas.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
+    const rendM = rendimentosConta.filter(r => r.mes === mesDb).reduce((acc, r) => acc + Number(r.valor), 0);
+    const saidaM = saidasReais.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
     const meta = getMetaMensal(mesDb);
     
-    saldoAcumuladoLoop = saldoAcumuladoLoop + arrec - saidaM;
-    return { mesAbbr, arrec, saidaM, saldo: saldoAcumuladoLoop, meta };
+    saldoAcumuladoLoop = saldoAcumuladoLoop + arrec + rendM - saidaM;
+    return { mesAbbr, arrec, rendM, saidaM, saldo: saldoAcumuladoLoop, meta };
   });
 
   return (
@@ -323,9 +346,15 @@ const App = () => {
             <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest mb-1 italic">SALDO EM CAIXA (ACUMULADO)</p>
             <h1 className="text-4xl md:text-7xl font-black text-[#22c55e] italic tracking-tighter italic">R$ {saldoAtual.toLocaleString('pt-BR')}</h1>
           </div>
-          <div className="bg-[#1A1D23] p-4 rounded-3xl border border-gray-800 self-start md:self-center italic">
-            <p className="text-[8px] text-gray-500 font-black uppercase mb-1 italic">ARRECADADO TOTAL:</p>
-            <p className="text-xl font-black italic">R$ {totalArrecadado.toLocaleString('pt-BR')}</p>
+          <div className="bg-[#1A1D23] p-4 rounded-3xl border border-gray-800 self-start md:self-center italic flex gap-6">
+            <div>
+              <p className="text-[8px] text-gray-500 font-black uppercase mb-1 italic">ARRECADADO FAMÍLIA:</p>
+              <p className="text-xl font-black italic">R$ {totalArrecadado.toLocaleString('pt-BR')}</p>
+            </div>
+            <div className="border-l border-gray-800 pl-6">
+              <p className="text-[8px] text-green-700 font-black uppercase mb-1 italic">RENDIMENTO BANCÁRIO:</p>
+              <p className="text-xl font-black text-green-500 italic">+ R$ {totalRendimentos.toLocaleString('pt-BR')}</p>
+            </div>
           </div>
         </div>
 
@@ -345,13 +374,14 @@ const App = () => {
         <div className="mt-8 italic">
            <h2 className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-4 italic">EVOLUÇÃO MENSAL</h2>
            <div className="overflow-x-auto -mx-6 px-6 italic">
-             <table className="w-full text-left border-collapse min-w-[280px] italic">
+             <table className="w-full text-left border-collapse min-w-[320px] italic">
                <thead>
                  <tr className="border-b border-gray-800 text-[8px] text-gray-600 font-black uppercase italic">
                    <th className="pb-3 italic">MÊS</th>
-                   <th className="pb-3 text-green-500 italic">ARREC.</th>
+                   <th className="pb-3 text-green-500 italic">FAMÍLIA</th>
+                   <th className="pb-3 text-green-700 italic">RENDIM.</th>
                    <th className="pb-3 text-red-500 italic">SAÍDA</th>
-                   <th className="pb-3 text-blue-400 italic">SALDO BANCO</th>
+                   <th className="pb-3 text-blue-400 italic">SALDO CAIXA</th>
                    <th className="pb-3 text-right italic">STATUS (%)</th>
                  </tr>
                </thead>
@@ -359,15 +389,10 @@ const App = () => {
                  {dadosEvolucao.map(item => (
                    <tr key={item.mesAbbr} onClick={() => setSelectedMonth(item.mesAbbr)} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-all cursor-pointer italic">
                      <td className="py-4 text-gray-300 italic">{item.mesAbbr}</td>
-                     <td className="py-4 text-green-500 italic">
-                       {item.arrec > 0 ? `R$ ${item.arrec.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}
-                     </td>
-                     <td className="py-4 text-red-400 italic">
-                       {item.saidaM > 0 ? `R$ ${item.saidaM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}
-                     </td>
-                     <td className="py-4 text-blue-400 italic">
-                       R$ {item.saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                     </td>
+                     <td className="py-4 text-green-500 italic">{item.arrec > 0 ? `R$ ${item.arrec.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
+                     <td className="py-4 text-green-700 italic">{item.rendM > 0 ? `+ R$ ${item.rendM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
+                     <td className="py-4 text-red-400 italic">{item.saidaM > 0 ? `- R$ ${item.saidaM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
+                     <td className="py-4 text-blue-400 italic">R$ {item.saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                      <td className={`py-4 text-right italic ${item.arrec >= item.meta ? 'text-[#22c55e]' : 'text-gray-600'}`}>
                        {item.arrec > 0 ? `${((item.arrec/item.meta)*100).toFixed(0)}%` : '—'}
                      </td>
@@ -428,13 +453,17 @@ const App = () => {
         </div>
 
         <div className="space-y-4 italic">
-          <h2 className="text-[9px] font-black text-red-900 uppercase tracking-widest ml-4 italic">Saídas Detalhadas</h2>
+          <h2 className="text-[9px] font-black text-gray-600 uppercase tracking-widest ml-4 italic">Movimentações da Conta</h2>
           <div className="bg-[#121418] rounded-[30px] p-6 border border-gray-800 min-h-[120px] italic">
-            {saidas.slice(0, 5).map(s => (
+            {saidas.slice(0, 7).map(s => (
               <div key={s.id} className="mb-3 border-b border-gray-800 pb-3 last:border-0 italic">
                 <div className="flex justify-between items-start mb-1 text-[7px] font-black italic">
-                   <span className="bg-red-900/30 text-red-500 px-2 py-0.5 rounded-full uppercase italic">{s.mes}</span>
-                   <span className="text-red-500 italic">R$ {s.valor}</span>
+                   <span className={`${s.tipo === 'rendimento' ? 'bg-green-900/30 text-green-500' : 'bg-red-900/30 text-red-500'} px-2 py-0.5 rounded-full uppercase italic`}>
+                     {s.mes} • {s.tipo === 'rendimento' ? 'ENTRADA' : 'SAÍDA'}
+                   </span>
+                   <span className={s.tipo === 'rendimento' ? 'text-green-500' : 'text-red-500'}>
+                     {s.tipo === 'rendimento' ? '+' : '-'} R$ {s.valor}
+                   </span>
                 </div>
                 <p className="text-[9px] font-bold text-gray-400 italic">{s.descricao}</p>
               </div>

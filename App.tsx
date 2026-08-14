@@ -455,7 +455,7 @@ const App = () => {
         <div className="space-y-4 italic">
           <h2 className="text-[9px] font-black text-gray-600 uppercase tracking-widest ml-4 italic">Movimentações da Conta</h2>
           <div className="bg-[#121418] rounded-[30px] p-6 border border-gray-800 min-h-[120px] italic">
-            {saidas.slice(0, 7).map(s => (
+            {saidas.map(s => (
               <div key={s.id} className="mb-3 border-b border-gray-800 pb-3 last:border-0 italic">
                 <div className="flex justify-between items-start mb-1 text-[7px] font-black italic">
                    <span className={`${s.tipo === 'rendimento' ? 'bg-green-900/30 text-green-500' : 'bg-red-900/30 text-red-500'} px-2 py-0.5 rounded-full uppercase italic`}>

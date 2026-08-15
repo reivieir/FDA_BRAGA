@@ -17,13 +17,10 @@ const App = () => {
   // Controles de Telas e Modais
   const [selectedMembroId, setSelectedMembroId] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null); 
-  const [activeModal, setActiveModal] = useState<string | null>(null); 
+  const [activeModal, setActiveModal] = useState<string | null>(null); // 'evolucao', 'membros', 'extratos', 'fluxo', 'pagamento', 'chacara'
   const [expandedGrupo, setExpandedGrupo] = useState<number | null>(null);
   const [showLogin, setShowLogin] = useState(false);
   const [senha, setSenha] = useState('');
-  
-  // Contador de Acessos
-  const [acessos, setAcessos] = useState<number | null>(null);
   
   // Controles de Formulário Admin
   const [filtrosGrupos, setFiltrosGrupos] = useState<any>({ 0: 'Todos', 1: 'Todos', 2: 'Todos', 3: 'Todos', 4: 'Todos' });
@@ -75,15 +72,7 @@ const App = () => {
     { titulo: "Grupo Julia", nomes: ["Julia", "Juan"] }
   ];
 
-  useEffect(() => { 
-    fetchAll(); 
-    
-    // Incrementa e busca o contador de acessos silenciosamente
-    fetch('https://api.counterapi.dev/v1/familia_alegria_braganca_2026/acessos/up')
-      .then(res => res.json())
-      .then(data => setAcessos(data.count))
-      .catch(() => {}); // Falha silenciosa se houver erro de rede
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
     try {
@@ -403,7 +392,7 @@ const App = () => {
 
   // --- APP PRINCIPAL (Estilo Fintech Bank Card) ---
   return (
-    <div className="min-h-screen bg-[#F4F5F7] font-sans text-[#061B30] selection:bg-[#CBAA61] selection:text-white pb-10">
+    <div className="min-h-screen bg-[#F4F5F7] font-sans text-[#061B30] selection:bg-[#CBAA61] selection:text-white pb-24">
       
       <div className="max-w-xl mx-auto pt-6 px-4">
         
@@ -481,50 +470,39 @@ const App = () => {
         </div>
 
         {/* MÓDULOS DE AÇÃO (GRID DE 6 BOTÕES) */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
           
-          <button onClick={() => setActiveModal('pagamento')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">Dados PIX</span>
+          <button onClick={() => setActiveModal('pagamento')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Dados PIX</span>
           </button>
 
-          <button onClick={() => setActiveModal('chacara')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">A Chácara</span>
+          <button onClick={() => setActiveModal('chacara')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">A Chácara</span>
           </button>
 
-          <button onClick={() => setActiveModal('evolucao')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">Evolução</span>
+          <button onClick={() => setActiveModal('evolucao')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Evolução</span>
           </button>
 
-          <button onClick={() => setActiveModal('membros')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">Membros</span>
+          <button onClick={() => setActiveModal('membros')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Membros</span>
           </button>
 
-          <button onClick={() => setActiveModal('docs')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">Extratos</span>
+          <button onClick={() => setActiveModal('docs')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Extratos</span>
           </button>
 
-          <button onClick={() => setActiveModal('fluxo')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">Fluxo</span>
+          <button onClick={() => setActiveModal('fluxo')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Fluxo</span>
           </button>
 
         </div>
-        
-        {/* CONTADOR DE ACESSOS DISCRETO NO RODAPÉ */}
-        {acessos !== null && (
-          <div className="mt-12 text-center">
-            <p className="text-[9px] text-gray-400/60 font-black uppercase tracking-widest flex justify-center items-center gap-1.5 hover:text-gray-400 transition-colors">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-              {acessos} acessos
-            </p>
-          </div>
-        )}
-
       </div>
 
       {/* ============================================================ */}

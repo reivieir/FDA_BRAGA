@@ -140,37 +140,33 @@ const App = () => {
     const totalEsperadoMes = isManuActive(mesDb) ? 27 : 26; 
 
     return (
-      <div className="min-h-screen bg-[#FAFAFA] p-6 font-sans text-black">
-        <button onClick={() => setSelectedMonth(null)} className="mb-8 font-bold text-gray-400 uppercase text-xs tracking-widest hover:text-black transition-colors flex items-center gap-2">
-          <span className="text-lg leading-none mb-1">←</span> Voltar
-        </button>
-        <div className="max-w-xl mx-auto bg-white p-8 md:p-12 border border-black shadow-sm relative">
-          <div className="absolute -inset-2 border border-gray-200 -z-10 hidden md:block"></div>
-          <h2 className="text-4xl font-light uppercase tracking-widest text-black mb-8">{selectedMonth}</h2>
-          <div className="border-t border-black pt-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-            <div className="text-left w-full">
-              <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-2">Saldo Período</p>
-              <p className="text-3xl font-light text-black">R$ {(arrecMes + rendMes - saidaMes).toLocaleString('pt-BR')}</p>
-              <p className="text-xs text-gray-400 uppercase tracking-widest mt-2 border-l-2 border-black pl-2">
+      <div className="min-h-screen bg-[#0B0C10] p-6 font-sans text-white">
+        <button onClick={() => setSelectedMonth(null)} className="mb-6 font-black text-[#D4A373] uppercase text-xs tracking-widest hover:text-white transition-colors">← Voltar</button>
+        <div className="max-w-xl mx-auto bg-[#121418] p-6 rounded-3xl shadow-2xl border border-gray-800 border-b-4 border-b-sky-500">
+          <h2 className="text-3xl font-black uppercase tracking-tighter text-white mb-4">{selectedMonth}</h2>
+          <div className="border-t border-gray-800 pt-4 flex justify-between items-end">
+            <div className="text-left">
+              <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Saldo Período</p>
+              <p className="text-3xl font-black text-sky-400">R$ {(arrecMes + rendMes - saidaMes).toLocaleString('pt-BR')}</p>
+              <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest mt-1">
                 {pagantesUnicosCount} PIXs (de {totalEsperadoMes})
               </p>
             </div>
-            <div className="text-left md:text-right flex flex-col gap-2 w-full md:w-auto border-t md:border-t-0 border-gray-200 pt-4 md:pt-0">
-              <p className="text-xs text-green-700 uppercase tracking-wider"><span className="text-gray-400 mr-2">Rendimentos</span> R$ {rendMes}</p>
-              <p className="text-xs text-red-600 uppercase tracking-wider"><span className="text-gray-400 mr-2">Saída</span> R$ {saidaMes}</p>
-              <p className="text-xs font-bold text-black uppercase tracking-wider mt-2">Meta: R$ {getMetaMensal(mesDb)}</p>
+            <div className="text-right flex flex-col gap-1">
+              <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Rend.: + R$ {rendMes}</p>
+              <p className="text-[10px] text-rose-400 font-bold uppercase tracking-wider">Saída: - R$ {saidaMes}</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Meta: R$ {getMetaMensal(mesDb)}</p>
             </div>
           </div>
         </div>
-        <div className="max-w-xl mx-auto mt-12 space-y-4">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Detalhamento dos Lançamentos</p>
+        <div className="max-w-xl mx-auto mt-6 space-y-3">
             {pagsMes.map(p => (
-              <div key={p.id} className="bg-white p-5 flex justify-between items-center border border-gray-200 hover:border-black transition-colors">
+              <div key={p.id} className="bg-[#1A1D23] p-4 rounded-xl flex justify-between items-center border border-gray-800 shadow-sm">
                 <div>
-                  <span className="font-bold text-black uppercase text-xs tracking-widest block">{p.membros?.nome}</span>
-                  {p.mes !== mesDb && <span className="text-[9px] text-red-500 uppercase tracking-widest mt-1 block">Ref. parcela de {p.mes}</span>}
+                  <span className="font-black text-white uppercase text-xs tracking-widest block">{p.membros?.nome}</span>
+                  {p.mes !== mesDb && <span className="text-[9px] text-rose-400 uppercase font-bold tracking-widest mt-1 block">Ref. parcela de {p.mes}</span>}
                 </div>
-                <span className="font-light text-black text-lg">R$ {p.valor}</span>
+                <span className="font-black text-emerald-400 text-lg">R$ {p.valor}</span>
               </div>
             ))}
         </div>
@@ -185,41 +181,38 @@ const App = () => {
     const metaMembro = getMetaInd(m?.nome || '');
     const pagouMes = pags.some(p => p.mes === mesAtualFull);
     const statusText = pagouMes ? "QUITADO" : diaDoMes > 15 ? "ATRASADO" : "PENDENTE";
-    const statusColor = pagouMes ? 'bg-black text-white' : diaDoMes > 15 ? 'bg-red-600 text-white' : 'bg-gray-200 text-black';
+    const statusColor = pagouMes ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : diaDoMes > 15 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-gray-800 text-gray-400 border border-gray-700';
 
     return (
-      <div className="min-h-screen bg-[#FAFAFA] p-6 font-sans text-black">
-        <button onClick={() => setSelectedMembroId(null)} className="mb-8 font-bold text-gray-400 uppercase text-xs tracking-widest hover:text-black transition-colors flex items-center gap-2">
-          <span className="text-lg leading-none mb-1">←</span> Voltar
-        </button>
-        <div className="max-w-xl mx-auto bg-white p-8 md:p-12 border border-black relative">
-          <div className="absolute -inset-2 border border-gray-200 -z-10 hidden md:block"></div>
-          <div className="flex justify-between items-start mb-8">
-             <h2 className="text-3xl font-light uppercase text-black tracking-widest">{m?.nome}</h2>
-             <div className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest ${statusColor}`}>{statusText}</div>
+      <div className="min-h-screen bg-[#0B0C10] p-6 font-sans text-white">
+        <button onClick={() => setSelectedMembroId(null)} className="mb-6 font-black text-[#D4A373] uppercase text-xs tracking-widest hover:text-white transition-colors">← Voltar</button>
+        <div className="max-w-xl mx-auto bg-[#121418] p-6 rounded-3xl shadow-2xl border border-gray-800">
+          <div className="flex justify-between items-start mb-6">
+             <h2 className="text-2xl font-black uppercase text-white tracking-widest">{m?.nome}</h2>
+             <div className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg ${statusColor}`}>{statusText}</div>
           </div>
           
-          <div className="border-t border-black pt-6 flex justify-between items-end">
+          <div className="border-t border-gray-800 pt-4 flex justify-between items-end">
             <div>
-               <span className="text-[10px] text-gray-400 uppercase tracking-widest block mb-2">Total Contribuído</span>
-               <span className="font-light text-4xl text-black">R$ {pagoAcumulado}</span>
+               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Total Contribuído</span>
+               <span className="font-black text-3xl text-emerald-400">R$ {pagoAcumulado}</span>
             </div>
-            <span className="text-xs uppercase tracking-widest text-gray-500 font-bold border-l-2 border-gray-200 pl-3 pb-1">Meta: R$ {metaMembro}</span>
+            <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold border-l-2 border-gray-800 pl-3 pb-1">Meta: R$ {metaMembro}</span>
           </div>
           
-          <div className="w-full bg-gray-100 h-[2px] mt-8 overflow-hidden">
-             <div className="bg-black h-full transition-all duration-1000" style={{ width: `${Math.min((pagoAcumulado/metaMembro)*100, 100)}%` }}></div>
+          <div className="w-full bg-[#1A1D23] h-2 rounded-full mt-4 overflow-hidden">
+             <div className="bg-emerald-500 h-full transition-all duration-1000" style={{ width: `${Math.min((pagoAcumulado/metaMembro)*100, 100)}%` }}></div>
           </div>
           
-          <div className="mt-12 space-y-3">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Histórico de Pagamentos</p>
+          <div className="mt-8 space-y-3">
+            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Histórico de Pagamentos</p>
             {pags.map(p => (
-              <div key={p.id} className="flex justify-between items-center p-5 bg-white border border-gray-200 hover:border-black transition-colors">
+              <div key={p.id} className="flex justify-between items-center p-4 bg-[#1A1D23] rounded-xl border border-gray-800">
                 <div className="flex flex-col gap-1">
-                  <span className="font-bold text-black uppercase text-xs tracking-widest">Ref: {p.mes}</span>
-                  {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[9px] text-gray-500 uppercase tracking-widest">Pago em: {p.mes_caixa}</span>}
+                  <span className="font-bold text-white uppercase text-xs tracking-widest">Ref: {p.mes}</span>
+                  {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Pago em: {p.mes_caixa}</span>}
                 </div>
-                <span className="font-light text-black text-lg">R$ {p.valor}</span>
+                <span className="font-black text-emerald-400 text-lg">R$ {p.valor}</span>
               </div>
             ))}
           </div>
@@ -228,79 +221,81 @@ const App = () => {
     );
   }
 
-  // TELA 3: ADMIN (Refinada para o estilo minimalista)
+  // TELA 3: ADMIN
   if (isAdmin) {
     return (
-      <div className="p-6 bg-[#FAFAFA] min-h-screen font-sans pb-20 text-black">
-        <div className="flex justify-between items-center mb-12 max-w-4xl mx-auto border-b border-black pb-6">
-           <button onClick={() => setIsAdmin(false)} className="font-bold text-gray-500 uppercase text-xs tracking-widest hover:text-black transition-colors flex items-center gap-2">
-             <span className="text-lg leading-none mb-1">←</span> Sair
-           </button>
+      <div className="p-4 md:p-6 bg-[#0B0C10] min-h-screen font-sans pb-20 text-white">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 max-w-5xl mx-auto border-b border-gray-800 pb-4">
+           <button onClick={() => setIsAdmin(false)} className="font-black text-sky-400 uppercase text-xs tracking-widest hover:text-white transition-colors">← Voltar ao Site</button>
            
-           <div className="flex gap-4">
-             <div className="flex flex-col text-right">
-                <span className="text-[9px] text-gray-500 font-bold uppercase mb-2 tracking-widest">Referente a (Dívida)</span>
-                <select className="p-2 border border-gray-300 text-xs font-bold bg-white text-black outline-none focus:border-black rounded-none" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
+           <div className="flex gap-4 w-full md:w-auto">
+             <div className="flex flex-col flex-1 md:flex-none">
+                <span className="text-[9px] text-gray-500 font-black uppercase mb-1 tracking-widest">Referente a (Dívida)</span>
+                <select className="p-2 border border-gray-700 text-xs font-bold bg-[#121418] text-white outline-none focus:border-sky-500 rounded-xl" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
                   {Object.values(mesesMap).map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
              </div>
-             <div className="flex flex-col text-right">
-                <span className="text-[9px] text-gray-500 font-bold uppercase mb-2 tracking-widest">Caiu no banco em</span>
-                <select className="p-2 border border-gray-300 text-xs font-bold bg-white text-black outline-none focus:border-black rounded-none" value={mesCaixaGlobal} onChange={e => setMesCaixaGlobal(e.target.value)}>
+             <div className="flex flex-col flex-1 md:flex-none">
+                <span className="text-[9px] text-emerald-500 font-black uppercase mb-1 tracking-widest">Caiu no banco em</span>
+                <select className="p-2 border border-emerald-500/50 text-xs font-bold bg-[#121418] text-white outline-none focus:border-emerald-500 rounded-xl" value={mesCaixaGlobal} onChange={e => setMesCaixaGlobal(e.target.value)}>
                   {Object.values(mesesMap).map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
              </div>
            </div>
         </div>
 
-        <div className="space-y-12 max-w-4xl mx-auto">
+        <div className="space-y-6 max-w-5xl mx-auto">
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              {/* Box Auditoria */}
-             <div className="bg-white p-8 border border-black relative">
-               <h2 className="text-[10px] font-bold uppercase mb-8 tracking-widest text-gray-400">01. Subir Extrato</h2>
-               <div className="flex flex-col gap-4 mb-6">
-                 <input type="text" placeholder="Nome do arquivo" className="w-full p-3 border border-gray-200 text-black text-xs outline-none focus:border-black" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
-                 <input type="file" className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-black hover:file:bg-gray-200 cursor-pointer" onChange={e => setFileToUpload(e.target.files?.[0] || null)} />
-                 <button onClick={handleUpload} className="bg-black text-white px-6 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors w-full mt-2">Enviar Documento</button>
+             <div className="bg-[#121418] p-6 rounded-3xl border border-gray-800 border-b-4 border-b-sky-500 shadow-xl">
+               <h2 className="text-[10px] font-black uppercase mb-5 tracking-widest text-sky-400">1. Subir Extrato</h2>
+               <div className="flex flex-col gap-3 mb-4">
+                 <input type="text" placeholder="Nome do arquivo" className="w-full p-3 rounded-xl bg-[#0B0C10] border border-gray-800 text-white text-xs outline-none focus:border-sky-500" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
+                 <div className="flex gap-2">
+                   <input type="file" className="flex-1 text-[9px] text-gray-400 file:mr-2 file:py-2 file:px-3 file:border-0 file:rounded-lg file:text-[9px] file:font-black file:bg-gray-800 file:text-white hover:file:bg-gray-700 cursor-pointer" onChange={e => setFileToUpload(e.target.files?.[0] || null)} />
+                   <button onClick={handleUpload} className="bg-sky-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-sky-400 transition-colors">Subir</button>
+                 </div>
                </div>
-               <div className="space-y-2 mt-8 pt-6 border-t border-gray-100">
+               <div className="space-y-2 mt-4 pt-4 border-t border-gray-800 max-h-[150px] overflow-y-auto pr-2">
                  {docs.map(d => (
-                   <div key={d.id} className="flex justify-between items-center bg-gray-50 p-3 text-[10px] border border-gray-100 uppercase tracking-wider">
-                     <span className="text-gray-500">{d.mes}: <span className="text-black font-bold ml-1">{d.nome_exibicao}</span></span>
-                     <button onClick={() => excluirDoc(d.id, d.url_arquivo)} className="text-red-500 font-bold px-2 hover:text-red-700">X</button>
+                   <div key={d.id} className="flex justify-between items-center bg-[#1A1D23] p-3 rounded-xl text-[10px] border border-gray-800 uppercase tracking-wider">
+                     <span className="text-gray-400">{d.mes}: <span className="text-white font-bold ml-1">{d.nome_exibicao}</span></span>
+                     <button onClick={() => excluirDoc(d.id, d.url_arquivo)} className="text-rose-500 font-black px-2 hover:text-rose-400">X</button>
                    </div>
                  ))}
                </div>
              </div>
 
              {/* Box Movimentação */}
-             <div className="bg-white p-8 border border-black relative">
-               <h2 className="text-[10px] font-bold uppercase mb-8 tracking-widest text-gray-400">02. Fluxo da Conta</h2>
+             <div className="bg-[#121418] p-6 rounded-3xl border border-gray-800 border-b-4 border-b-rose-500 shadow-xl">
+               <h2 className="text-[10px] font-black uppercase mb-5 tracking-widest text-white">2. Fluxo Bancário</h2>
                
-               <div className="flex gap-2 mb-6">
-                 <button onClick={() => setTipoFluxo('saida')} className={`flex-1 p-3 text-[9px] font-bold uppercase tracking-widest transition-colors border ${tipoFluxo === 'saida' ? 'bg-black text-white border-black' : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400'}`}>Saída</button>
-                 <button onClick={() => setTipoFluxo('rendimento')} className={`flex-1 p-3 text-[9px] font-bold uppercase tracking-widest transition-colors border ${tipoFluxo === 'rendimento' ? 'bg-black text-white border-black' : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400'}`}>Rendimento</button>
+               <div className="flex gap-2 mb-4">
+                 <button onClick={() => setTipoFluxo('saida')} className={`flex-1 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border ${tipoFluxo === 'saida' ? 'bg-rose-500/20 text-rose-400 border-rose-500/50' : 'bg-[#1A1D23] text-gray-500 border-gray-800'}`}>Saída</button>
+                 <button onClick={() => setTipoFluxo('rendimento')} className={`flex-1 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border ${tipoFluxo === 'rendimento' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50' : 'bg-[#1A1D23] text-gray-500 border-gray-800'}`}>Rend.</button>
                </div>
 
-               <input type="text" placeholder="Descrição do lançamento" className="w-full p-3 bg-white border border-gray-200 text-black text-xs mb-4 outline-none focus:border-black" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
-               <div className="flex gap-2">
-                   <input type="number" placeholder="R$ Valor" className="w-1/2 p-3 bg-white border border-gray-200 text-black text-xs font-bold outline-none focus:border-black" value={valorSaida} onChange={e => setValorSaida(e.target.value)} />
-                   <button onClick={lancarMovimentacao} className="w-1/2 bg-black text-white font-bold text-[10px] uppercase tracking-widest hover:bg-gray-800 transition-colors">Registrar</button>
+               <div className="flex flex-col gap-3">
+                 <input type="text" placeholder="Descrição (ex: Rendimento)" className="w-full p-3 rounded-xl bg-[#0B0C10] border border-gray-800 text-white text-xs outline-none focus:border-gray-500" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
+                 <div className="flex gap-2">
+                     <input type="number" placeholder="R$ Valor" className="w-1/2 p-3 rounded-xl bg-[#0B0C10] border border-gray-800 text-white text-xs font-bold outline-none focus:border-gray-500" value={valorSaida} onChange={e => setValorSaida(e.target.value)} />
+                     <button onClick={lancarMovimentacao} className="w-1/2 bg-white text-black rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-colors">Registrar</button>
+                 </div>
                </div>
                
-               <div className="mt-8 space-y-2 border-t border-gray-100 pt-6 max-h-[200px] overflow-y-auto pr-2">
+               <div className="mt-4 space-y-2 border-t border-gray-800 pt-4 max-h-[150px] overflow-y-auto pr-2">
                   {saidas.map(s => (
-                    <div key={s.id} className="flex justify-between items-center text-[10px] bg-white p-3 border border-gray-100 uppercase tracking-wider">
-                      <div className="flex items-center gap-3">
-                        <span className={`font-bold ${s.tipo === 'rendimento' ? 'text-green-600' : 'text-red-500'}`}>
+                    <div key={s.id} className="flex justify-between items-center text-[10px] bg-[#1A1D23] p-3 rounded-xl border border-gray-800 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-black ${s.tipo === 'rendimento' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
                           {s.tipo === 'rendimento' ? 'IN' : 'OUT'}
                         </span>
-                        <span className="text-gray-500">{s.mes} • {s.descricao}</span>
+                        <span className="text-gray-400">{s.mes} • {s.descricao}</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-black">R$ {s.valor}</span>
-                        <button onClick={() => excluirItem(s.id, 'saidas_caixa')} className="text-red-500 font-bold hover:text-red-700">X</button>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white">R$ {s.valor}</span>
+                        <button onClick={() => excluirItem(s.id, 'saidas_caixa')} className="text-rose-500 font-black hover:text-rose-400">X</button>
                       </div>
                     </div>
                   ))}
@@ -309,17 +304,17 @@ const App = () => {
           </div>
 
           {/* Box Grupos */}
-          <div className="border-t border-black pt-12">
-             <h2 className="text-[10px] font-bold uppercase mb-8 tracking-widest text-gray-400">03. Lançamento de PIX (Membros)</h2>
+          <div className="bg-[#121418] p-6 rounded-3xl border border-gray-800 shadow-xl mt-6">
+             <h2 className="text-[10px] font-black uppercase mb-6 tracking-widest text-gray-500">3. Lançamento de PIX</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {gruposDef.map((g, idx) => (
-                  <div key={idx} className="bg-white p-6 border border-gray-200">
-                    <h2 className="text-xs font-bold text-black uppercase tracking-widest mb-6">{g.titulo}</h2>
-                    <select className="w-full p-3 border border-gray-200 mb-6 bg-white text-gray-600 text-xs font-bold outline-none focus:border-black rounded-none uppercase tracking-wider" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
+                  <div key={idx} className="bg-[#1A1D23] p-5 rounded-2xl border border-gray-800">
+                    <h2 className="text-[11px] font-black text-white uppercase tracking-widest mb-4">{g.titulo}</h2>
+                    <select className="w-full p-2.5 rounded-xl border border-gray-700 mb-4 bg-[#0B0C10] text-gray-400 text-xs font-bold outline-none focus:border-white uppercase tracking-wider" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
                       <option value="Todos">Selecionar Membro...</option>
                       {g.nomes.filter(n => n !== 'Manu' || isManuActive(mesGlobal)).map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {g.nomes
                         .filter(n => n !== 'Manu' || isManuActive(mesGlobal))
                         .filter(n => filtrosGrupos[idx] === 'Todos' || filtrosGrupos[idx] === n)
@@ -328,22 +323,22 @@ const App = () => {
                         if (!m) return null;
                         if (filtrosGrupos[idx] === 'Todos') {
                           return (
-                            <div key={m.id} className="flex items-center gap-2 border-t border-gray-100 pt-4">
-                              <span className="text-[10px] font-bold w-20 truncate uppercase text-gray-500 tracking-wider">{m.nome}</span>
-                              <input type="number" placeholder="R$" className="flex-1 p-2 bg-white border border-gray-200 text-xs font-bold text-black outline-none focus:border-black" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
-                              <button onClick={() => lancarPagamento(m.id, valoresLote[m.id])} className="bg-black text-white px-4 py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">OK</button>
+                            <div key={m.id} className="flex items-center gap-2 border-t border-gray-800 pt-3">
+                              <span className="text-[10px] font-bold w-20 truncate uppercase text-gray-400 tracking-wider">{m.nome}</span>
+                              <input type="number" placeholder="R$" className="flex-1 p-2 rounded-xl bg-[#0B0C10] border border-gray-700 text-xs font-bold text-white outline-none focus:border-emerald-500" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
+                              <button onClick={() => lancarPagamento(m.id, valoresLote[m.id])} className="bg-emerald-500 text-[#0B0C10] rounded-xl px-3 py-2 text-[9px] font-black uppercase tracking-widest hover:bg-emerald-400 transition-colors">OK</button>
                             </div>
                           );
                         } else {
                           return historico.filter(h => h.membro_id === m.id).map(p => (
-                            <div key={p.id} className="flex justify-between items-center p-4 bg-gray-50 border border-gray-200 mt-2">
+                            <div key={p.id} className="flex justify-between items-center p-3 bg-[#0B0C10] rounded-xl border border-gray-800 mt-2">
                               <div className="flex flex-col gap-1">
-                                <span className="text-[10px] font-bold text-black tracking-widest uppercase">Ref: {p.mes}</span>
-                                {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Caixa: {p.mes_caixa}</span>}
+                                <span className="text-[9px] font-bold text-gray-300 tracking-widest uppercase">Ref: {p.mes}</span>
+                                {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[8px] text-gray-600 font-bold uppercase tracking-widest">Caixa: {p.mes_caixa}</span>}
                               </div>
-                              <div className="flex items-center gap-4">
-                                <span className="text-xs font-bold text-black">R$ {p.valor}</span>
-                                <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-red-500 hover:text-red-700 font-black text-xs uppercase tracking-wider">X</button>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-black text-emerald-400">R$ {p.valor}</span>
+                                <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-rose-500 hover:text-rose-400 font-black text-[10px] uppercase">X</button>
                               </div>
                             </div>
                           ));
@@ -374,159 +369,145 @@ const App = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans text-black selection:bg-black selection:text-white pb-24">
+    <div className="min-h-screen bg-[#0B0C10] font-sans text-white selection:bg-[#D4A373] selection:text-black pb-24">
       
-      {/* NOVO LOGIN MINIMALISTA NO TOPO DIREITO */}
-      <div className="absolute top-6 right-6 md:top-10 md:right-10 z-40">
+      {/* LOGIN MINIMALISTA NO TOPO DIREITO */}
+      <div className="absolute top-4 right-4 md:top-6 md:right-6 z-40">
         {!showLogin ? (
-           <button onClick={() => setShowLogin(true)} className="text-gray-400 hover:text-black transition-colors" title="Acesso Restrito">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
+           <button onClick={() => setShowLogin(true)} className="text-gray-600 hover:text-[#D4A373] transition-colors p-2 bg-[#121418] rounded-full border border-gray-800" title="Acesso Restrito">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
            </button>
         ) : (
-           <div className="flex items-center gap-0 bg-white border border-black shadow-sm">
-              <input type="password" placeholder="SENHA" className="p-3 w-32 bg-transparent text-[10px] uppercase tracking-widest font-bold text-black outline-none placeholder:text-gray-300" value={senha} onChange={e => {
+           <div className="flex items-center bg-[#121418] border border-gray-700 rounded-xl overflow-hidden shadow-2xl">
+              <input type="password" placeholder="SENHA" className="p-2 w-28 bg-transparent text-[10px] uppercase tracking-widest font-bold text-white outline-none placeholder:text-gray-600" value={senha} onChange={e => {
                  setSenha(e.target.value);
                  if (e.target.value === '041252') { setIsAdmin(true); setShowLogin(false); setSenha(''); }
               }} autoFocus />
-              <button onClick={() => setShowLogin(false)} className="text-gray-400 hover:text-black font-bold px-4 text-xs transition-colors border-l border-gray-100">X</button>
+              <button onClick={() => setShowLogin(false)} className="text-gray-500 hover:text-white font-black px-3 py-2 text-xs transition-colors bg-gray-800/50">X</button>
            </div>
         )}
       </div>
 
-      {/* CABEÇALHO EDITORIAL */}
-      <header className="pt-16 pb-12 px-6 max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-end justify-between border-b border-black">
-        <div>
-           <p className="text-[9px] tracking-[0.4em] uppercase text-gray-400 mb-4">Dezembro 2026</p>
-           <h1 className="text-4xl md:text-6xl font-light tracking-tighter text-black uppercase">Família da Alegria</h1>
-        </div>
-        <div className="text-left md:text-right mt-6 md:mt-0 flex flex-col gap-1 border-l-2 md:border-l-0 border-black pl-4 md:pl-0">
-           <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Projeto Natal</p>
-           <p className="text-sm uppercase tracking-widest text-black font-light">Bragança City</p>
-        </div>
+      {/* CABEÇALHO */}
+      <header className="pt-10 pb-8 px-4 text-center">
+        <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-[#D4A373] uppercase mb-1">Família da Alegria</h1>
+        <p className="text-[9px] uppercase tracking-[0.3em] text-gray-500 font-bold">
+           <span className="text-emerald-500">Natal</span> Bragança City
+        </p>
       </header>
 
-      {/* BLOCO PRINCIPAL: SALDOS E META */}
-      <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-8">
-        
-        {/* Painel Principal de Saldo */}
-        <div className="lg:col-span-2 relative group">
-          <div className="absolute -top-3 -left-3 w-full h-full border border-gray-200 -z-10 hidden md:block transition-transform group-hover:translate-x-1 group-hover:translate-y-1"></div>
-          <div className="bg-white border border-black p-8 md:p-14">
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Saldo em Caixa Atual</p>
-            <h1 className="text-5xl md:text-7xl font-light text-black tracking-tighter">R$ {saldoAtual.toLocaleString('pt-BR')}</h1>
+      {/* BLOCO PRINCIPAL: SALDOS E META (COMPACTO) */}
+      <div className="max-w-5xl mx-auto px-4 mb-6">
+        <div className="bg-[#121418] rounded-[30px] p-6 shadow-2xl border border-gray-800">
+          
+          <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-6 mb-6">
+            <div className="text-center md:text-left w-full md:w-auto">
+              <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest mb-1">Saldo em Caixa Atual</p>
+              <h1 className="text-4xl md:text-5xl font-black text-emerald-400 tracking-tighter">R$ {saldoAtual.toLocaleString('pt-BR')}</h1>
+            </div>
             
-            <div className="mt-16 pt-8 border-t border-gray-100">
-               <div className="flex justify-between items-end mb-4">
-                  <div>
-                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Meta Global Bragança</p>
-                    <p className="text-xl font-light text-black">R$ {metaGlobalBragança.toLocaleString('pt-BR')}</p>
-                  </div>
-                  <p className="text-2xl font-light text-black">{( (totalArrecadado/metaGlobalBragança)*100 ).toFixed(1)}%</p>
-               </div>
-               <div className="w-full bg-gray-100 h-[2px] overflow-hidden relative">
-                  <div className="bg-black h-full transition-all duration-1000" style={{ width: `${(totalArrecadado/metaGlobalBragança)*100}%` }}></div>
-               </div>
+            <div className="bg-[#1A1D23] p-4 rounded-2xl border border-gray-800 flex flex-row gap-4 w-full md:w-auto justify-center md:justify-start">
+              <div className="text-center md:text-left">
+                <p className="text-[8px] text-gray-500 font-black uppercase mb-1 tracking-widest">Arrecadado</p>
+                <p className="text-lg font-black text-white">R$ {totalArrecadado.toLocaleString('pt-BR')}</p>
+              </div>
+              <div className="border-l border-gray-700 pl-4 text-center md:text-left">
+                <p className="text-[8px] text-emerald-600 font-black uppercase mb-1 tracking-widest">Rendimento</p>
+                <p className="text-lg font-black text-emerald-500">+ R$ {totalRendimentos.toLocaleString('pt-BR')}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Caixas Secundárias */}
-        <div className="flex flex-col gap-6 justify-between">
-          <div className="bg-white border border-black p-8 flex-1 flex flex-col justify-center relative">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-               <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-            </div>
-            <p className="text-[9px] text-gray-500 font-bold uppercase mb-2 tracking-widest">Arrecadado Família</p>
-            <p className="text-3xl font-light text-black">R$ {totalArrecadado.toLocaleString('pt-BR')}</p>
-          </div>
-          <div className="bg-white border border-black p-8 flex-1 flex flex-col justify-center border-l-4 border-l-black relative">
-            <p className="text-[9px] text-gray-500 font-bold uppercase mb-2 tracking-widest">Rendimento Bancário</p>
-            <p className="text-3xl font-light text-black">+ R$ {totalRendimentos.toLocaleString('pt-BR')}</p>
+          <div className="pt-4 border-t border-gray-800">
+             <div className="flex justify-between items-end mb-2">
+                <div>
+                  <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-0.5">Meta Bragança</p>
+                  <p className="text-sm font-bold text-gray-300">R$ {metaGlobalBragança.toLocaleString('pt-BR')}</p>
+                </div>
+                <p className="text-lg font-black text-emerald-400">{( (totalArrecadado/metaGlobalBragança)*100 ).toFixed(1)}%</p>
+             </div>
+             <div className="w-full bg-[#0B0C10] h-2 rounded-full overflow-hidden border border-gray-800">
+                <div className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full transition-all duration-1000" style={{ width: `${(totalArrecadado/metaGlobalBragança)*100}%` }}></div>
+             </div>
           </div>
         </div>
       </div>
 
-      {/* EVOLUÇÃO MENSAL (AGORA EM CARDS RESPONSIVOS - Fim da Tabela que precisa arrastar) */}
-      <div className="max-w-6xl mx-auto px-6 py-12">
-         <div className="flex items-center gap-6 mb-10">
-            <h2 className="text-[10px] text-gray-400 font-bold uppercase tracking-widest whitespace-nowrap">Evolução Mensal</h2>
-            <div className="h-[1px] bg-gray-200 w-full"></div>
+      {/* EVOLUÇÃO MENSAL: CARDS RESPONSIVOS E COLORIDOS */}
+      <div className="max-w-5xl mx-auto px-4 mb-8">
+         <div className="flex items-center gap-4 mb-4 ml-2">
+            <h2 className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Evolução Mensal</h2>
+            <div className="h-[1px] bg-gray-800 flex-1"></div>
          </div>
          
-         {/* GRID INTELIGENTE: 1 Coluna no Celular, 2 no Tablet, 3 no PC */}
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
            {dadosEvolucao.map(item => (
-             <div key={item.mesAbbr} onClick={() => setSelectedMonth(item.mesAbbr)} className="bg-white border border-black p-6 cursor-pointer hover:-translate-y-1 transition-transform group relative">
-               <div className="absolute top-0 left-0 w-1 h-0 bg-black transition-all group-hover:h-full"></div>
+             <div key={item.mesAbbr} onClick={() => setSelectedMonth(item.mesAbbr)} className="bg-[#121418] border border-gray-800 p-4 rounded-2xl cursor-pointer hover:border-gray-600 transition-colors group">
                
-               <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-                 <span className="text-xl font-light uppercase tracking-widest text-black">{item.mesAbbr}</span>
-                 <span className={`text-[9px] font-bold uppercase tracking-widest px-3 py-1 ${item.arrec >= item.meta ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'}`}>
+               <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
+                 <span className="text-lg font-black uppercase tracking-widest text-gray-200 group-hover:text-white transition-colors">{item.mesAbbr}</span>
+                 <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${item.arrec >= item.meta ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-[#1A1D23] text-gray-500 border border-gray-800'}`}>
                    {item.arrec > 0 ? `${((item.arrec/item.meta)*100).toFixed(0)}%` : '0%'}
                  </span>
                </div>
                
-               <div className="space-y-3 mb-6">
-                 <div className="flex justify-between items-center text-xs">
-                   <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Família</span>
-                   <span className="font-light text-black">{item.arrec > 0 ? `R$ ${item.arrec.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
+               <div className="space-y-1.5 mb-3">
+                 <div className="flex justify-between items-center text-[10px]">
+                   <span className="text-gray-500 font-bold uppercase tracking-wider">Família</span>
+                   <span className="font-black text-white">{item.arrec > 0 ? `R$ ${item.arrec.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
                  </div>
-                 <div className="flex justify-between items-center text-xs">
-                   <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Rendimento</span>
-                   <span className="font-light text-green-700">{item.rendM > 0 ? `+ R$ ${item.rendM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
+                 <div className="flex justify-between items-center text-[10px]">
+                   <span className="text-gray-500 font-bold uppercase tracking-wider">Rend.</span>
+                   <span className="font-black text-emerald-500">{item.rendM > 0 ? `+ R$ ${item.rendM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
                  </div>
-                 <div className="flex justify-between items-center text-xs">
-                   <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Saídas</span>
-                   <span className="font-light text-red-600">{item.saidaM > 0 ? `- R$ ${item.saidaM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
+                 <div className="flex justify-between items-center text-[10px]">
+                   <span className="text-gray-500 font-bold uppercase tracking-wider">Saídas</span>
+                   <span className="font-black text-rose-500">{item.saidaM > 0 ? `- R$ ${item.saidaM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
                  </div>
                </div>
                
-               <div className="pt-4 border-t border-black flex justify-between items-end">
-                 <span className="text-[9px] uppercase tracking-widest text-black font-bold">Caixa Mês</span>
-                 <span className="text-xl font-light text-black">R$ {item.saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+               <div className="pt-2 border-t border-gray-800 flex justify-between items-end">
+                 <span className="text-[9px] uppercase tracking-widest text-sky-500 font-black">Caixa Mês</span>
+                 <span className="text-sm font-black text-sky-400">R$ {item.saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                </div>
              </div>
            ))}
          </div>
       </div>
 
-      {/* TERCEIRA SEÇÃO: BLOCOS DE ADMINISTRAÇÃO E DADOS */}
-      <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-8 border-t border-gray-200 mt-8">
+      {/* BLOCOS INFERIORES: MEMBROS, EXTRATOS, FLUXO */}
+      <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* COLUNA 1: MEMBROS E METAS */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-4 mb-2">
-            <h2 className="text-[10px] font-bold text-black uppercase tracking-widest">Acompanhamento</h2>
-            <div className="h-[1px] bg-black w-8"></div>
-          </div>
-          
+        {/* COLUNA 1: MEMBROS */}
+        <div className="space-y-4">
+          <h2 className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">Membros & Metas</h2>
           {gruposDef.map((g, gIdx) => {
             const expectCount = g.nomes.filter(n => n !== 'Manu' || isManuActive(mesAtualFull)).length;
             const paidCount = g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtualFull)).length;
             
             return (
-              <div key={gIdx} className="bg-transparent border border-black overflow-hidden group">
-                <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className={`w-full p-6 flex justify-between items-center transition-colors ${expandedGrupo === gIdx ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'}`}>
+              <div key={gIdx} className="bg-[#121418] border border-gray-800 rounded-2xl overflow-hidden">
+                <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-4 flex justify-between items-center hover:bg-[#1A1D23] transition-colors">
                   <div className="text-left">
-                    <h2 className="text-xs font-bold uppercase tracking-widest">{g.titulo}</h2>
-                    <p className={`text-[8px] font-bold uppercase mt-2 tracking-widest ${expandedGrupo === gIdx ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {paidCount} de {expectCount} confirmados
+                    <h2 className="text-[11px] font-black uppercase tracking-widest text-gray-200">{g.titulo}</h2>
+                    <p className={`text-[8px] font-bold uppercase mt-1 tracking-widest ${paidCount === expectCount ? 'text-emerald-500' : 'text-gray-500'}`}>
+                      {paidCount} de {expectCount} pagos
                     </p>
                   </div>
-                  <span className="text-xl font-light">{expandedGrupo === gIdx ? '−' : '+'}</span>
+                  <span className="text-[#D4A373] font-light text-xl">{expandedGrupo === gIdx ? '−' : '+'}</span>
                 </button>
-                <div className={`transition-all duration-500 ${expandedGrupo === gIdx ? 'max-h-[800px] bg-white' : 'max-h-0'} overflow-hidden`}>
-                  <div className="p-6 pt-2 space-y-1">
+                <div className={`transition-all duration-300 ${expandedGrupo === gIdx ? 'max-h-[800px]' : 'max-h-0'} overflow-hidden`}>
+                  <div className="p-4 pt-0 space-y-2 border-t border-gray-800 mx-4">
                     {g.nomes.map(nome => {
                       const m = membros.find(x => x.nome === nome);
                       const pg = m ? calcPago(m.id) : 0;
                       const meta = getMetaInd(nome);
                       return (
-                        <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="py-3 flex justify-between items-center border-b border-gray-100 last:border-0 cursor-pointer group/item hover:pl-2 transition-all">
-                          <span className="font-bold text-[10px] uppercase text-gray-500 tracking-widest group-hover/item:text-black">{nome}</span>
-                          <div className="flex items-center gap-4">
-                            <span className="text-xs font-light text-black">R$ {pg}</span>
-                            <div className={`h-[4px] w-[4px] rotate-45 ${pg >= meta ? 'bg-black' : 'bg-gray-200'}`}></div>
+                        <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="py-2 flex justify-between items-center border-b border-gray-800/50 last:border-0 cursor-pointer hover:pl-1 transition-all">
+                          <span className="font-bold text-[10px] uppercase text-gray-400 tracking-wider">{nome}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-black text-white">R$ {pg}</span>
+                            <div className={`h-[6px] w-[6px] rounded-full ${pg >= meta ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'bg-gray-700'}`}></div>
                           </div>
                         </div>
                       );
@@ -539,60 +520,49 @@ const App = () => {
         </div>
 
         {/* COLUNA 2: EXTRATOS */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-4 mb-2">
-            <h2 className="text-[10px] font-bold text-black uppercase tracking-widest">Documentação</h2>
-            <div className="h-[1px] bg-black w-8"></div>
-          </div>
-          
-          <div className="bg-white border border-black p-8 min-h-[120px] flex flex-col justify-between relative">
-            <div className="absolute top-0 right-0 w-8 h-8 border-b border-l border-gray-100"></div>
-            <div>
+        <div className="space-y-4">
+          <h2 className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">Documentos</h2>
+          <div className="bg-[#121418] border border-gray-800 rounded-2xl p-5 min-h-[120px] flex flex-col justify-between">
+            <div className="space-y-2">
               {docs.slice(0, 5).map(d => (
-                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center py-4 border-b border-gray-100 last:border-0 group">
-                  <span className="text-[10px] font-bold text-gray-500 uppercase truncate pr-4 tracking-widest group-hover:text-black transition-colors">{d.nome_exibicao}</span>
-                  <span className="text-black font-light text-lg transition-transform group-hover:translate-y-1">↓</span>
+                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-3 bg-[#1A1D23] rounded-xl border border-gray-800 hover:border-sky-500/30 transition-colors group">
+                  <span className="text-[9px] font-bold text-gray-300 uppercase truncate pr-2 tracking-widest group-hover:text-white">{d.nome_exibicao}</span>
+                  <span className="text-sky-400 font-black text-sm">↓</span>
                 </a>
               ))}
             </div>
             
             {docs.length > 5 && (
-              <button onClick={() => setShowAllDocs(true)} className="w-full mt-8 pt-4 border-t border-black text-[9px] font-bold text-black uppercase tracking-widest text-left hover:text-gray-500 transition-colors flex justify-between items-center">
-                <span>Ver Todos os Extratos</span>
-                <span>({docs.length}) →</span>
+              <button onClick={() => setShowAllDocs(true)} className="w-full mt-4 py-2.5 bg-[#1A1D23] rounded-xl border border-gray-800 text-[9px] font-black text-sky-400 uppercase tracking-widest hover:bg-gray-800 transition-colors">
+                Ver Todos ({docs.length})
               </button>
             )}
           </div>
         </div>
 
         {/* COLUNA 3: MOVIMENTAÇÕES */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-4 mb-2">
-            <h2 className="text-[10px] font-bold text-black uppercase tracking-widest">Histórico de Caixa</h2>
-            <div className="h-[1px] bg-black w-8"></div>
-          </div>
-
-          <div className="bg-white border border-black p-8 min-h-[120px] flex flex-col justify-between">
-            <div>
+        <div className="space-y-4">
+          <h2 className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">Fluxo de Caixa</h2>
+          <div className="bg-[#121418] border border-gray-800 rounded-2xl p-5 min-h-[120px] flex flex-col justify-between">
+            <div className="space-y-3">
               {saidas.slice(0, 4).map(s => (
-                <div key={s.id} className="mb-6 last:mb-0">
-                  <div className="flex justify-between items-start mb-2">
-                     <span className={`border px-2 py-1 text-[8px] font-bold uppercase tracking-widest ${s.tipo === 'rendimento' ? 'border-gray-200 text-gray-500' : 'border-black text-black'}`}>
+                <div key={s.id} className="pb-3 border-b border-gray-800 last:border-0 last:pb-0">
+                  <div className="flex justify-between items-start mb-1.5">
+                     <span className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest ${s.tipo === 'rendimento' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
                        {s.mes} • {s.tipo === 'rendimento' ? 'IN' : 'OUT'}
                      </span>
-                     <span className={`text-xs font-light ${s.tipo === 'rendimento' ? 'text-black' : 'text-gray-500'}`}>
+                     <span className={`text-[10px] font-black ${s.tipo === 'rendimento' ? 'text-emerald-400' : 'text-rose-400'}`}>
                        {s.tipo === 'rendimento' ? '+' : '-'} R$ {s.valor}
                      </span>
                   </div>
-                  <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase">{s.descricao}</p>
+                  <p className="text-[9px] font-bold text-gray-400 tracking-wider uppercase truncate">{s.descricao}</p>
                 </div>
               ))}
             </div>
             
             {saidas.length > 4 && (
-               <button onClick={() => setShowAllMovimentacoes(true)} className="w-full mt-8 pt-4 border-t border-black text-[9px] font-bold text-black uppercase tracking-widest text-left hover:text-gray-500 transition-colors flex justify-between items-center">
-                 <span>Registro Completo</span>
-                 <span>({saidas.length}) →</span>
+               <button onClick={() => setShowAllMovimentacoes(true)} className="w-full mt-4 py-2.5 bg-[#1A1D23] rounded-xl border border-gray-800 text-[9px] font-black text-gray-400 uppercase tracking-widest hover:text-white hover:bg-gray-800 transition-colors">
+                 Registro Completo ({saidas.length})
                </button>
             )}
           </div>
@@ -601,28 +571,28 @@ const App = () => {
 
       {/* MODAL MOVIMENTAÇÕES */}
       {showAllMovimentacoes && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-white/90 backdrop-blur-sm">
-          <div className="bg-white border border-black w-full max-w-lg p-8 md:p-12 shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-start mb-10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#121418] border border-gray-800 rounded-[30px] w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
               <div>
-                 <h2 className="text-xs font-bold text-black uppercase tracking-widest mb-1">Registro Completo</h2>
-                 <p className="text-[9px] text-gray-400 uppercase tracking-widest">Fluxo de Caixa Bancário</p>
+                 <h2 className="text-[11px] font-black text-white uppercase tracking-widest">Fluxo de Caixa</h2>
+                 <p className="text-[8px] text-gray-500 uppercase tracking-widest mt-1">Registro Completo</p>
               </div>
-              <button onClick={() => setShowAllMovimentacoes(false)} className="text-black hover:text-gray-400 font-light text-4xl leading-none transition-colors -mt-2">×</button>
+              <button onClick={() => setShowAllMovimentacoes(false)} className="text-gray-600 hover:text-rose-500 font-black text-2xl leading-none transition-colors">×</button>
             </div>
             
-            <div className="overflow-y-auto pr-4 space-y-6 flex-1 scrollbar-hide border-t border-black pt-8">
+            <div className="overflow-y-auto pr-2 space-y-4 flex-1 scrollbar-hide">
               {saidas.map(s => (
-                <div key={s.id} className="pb-6 border-b border-gray-100 last:border-0 last:pb-0">
-                  <div className="flex justify-between items-start mb-2">
-                     <span className={`border px-2 py-1 text-[8px] font-bold uppercase tracking-widest ${s.tipo === 'rendimento' ? 'border-gray-200 text-gray-500' : 'border-black text-black'}`}>
+                <div key={s.id} className="pb-3 border-b border-gray-800 last:border-0 last:pb-0">
+                  <div className="flex justify-between items-start mb-1.5">
+                     <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${s.tipo === 'rendimento' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
                        {s.mes} • {s.tipo === 'rendimento' ? 'IN' : 'OUT'}
                      </span>
-                     <span className={`text-sm font-light ${s.tipo === 'rendimento' ? 'text-black' : 'text-gray-500'}`}>
+                     <span className={`text-[11px] font-black ${s.tipo === 'rendimento' ? 'text-emerald-400' : 'text-rose-400'}`}>
                        {s.tipo === 'rendimento' ? '+' : '-'} R$ {s.valor}
                      </span>
                   </div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{s.descricao}</p>
+                  <p className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">{s.descricao}</p>
                 </div>
               ))}
             </div>
@@ -632,24 +602,24 @@ const App = () => {
 
       {/* MODAL EXTRATOS */}
       {showAllDocs && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-white/90 backdrop-blur-sm">
-          <div className="bg-white border border-black w-full max-w-lg p-8 md:p-12 shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-start mb-10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#121418] border border-gray-800 rounded-[30px] w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
               <div>
-                 <h2 className="text-xs font-bold text-black uppercase tracking-widest mb-1">Acervo Digital</h2>
-                 <p className="text-[9px] text-gray-400 uppercase tracking-widest">Extratos e Comprovantes</p>
+                 <h2 className="text-[11px] font-black text-sky-400 uppercase tracking-widest">Documentação</h2>
+                 <p className="text-[8px] text-gray-500 uppercase tracking-widest mt-1">Todos os Extratos</p>
               </div>
-              <button onClick={() => setShowAllDocs(false)} className="text-black hover:text-gray-400 font-light text-4xl leading-none transition-colors -mt-2">×</button>
+              <button onClick={() => setShowAllDocs(false)} className="text-gray-600 hover:text-rose-500 font-black text-2xl leading-none transition-colors">×</button>
             </div>
             
-            <div className="overflow-y-auto pr-4 space-y-4 flex-1 scrollbar-hide border-t border-black pt-8">
+            <div className="overflow-y-auto pr-2 space-y-2 flex-1 scrollbar-hide">
               {docs.map(d => (
-                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-5 bg-white border border-gray-200 hover:border-black transition-all group">
+                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 bg-[#1A1D23] rounded-xl border border-gray-800 hover:border-sky-500/50 transition-all group">
                   <div className="flex flex-col gap-1">
-                     <span className="text-[11px] font-bold text-black uppercase truncate tracking-widest">{d.nome_exibicao}</span>
-                     <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Ref: {d.mes}</span>
+                     <span className="text-[10px] font-bold text-white uppercase truncate tracking-widest group-hover:text-sky-400 transition-colors">{d.nome_exibicao}</span>
+                     <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Ref: {d.mes}</span>
                   </div>
-                  <span className="text-black font-light text-xl pl-4 transition-transform group-hover:translate-y-1">↓</span>
+                  <span className="text-sky-500 font-black text-lg pl-4 transition-transform group-hover:translate-y-1">↓</span>
                 </a>
               ))}
             </div>

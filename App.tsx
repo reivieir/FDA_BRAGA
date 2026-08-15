@@ -493,7 +493,7 @@ const App = () => {
 
           {/* SALDO PRINCIPAL */}
           <div className="relative z-10 mb-8">
-            <p className="text-[10px] text-white/60 font-black uppercase tracking-widest mb-2">Meu Saldo</p>
+            <p className="text-[10px] text-white/60 font-black uppercase tracking-widest mb-2">Nosso Saldo</p>
             <h1 className="text-5xl font-black tracking-tighter">R$ {saldoAtual.toLocaleString('pt-BR')}</h1>
           </div>
 
@@ -569,10 +569,10 @@ const App = () => {
                <thead>
                  <tr className="border-b-2 border-[#061B30] text-[8px] sm:text-[9px] text-gray-500 font-black uppercase tracking-tighter">
                    <th className="pb-3 text-[#061B30] min-w-[30px]">Mês</th>
-                   <th className="pb-3 text-[#0D6B8C]">Fam.</th>
+                   <th className="pb-3 text-[#0D6B8C]">Entr.</th>
                    <th className="pb-3 text-emerald-600">Rend.</th>
                    <th className="pb-3 text-red-500">Saída</th>
-                   <th className="pb-3 text-[#CBAA61]">Caixa</th>
+                   <th className="pb-3 text-[#CBAA61]">Saldo</th>
                    <th className="pb-3 text-right">%</th>
                  </tr>
                </thead>

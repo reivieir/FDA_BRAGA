@@ -16,8 +16,8 @@ const App = () => {
   
   // Controles de Telas e Modais
   const [selectedMembroId, setSelectedMembroId] = useState<number | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null); // Restaurado!
-  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null); 
+  const [activeModal, setActiveModal] = useState<string | null>(null); // 'evolucao', 'membros', 'extratos', 'fluxo', 'pagamento', 'chacara'
   const [expandedGrupo, setExpandedGrupo] = useState<number | null>(null);
   const [showLogin, setShowLogin] = useState(false);
   const [senha, setSenha] = useState('');
@@ -128,9 +128,8 @@ const App = () => {
   const totalSaidas = saidasReais.reduce((acc, s) => acc + Number(s.valor), 0);
   const saldoAtual = totalArrecadado + totalRendimentos - totalSaidas;
 
-
   // ==========================================
-  // TELA 1: DETALHAMENTO DO MÊS (Restaurada)
+  // TELA 1: DETALHAMENTO DO MÊS
   // ==========================================
   if (selectedMonth) {
     const mesDb = mesesMap[selectedMonth] || selectedMonth;
@@ -245,7 +244,7 @@ const App = () => {
     );
   }
 
-  // TELA ADMIN (Sem alterações)
+  // TELA ADMIN 
   if (isAdmin) {
     return (
       <div className="p-4 md:p-6 bg-[#F4F5F7] min-h-screen font-sans pb-20 text-[#061B30]">
@@ -470,27 +469,39 @@ const App = () => {
           </div>
         </div>
 
-        {/* MÓDULOS DE AÇÃO (GRID DE BOTÕES) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+        {/* MÓDULOS DE AÇÃO (GRID DE 6 BOTÕES) */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
+          
+          <button onClick={() => setActiveModal('pagamento')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Dados PIX</span>
+          </button>
+
+          <button onClick={() => setActiveModal('chacara')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">A Chácara</span>
+          </button>
+
           <button onClick={() => setActiveModal('evolucao')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
             <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-            <span className="text-[10px] font-black uppercase tracking-widest">Evolução</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Evolução</span>
           </button>
 
           <button onClick={() => setActiveModal('membros')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
             <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            <span className="text-[10px] font-black uppercase tracking-widest">Membros</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Membros</span>
           </button>
 
           <button onClick={() => setActiveModal('docs')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
             <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            <span className="text-[10px] font-black uppercase tracking-widest">Extratos</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Extratos</span>
           </button>
 
           <button onClick={() => setActiveModal('fluxo')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
             <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-            <span className="text-[10px] font-black uppercase tracking-widest">Fluxo</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Fluxo</span>
           </button>
+
         </div>
       </div>
 
@@ -654,6 +665,121 @@ const App = () => {
                 </div>
               ))}
               {saidas.length === 0 && <p className="text-xs text-gray-400 text-center font-bold italic py-8">Nenhuma movimentação registrada.</p>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================= */}
+      {/* MODAL 5: DADOS PIX                          */}
+      {/* ========================================= */}
+      {activeModal === 'pagamento' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm">
+          <div className="bg-white rounded-[30px] w-full max-w-md p-6 md:p-8 shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+              <div>
+                 <h2 className="text-xl md:text-2xl font-black text-[#061B30] uppercase tracking-widest">Dados PIX</h2>
+                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1 font-bold">Informações de Pagamento</p>
+              </div>
+              <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-red-500 font-black text-3xl leading-none transition-colors">×</button>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 pr-2 space-y-4 scrollbar-hide">
+               <div className="bg-[#F4F5F7] p-4 rounded-2xl border border-gray-200 text-center cursor-copy group">
+                 <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Chave PIX (E-mail)</p>
+                 <p className="text-base font-black text-[#0D6B8C] select-all group-hover:text-[#061B30] transition-colors">reinaldo.paulo@gmail.com</p>
+               </div>
+               
+               <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                 <p className="text-[9px] font-black text-[#CBAA61] uppercase tracking-widest mb-4">Mensalidade Geral</p>
+                 <div className="flex justify-between items-center">
+                   <span className="text-[11px] font-bold text-[#061B30] uppercase tracking-wider">Março a Dezembro</span>
+                   <span className="font-black text-[#0D6B8C] text-sm">R$ 70,00</span>
+                 </div>
+                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Fevereiro (Exceção)</span>
+                   <span className="font-black text-gray-400">R$ 60,00</span>
+                 </div>
+               </div>
+
+               <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                 <p className="text-[9px] font-black text-[#CBAA61] uppercase tracking-widest mb-4">Mensalidade Pablito</p>
+                 <div className="flex justify-between items-center">
+                   <span className="text-[11px] font-bold text-[#061B30] uppercase tracking-wider">Março a Dezembro</span>
+                   <span className="font-black text-[#0D6B8C] text-sm">R$ 35,00</span>
+                 </div>
+                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Fevereiro (Exceção)</span>
+                   <span className="font-black text-gray-400">R$ 30,00</span>
+                 </div>
+               </div>
+               
+               <div className="text-center mt-6">
+                 <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Período de Arrecadação</p>
+                 <p className="text-[10px] font-black text-[#061B30] uppercase tracking-widest mt-1">Fevereiro 2026 a Dezembro 2026</p>
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================= */}
+      {/* MODAL 6: A CHÁCARA                          */}
+      {/* ========================================= */}
+      {activeModal === 'chacara' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm">
+          <div className="bg-white rounded-[30px] w-full max-w-md p-6 md:p-8 shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+              <div>
+                 <h2 className="text-xl md:text-2xl font-black text-[#061B30] uppercase tracking-widest">A Chácara</h2>
+                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1 font-bold">Local e Informações</p>
+              </div>
+              <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-red-500 font-black text-3xl leading-none transition-colors">×</button>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 pr-2 space-y-4 scrollbar-hide">
+               <div className="bg-[#F4F5F7] p-5 rounded-2xl border border-gray-200">
+                 <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-2">Endereço do Local</p>
+                 <p className="text-xs font-black text-[#061B30] leading-relaxed uppercase tracking-wide">
+                   Rua Andre Sanches Cuenca, nº 620<br/>
+                   Bairro Curitibanos<br/>
+                   Bragança Paulista / SP
+                 </p>
+               </div>
+               
+               <div className="grid grid-cols-2 gap-3">
+                 <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
+                   <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-1">Check-in</p>
+                   <p className="text-sm font-black text-[#061B30]">23/12</p>
+                   <p className="text-[10px] font-bold text-gray-500 mt-1">às 14:00h</p>
+                 </div>
+                 <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
+                   <p className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-1">Check-out</p>
+                   <p className="text-sm font-black text-[#061B30]">27/12</p>
+                   <p className="text-[10px] font-bold text-gray-500 mt-1">às 18:00h</p>
+                 </div>
+               </div>
+
+               <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm text-center">
+                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Limite Máximo</p>
+                 <p className="text-lg font-black text-[#061B30] uppercase tracking-widest">30 Pessoas</p>
+               </div>
+
+               <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                 <p className="text-[9px] font-black text-[#CBAA61] uppercase tracking-widest mb-4 text-center border-b border-gray-100 pb-2">Contrato de Aluguel</p>
+                 <div className="flex justify-between items-center mb-3">
+                   <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">Valor Total</span>
+                   <span className="font-black text-[#0D6B8C] text-sm">R$ 14.500,00</span>
+                 </div>
+                 <div className="flex justify-between items-center py-2 border-t border-gray-100">
+                   <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Março a Julho</span>
+                   <span className="font-black text-gray-500 text-[10px]">R$ 1.500,00/mês</span>
+                 </div>
+                 <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                   <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Em 15 de Dezembro</span>
+                   <span className="font-black text-gray-500 text-[10px]">R$ 7.000,00</span>
+                 </div>
+               </div>
             </div>
           </div>
         </div>

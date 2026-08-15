@@ -357,7 +357,7 @@ const App = () => {
   // --- RENDER PRINCIPAL ---
   
   let saldoAcumuladoLoop = 0;
-  const dadosEvolucao = mesesAbbr.map(mesAbbr => {
+  const evolucaoCompleta = mesesAbbr.map(mesAbbr => {
     const mesDb = mesesMap[mesAbbr];
     const arrec = historico.filter(h => (h.mes_caixa || h.mes) === mesDb).reduce((acc, h) => acc + Number(h.valor), 0);
     const rendM = rendimentosConta.filter(r => r.mes === mesDb).reduce((acc, r) => acc + Number(r.valor), 0);
@@ -367,6 +367,11 @@ const App = () => {
     saldoAcumuladoLoop = saldoAcumuladoLoop + arrec + rendM - saidaM;
     return { mesAbbr, arrec, rendM, saidaM, saldo: saldoAcumuladoLoop, meta };
   });
+
+  // MÁGICA DE USABILIDADE: Oculta meses zerados e inverte a ordem para exibir do mais atual para o mais antigo!
+  const dadosEvolucao = evolucaoCompleta
+    .filter(item => item.arrec > 0 || item.rendM > 0 || item.saidaM > 0)
+    .reverse();
 
   return (
     <div className="min-h-screen bg-[#0B0C10] font-sans text-white selection:bg-[#D4A373] selection:text-black pb-24">
@@ -433,7 +438,7 @@ const App = () => {
         </div>
       </div>
 
-      {/* EVOLUÇÃO MENSAL: CARDS RESPONSIVOS E COLORIDOS */}
+      {/* EVOLUÇÃO MENSAL: CARDS RESPONSIVOS E COLORIDOS (ORDEM INVERTIDA) */}
       <div className="max-w-5xl mx-auto px-4 mb-8">
          <div className="flex items-center gap-4 mb-4 ml-2">
             <h2 className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Evolução Mensal</h2>

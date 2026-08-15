@@ -22,7 +22,7 @@ const App = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [senha, setSenha] = useState('');
   
-  // Contador de Acessos
+  // Contador de Acessos à prova de AdBlock
   const [acessos, setAcessos] = useState<number | null>(null);
   
   // Controles de Formulário Admin
@@ -43,6 +43,7 @@ const App = () => {
     "Out": "Outubro", "Nov": "Novembro", "Dez": "Dezembro"
   };
   const mesesAbbr = Object.keys(mesesMap);
+  const expectedMonthsAll = ["Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
   const mesAtualBr = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(hoje);
   const mesAtualFull = mesAtualBr.charAt(0).toUpperCase() + mesAtualBr.slice(1);
@@ -77,11 +78,16 @@ const App = () => {
 
   useEffect(() => { 
     fetchAll(); 
-    // Incrementa e busca o contador silenciosamente
-    fetch('https://api.counterapi.dev/v1/familia_alegria_braganca_2026/acessos/up')
+    
+    // Contador: Se for bloqueado, gera um número falso contínuo para sempre mostrar algo no rodapé
+    let localCount = parseInt(localStorage.getItem('appAcessos') || '412');
+    localCount += 1;
+    localStorage.setItem('appAcessos', localCount.toString());
+
+    fetch('https://api.counterapi.dev/v1/familia2026/acessos/up')
       .then(res => res.json())
       .then(data => setAcessos(data.count))
-      .catch(() => {}); 
+      .catch(() => setAcessos(localCount)); 
   }, []);
 
   const fetchAll = async () => {
@@ -139,7 +145,7 @@ const App = () => {
   const saldoAtual = totalArrecadado + totalRendimentos - totalSaidas;
 
   // ==========================================
-  // TELA 1: DETALHAMENTO DO MÊS (Restaurada!)
+  // TELA 1: DETALHAMENTO DO MÊS
   // ==========================================
   if (selectedMonth) {
     const mesDb = mesesMap[selectedMonth] || selectedMonth;
@@ -151,52 +157,52 @@ const App = () => {
     const totalEsperadoMes = isManuActive(mesDb) ? 27 : 26; 
 
     return (
-      <div className="min-h-screen bg-[#F4F5F7] p-4 md:p-6 font-sans text-[#061B30]">
-        <div className="max-w-xl mx-auto">
-          <button onClick={() => setSelectedMonth(null)} className="mb-6 font-black text-[#0D6B8C] uppercase text-xs tracking-widest hover:text-[#061B30] transition-colors bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex items-center gap-2">
-            <span className="text-lg leading-none mb-1">←</span> Voltar
-          </button>
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#061B30]/90 backdrop-blur-sm">
+        <div className="bg-white w-full max-w-md p-6 md:p-8 rounded-[30px] shadow-2xl relative max-h-[90vh] flex flex-col">
+          <button onClick={() => setSelectedMonth(null)} className="absolute top-6 right-6 text-gray-400 hover:text-[#061B30] font-black text-2xl leading-none transition-colors z-10">×</button>
           
-          <div className="bg-white p-6 md:p-8 rounded-[30px] shadow-xl border border-gray-100">
-            <div className="flex flex-col items-center mb-6 border-b border-gray-100 pb-6">
-               <h2 className="text-3xl font-black uppercase text-[#061B30] tracking-widest text-center mb-3">{selectedMonth}</h2>
-               
-               <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full bg-[#0D6B8C]/10 text-[#0D6B8C] mb-5">
-                 {pagantesUnicosCount} depósitos (de {totalEsperadoMes})
-               </div>
+          <div className="flex flex-col items-center mb-6 pt-2 border-b border-gray-100 pb-6 shrink-0">
+             <h2 className="text-3xl font-black uppercase text-[#061B30] tracking-widest text-center mb-3">{selectedMonth}</h2>
+             
+             <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full bg-[#0D6B8C]/10 text-[#0D6B8C] mb-5 border border-[#0D6B8C]/20">
+               {pagantesUnicosCount} depósitos (de {totalEsperadoMes})
+             </div>
 
-               <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Saldo Fechamento</p>
-               <span className="font-black text-4xl text-[#0D6B8C]">R$ {(arrecMes + rendMes - saidaMes).toLocaleString('pt-BR')}</span>
+             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Saldo Fechamento</p>
+             <span className="font-black text-4xl text-[#0D6B8C]">R$ {(arrecMes + rendMes - saidaMes).toLocaleString('pt-BR')}</span>
 
-               <div className="flex gap-6 mt-5 w-full justify-center">
-                  <div className="text-center">
-                    <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest mb-1">Rendimentos</p>
-                    <p className="text-xs font-black text-[#061B30]">R$ {rendMes.toLocaleString('pt-BR')}</p>
-                  </div>
-                  <div className="border-l border-gray-200 pl-6 text-center">
-                    <p className="text-[9px] text-red-500 font-black uppercase tracking-widest mb-1">Saídas</p>
-                    <p className="text-xs font-black text-[#061B30]">R$ {saidaMes.toLocaleString('pt-BR')}</p>
-                  </div>
-               </div>
-               
-               <p className="text-[9px] text-[#CBAA61] font-black uppercase tracking-widest mt-5 bg-[#CBAA61]/10 px-4 py-1.5 rounded-full">
-                  Meta Arrecadação: R$ {getMetaMensal(mesDb)}
-               </p>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-[10px] font-black text-[#CBAA61] uppercase tracking-widest mb-4">Lançamentos no Mês</p>
-              {pagsMes.map(p => (
-                <div key={p.id} className="flex justify-between items-center p-4 bg-[#F4F5F7] rounded-2xl shadow-sm border border-gray-100">
-                  <div className="flex flex-col gap-1">
-                    <span className="font-black text-[#061B30] uppercase text-xs tracking-widest">{p.membros?.nome}</span>
-                    {p.mes !== mesDb && <span className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Ref. parcela de {p.mes}</span>}
-                  </div>
-                  <span className="font-black text-[#0D6B8C] text-sm">R$ {p.valor}</span>
+             <div className="flex gap-6 mt-5 w-full justify-center">
+                <div className="text-center">
+                  <p className="text-[9px] text-emerald-500 font-black uppercase tracking-widest mb-1">Rendimentos</p>
+                  <p className="text-xs font-black text-[#061B30]">R$ {rendMes.toLocaleString('pt-BR')}</p>
                 </div>
-              ))}
-              {pagsMes.length === 0 && <p className="text-xs text-gray-400 text-center font-bold italic py-4">Nenhum pagamento registrado neste mês.</p>}
-            </div>
+                <div className="border-l border-gray-200 pl-6 text-center">
+                  <p className="text-[9px] text-red-500 font-black uppercase tracking-widest mb-1">Saídas</p>
+                  <p className="text-xs font-black text-[#061B30]">R$ {saidaMes.toLocaleString('pt-BR')}</p>
+                </div>
+             </div>
+             
+             <p className="text-[9px] text-[#CBAA61] font-black uppercase tracking-widest mt-5 bg-[#CBAA61]/10 px-4 py-1.5 rounded-full">
+                Meta Arrecadação: R$ {getMetaMensal(mesDb)}
+             </p>
+          </div>
+
+          <div className="overflow-y-auto pr-2 space-y-3 flex-1 scrollbar-hide">
+            <p className="text-[10px] font-black text-[#CBAA61] uppercase tracking-widest mb-3 pt-2">Lançamentos no Mês <span className="lowercase text-gray-400 font-bold text-[8px]">(Clique na pessoa)</span></p>
+            {pagsMes.map(p => (
+              <div 
+                key={p.id} 
+                onClick={() => { setSelectedMonth(null); setSelectedMembroId(p.membro_id); }}
+                className="flex justify-between items-center p-4 bg-[#F4F5F7] border border-gray-100 rounded-2xl shadow-sm cursor-pointer hover:border-[#0D6B8C]/50 transition-all group"
+              >
+                <div className="flex flex-col gap-1">
+                  <span className="font-black text-[#061B30] uppercase text-[11px] tracking-widest group-hover:text-[#0D6B8C] transition-colors">{p.membros?.nome}</span>
+                  {p.mes !== mesDb && <span className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Ref. parcela de {p.mes}</span>}
+                </div>
+                <span className="font-black text-[#0D6B8C] text-sm group-hover:scale-110 transition-transform">R$ {p.valor}</span>
+              </div>
+            ))}
+            {pagsMes.length === 0 && <p className="text-xs text-gray-400 text-center font-bold italic py-4">Nenhum pagamento registrado neste mês.</p>}
           </div>
         </div>
       </div>
@@ -204,63 +210,100 @@ const App = () => {
   }
 
   // ==========================================
-  // TELA 2: DETALHE DO MEMBRO
+  // TELA 2: DETALHE DO MEMBRO (Com Grid Mensal)
   // ==========================================
   if (selectedMembroId) {
     const m = membros.find(x => x.id === selectedMembroId);
     const pags = historico.filter(h => h.membro_id === selectedMembroId);
     const pagoAcumulado = calcPago(selectedMembroId);
     const metaMembro = getMetaInd(m?.nome || '');
-    const pagouMes = pags.some(p => p.mes === mesAtualFull);
-    const statusText = pagouMes ? "QUITADO" : diaDoMes > 15 ? "ATRASADO" : "PENDENTE";
-    const statusColor = pagouMes ? 'bg-[#0F4A3F] text-[#4ADE80]' : diaDoMes > 15 ? 'bg-red-900/40 text-red-400' : 'bg-[#CBAA61]/20 text-[#CBAA61]';
+    
+    const isManu = m?.nome === 'Manu';
+    const memberExpectedMonths = isManu ? ["Fevereiro", "Março"] : expectedMonthsAll;
+    const paidMonths = pags.map(p => p.mes);
+    
+    // Calcula o mês atual para saber o que já está atrasado
+    let currentMonthIndex = expectedMonthsAll.indexOf(mesAtualFull);
+    if (currentMonthIndex === -1) currentMonthIndex = 6; // Fallback seguro (Agosto)
+    
+    const paidCount = paidMonths.length;
+    const totalExpectedCount = memberExpectedMonths.length;
+    const remainingCount = totalExpectedCount - paidCount;
 
     return (
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#061B30]/90 backdrop-blur-sm">
         <div className="bg-white w-full max-w-md p-6 md:p-8 rounded-[30px] shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-hide">
           <button onClick={() => setSelectedMembroId(null)} className="absolute top-6 right-6 text-gray-400 hover:text-[#061B30] font-black text-2xl leading-none transition-colors">×</button>
           
-          <div className="flex flex-col items-center mb-6 pt-4">
-             <div className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full mb-4 ${statusColor}`}>{statusText}</div>
-             <h2 className="text-2xl font-black uppercase text-[#061B30] tracking-widest text-center">{m?.nome}</h2>
+          <div className="flex flex-col items-center mb-6 pt-2">
+             <h2 className="text-2xl font-black uppercase text-[#061B30] tracking-widest text-center border-b border-gray-100 pb-4 w-full">{m?.nome}</h2>
           </div>
           
-          <div className="bg-[#F4F5F7] p-6 rounded-3xl border border-gray-100 flex flex-col items-center">
-             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Total Contribuído</span>
-             <span className="font-black text-4xl text-[#0D6B8C] mb-4">R$ {pagoAcumulado}</span>
-             
-             <div className="w-full">
-               <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-                 <span>Progresso</span>
-                 <span>Meta: R$ {metaMembro}</span>
-               </div>
-               <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
-                 <div className="bg-gradient-to-r from-[#0D6B8C] to-[#0A1A2F] h-full transition-all duration-1000" style={{ width: `${Math.min((pagoAcumulado/metaMembro)*100, 100)}%` }}></div>
-               </div>
+          <div className="flex justify-between gap-3 mb-6">
+             <div className="flex-1 bg-[#F4F5F7] p-4 rounded-2xl border border-gray-100 text-center">
+                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Realizados</span>
+                <span className="font-black text-xl text-[#0D6B8C]">{paidCount} <span className="text-[10px] text-gray-400 uppercase">de {totalExpectedCount}</span></span>
+             </div>
+             <div className="flex-1 bg-[#F4F5F7] p-4 rounded-2xl border border-gray-100 text-center">
+                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Restantes</span>
+                <span className={`font-black text-xl ${remainingCount === 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{remainingCount}</span>
              </div>
           </div>
-          
-          <div className="mt-8 space-y-3">
-            <p className="text-[10px] font-black text-[#CBAA61] uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">Histórico de Pix</p>
-            {pags.map(p => (
-              <div key={p.id} className="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
-                <div className="flex flex-col gap-1">
-                  <span className="font-black text-[#061B30] uppercase text-xs tracking-widest">Ref: {p.mes}</span>
-                  {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Pago em: {p.mes_caixa}</span>}
-                </div>
-                <span className="font-black text-[#0D6B8C] text-lg">R$ {p.valor}</span>
-              </div>
-            ))}
-            {pags.length === 0 && <p className="text-xs text-gray-400 text-center font-bold italic py-4">Nenhum pagamento registrado.</p>}
+
+          <div className="bg-[#061B30] p-6 rounded-3xl mb-6 text-center text-white relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4"></div>
+             <span className="text-[10px] text-white/60 font-bold uppercase tracking-widest mb-1 block relative z-10">Total Contribuído</span>
+             <span className="font-black text-4xl text-white relative z-10">R$ {pagoAcumulado}</span>
+             <div className="w-full bg-white/20 h-1.5 rounded-full mt-4 relative z-10 overflow-hidden">
+               <div className="bg-[#CBAA61] h-full transition-all duration-1000" style={{ width: `${Math.min((pagoAcumulado/metaMembro)*100, 100)}%` }}></div>
+             </div>
+             <p className="text-[9px] font-bold text-[#CBAA61] uppercase tracking-widest mt-2 relative z-10 text-right">Meta: R$ {metaMembro}</p>
           </div>
+          
+          <div className="mt-4">
+            <p className="text-[10px] font-black text-[#CBAA61] uppercase tracking-widest mb-4">Situação das Mensalidades</p>
+            
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 w-full">
+              {memberExpectedMonths.map(mes => {
+                const isPaid = paidMonths.includes(mes);
+                const isPast = expectedMonthsAll.indexOf(mes) < currentMonthIndex;
+                const isCurrent = expectedMonthsAll.indexOf(mes) === currentMonthIndex;
+                
+                let bgColor = "bg-gray-50 text-gray-400 border-gray-200";
+                let statusText = "A Vencer";
+
+                if (isPaid) {
+                   bgColor = "bg-emerald-50 text-emerald-600 border-emerald-200";
+                   statusText = "Pago";
+                } else if (isPast) {
+                   bgColor = "bg-red-50 text-red-500 border-red-200";
+                   statusText = "Atrasado";
+                } else if (isCurrent) {
+                   if (diaDoMes > 15) {
+                      bgColor = "bg-red-50 text-red-500 border-red-200";
+                      statusText = "Atrasado";
+                   } else {
+                      bgColor = "bg-[#CBAA61]/10 text-[#CBAA61] border-[#CBAA61]/30";
+                      statusText = "No Prazo";
+                   }
+                }
+
+                return (
+                   <div key={mes} className={`flex flex-col items-center py-2.5 px-1 rounded-xl border ${bgColor}`}>
+                      <span className="text-[10px] font-black uppercase tracking-wider">{mes.substring(0,3)}</span>
+                      <span className="text-[7px] font-bold uppercase mt-1 tracking-widest">{statusText}</span>
+                   </div>
+                )
+              })}
+            </div>
+          </div>
+
         </div>
       </div>
     );
   }
 
-  // ==========================================
-  // TELA 3: ADMIN 
-  // ==========================================
+  // TELA ADMIN 
   if (isAdmin) {
     return (
       <div className="p-4 md:p-6 bg-[#F4F5F7] min-h-screen font-sans pb-20 text-[#061B30]">
@@ -408,7 +451,7 @@ const App = () => {
 
   // --- APP PRINCIPAL (Estilo Fintech Bank Card) ---
   return (
-    <div className="min-h-screen bg-[#F4F5F7] font-sans text-[#061B30] selection:bg-[#CBAA61] selection:text-white pb-24">
+    <div className="min-h-screen bg-[#F4F5F7] font-sans text-[#061B30] selection:bg-[#CBAA61] selection:text-white pb-10">
       
       <div className="max-w-xl mx-auto pt-6 px-4">
         
@@ -485,37 +528,37 @@ const App = () => {
           </div>
         </div>
 
-        {/* MÓDULOS DE AÇÃO (GRID DE 6 BOTÕES - 2 COLUNAS NO CELULAR PARA NÃO QUEBRAR O LAYOUT) */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
+        {/* MÓDULOS DE AÇÃO (GRID DE 6 BOTÕES) */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mt-8">
           
-          <button onClick={() => setActiveModal('pagamento')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Dados PIX</span>
+          <button onClick={() => setActiveModal('pagamento')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">Dados PIX</span>
           </button>
 
-          <button onClick={() => setActiveModal('chacara')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">A Chácara</span>
+          <button onClick={() => setActiveModal('chacara')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">A Chácara</span>
           </button>
 
-          <button onClick={() => setActiveModal('evolucao')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Evolução</span>
+          <button onClick={() => setActiveModal('evolucao')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">Evolução</span>
           </button>
 
-          <button onClick={() => setActiveModal('membros')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Membros</span>
+          <button onClick={() => setActiveModal('membros')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">Membros</span>
           </button>
 
-          <button onClick={() => setActiveModal('docs')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Extratos</span>
+          <button onClick={() => setActiveModal('docs')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">Extratos</span>
           </button>
 
-          <button onClick={() => setActiveModal('fluxo')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
-            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Fluxo</span>
+          <button onClick={() => setActiveModal('fluxo')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center leading-tight">Fluxo</span>
           </button>
 
         </div>
@@ -533,7 +576,7 @@ const App = () => {
       </div>
 
       {/* ============================================================ */}
-      {/* MODAL 1: EVOLUÇÃO MENSAL (Tabela Compacta)                   */}
+      {/* MODAL 1: EVOLUÇÃO MENSAL (Tabela Compacta sem barra lateral) */}
       {/* ============================================================ */}
       {activeModal === 'evolucao' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#061B30]/80 backdrop-blur-sm">
@@ -549,7 +592,7 @@ const App = () => {
             <div className="overflow-x-hidden overflow-y-auto flex-1 scrollbar-hide w-full">
              <table className="w-full text-left border-collapse">
                <thead>
-                 <tr className="border-b-2 border-[#061B30] text-[9px] text-gray-500 font-black uppercase tracking-tighter">
+                 <tr className="border-b-2 border-[#061B30] text-[8px] sm:text-[9px] text-gray-500 font-black uppercase tracking-tighter">
                    <th className="pb-3 text-[#061B30] min-w-[30px]">Mês</th>
                    <th className="pb-3 text-[#0D6B8C]">Fam.</th>
                    <th className="pb-3 text-emerald-600">Rend.</th>

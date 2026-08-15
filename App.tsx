@@ -17,10 +17,13 @@ const App = () => {
   // Controles de Telas e Modais
   const [selectedMembroId, setSelectedMembroId] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null); 
-  const [activeModal, setActiveModal] = useState<string | null>(null); // 'evolucao', 'membros', 'extratos', 'fluxo', 'pagamento', 'chacara'
+  const [activeModal, setActiveModal] = useState<string | null>(null); 
   const [expandedGrupo, setExpandedGrupo] = useState<number | null>(null);
   const [showLogin, setShowLogin] = useState(false);
   const [senha, setSenha] = useState('');
+  
+  // Contador de Acessos
+  const [acessos, setAcessos] = useState<number | null>(null);
   
   // Controles de Formulário Admin
   const [filtrosGrupos, setFiltrosGrupos] = useState<any>({ 0: 'Todos', 1: 'Todos', 2: 'Todos', 3: 'Todos', 4: 'Todos' });
@@ -72,7 +75,14 @@ const App = () => {
     { titulo: "Grupo Julia", nomes: ["Julia", "Juan"] }
   ];
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { 
+    fetchAll(); 
+    // Incrementa e busca o contador silenciosamente
+    fetch('https://api.counterapi.dev/v1/familia_alegria_braganca_2026/acessos/up')
+      .then(res => res.json())
+      .then(data => setAcessos(data.count))
+      .catch(() => {}); 
+  }, []);
 
   const fetchAll = async () => {
     try {
@@ -129,7 +139,7 @@ const App = () => {
   const saldoAtual = totalArrecadado + totalRendimentos - totalSaidas;
 
   // ==========================================
-  // TELA 1: DETALHAMENTO DO MÊS
+  // TELA 1: DETALHAMENTO DO MÊS (Restaurada!)
   // ==========================================
   if (selectedMonth) {
     const mesDb = mesesMap[selectedMonth] || selectedMonth;
@@ -141,48 +151,52 @@ const App = () => {
     const totalEsperadoMes = isManuActive(mesDb) ? 27 : 26; 
 
     return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#061B30]/90 backdrop-blur-sm">
-        <div className="bg-white w-full max-w-md p-6 md:p-8 rounded-[30px] shadow-2xl relative max-h-[90vh] flex flex-col">
-          <button onClick={() => setSelectedMonth(null)} className="absolute top-6 right-6 text-gray-400 hover:text-[#061B30] font-black text-2xl leading-none transition-colors z-10">×</button>
+      <div className="min-h-screen bg-[#F4F5F7] p-4 md:p-6 font-sans text-[#061B30]">
+        <div className="max-w-xl mx-auto">
+          <button onClick={() => setSelectedMonth(null)} className="mb-6 font-black text-[#0D6B8C] uppercase text-xs tracking-widest hover:text-[#061B30] transition-colors bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex items-center gap-2">
+            <span className="text-lg leading-none mb-1">←</span> Voltar
+          </button>
           
-          <div className="flex flex-col items-center mb-6 pt-2 border-b border-gray-100 pb-6 shrink-0">
-             <h2 className="text-3xl font-black uppercase text-[#061B30] tracking-widest text-center mb-3">{selectedMonth}</h2>
-             
-             <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full bg-[#0D6B8C]/10 text-[#0D6B8C] mb-5 border border-[#0D6B8C]/20">
-               {pagantesUnicosCount} depósitos (de {totalEsperadoMes})
-             </div>
+          <div className="bg-white p-6 md:p-8 rounded-[30px] shadow-xl border border-gray-100">
+            <div className="flex flex-col items-center mb-6 border-b border-gray-100 pb-6">
+               <h2 className="text-3xl font-black uppercase text-[#061B30] tracking-widest text-center mb-3">{selectedMonth}</h2>
+               
+               <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full bg-[#0D6B8C]/10 text-[#0D6B8C] mb-5">
+                 {pagantesUnicosCount} depósitos (de {totalEsperadoMes})
+               </div>
 
-             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Saldo Fechamento</p>
-             <span className="font-black text-4xl text-[#0D6B8C]">R$ {(arrecMes + rendMes - saidaMes).toLocaleString('pt-BR')}</span>
+               <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Saldo Fechamento</p>
+               <span className="font-black text-4xl text-[#0D6B8C]">R$ {(arrecMes + rendMes - saidaMes).toLocaleString('pt-BR')}</span>
 
-             <div className="flex gap-6 mt-5 w-full justify-center">
-                <div className="text-center">
-                  <p className="text-[9px] text-emerald-500 font-black uppercase tracking-widest mb-1">Rendimentos</p>
-                  <p className="text-xs font-black text-[#061B30]">R$ {rendMes.toLocaleString('pt-BR')}</p>
-                </div>
-                <div className="border-l border-gray-200 pl-6 text-center">
-                  <p className="text-[9px] text-red-500 font-black uppercase tracking-widest mb-1">Saídas</p>
-                  <p className="text-xs font-black text-[#061B30]">R$ {saidaMes.toLocaleString('pt-BR')}</p>
-                </div>
-             </div>
-             
-             <p className="text-[9px] text-[#CBAA61] font-black uppercase tracking-widest mt-5 bg-[#CBAA61]/10 px-4 py-1.5 rounded-full">
-                Meta Arrecadação: R$ {getMetaMensal(mesDb)}
-             </p>
-          </div>
+               <div className="flex gap-6 mt-5 w-full justify-center">
+                  <div className="text-center">
+                    <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest mb-1">Rendimentos</p>
+                    <p className="text-xs font-black text-[#061B30]">R$ {rendMes.toLocaleString('pt-BR')}</p>
+                  </div>
+                  <div className="border-l border-gray-200 pl-6 text-center">
+                    <p className="text-[9px] text-red-500 font-black uppercase tracking-widest mb-1">Saídas</p>
+                    <p className="text-xs font-black text-[#061B30]">R$ {saidaMes.toLocaleString('pt-BR')}</p>
+                  </div>
+               </div>
+               
+               <p className="text-[9px] text-[#CBAA61] font-black uppercase tracking-widest mt-5 bg-[#CBAA61]/10 px-4 py-1.5 rounded-full">
+                  Meta Arrecadação: R$ {getMetaMensal(mesDb)}
+               </p>
+            </div>
 
-          <div className="overflow-y-auto pr-2 space-y-3 flex-1 scrollbar-hide">
-            <p className="text-[10px] font-black text-[#CBAA61] uppercase tracking-widest mb-3 pt-2">Lançamentos no Mês</p>
-            {pagsMes.map(p => (
-              <div key={p.id} className="flex justify-between items-center p-4 bg-[#F4F5F7] border border-gray-100 rounded-2xl shadow-sm">
-                <div className="flex flex-col gap-1">
-                  <span className="font-black text-[#061B30] uppercase text-[11px] tracking-widest">{p.membros?.nome}</span>
-                  {p.mes !== mesDb && <span className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Ref. parcela de {p.mes}</span>}
+            <div className="space-y-3">
+              <p className="text-[10px] font-black text-[#CBAA61] uppercase tracking-widest mb-4">Lançamentos no Mês</p>
+              {pagsMes.map(p => (
+                <div key={p.id} className="flex justify-between items-center p-4 bg-[#F4F5F7] rounded-2xl shadow-sm border border-gray-100">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-black text-[#061B30] uppercase text-xs tracking-widest">{p.membros?.nome}</span>
+                    {p.mes !== mesDb && <span className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Ref. parcela de {p.mes}</span>}
+                  </div>
+                  <span className="font-black text-[#0D6B8C] text-sm">R$ {p.valor}</span>
                 </div>
-                <span className="font-black text-[#0D6B8C] text-sm">R$ {p.valor}</span>
-              </div>
-            ))}
-            {pagsMes.length === 0 && <p className="text-xs text-gray-400 text-center font-bold italic py-4">Nenhum pagamento registrado neste mês.</p>}
+              ))}
+              {pagsMes.length === 0 && <p className="text-xs text-gray-400 text-center font-bold italic py-4">Nenhum pagamento registrado neste mês.</p>}
+            </div>
           </div>
         </div>
       </div>
@@ -244,7 +258,9 @@ const App = () => {
     );
   }
 
-  // TELA ADMIN 
+  // ==========================================
+  // TELA 3: ADMIN 
+  // ==========================================
   if (isAdmin) {
     return (
       <div className="p-4 md:p-6 bg-[#F4F5F7] min-h-screen font-sans pb-20 text-[#061B30]">
@@ -469,7 +485,7 @@ const App = () => {
           </div>
         </div>
 
-        {/* MÓDULOS DE AÇÃO (GRID DE 6 BOTÕES) */}
+        {/* MÓDULOS DE AÇÃO (GRID DE 6 BOTÕES - 2 COLUNAS NO CELULAR PARA NÃO QUEBRAR O LAYOUT) */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
           
           <button onClick={() => setActiveModal('pagamento')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
@@ -503,10 +519,21 @@ const App = () => {
           </button>
 
         </div>
+        
+        {/* CONTADOR DE ACESSOS DISCRETO NO RODAPÉ */}
+        {acessos !== null && (
+          <div className="mt-12 text-center">
+            <p className="text-[9px] text-gray-400/60 font-black uppercase tracking-widest flex justify-center items-center gap-1.5 hover:text-gray-400 transition-colors">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+              {acessos} acessos
+            </p>
+          </div>
+        )}
+
       </div>
 
       {/* ============================================================ */}
-      {/* MODAL 1: EVOLUÇÃO MENSAL (Tabela Compacta sem barra lateral) */}
+      {/* MODAL 1: EVOLUÇÃO MENSAL (Tabela Compacta)                   */}
       {/* ============================================================ */}
       {activeModal === 'evolucao' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#061B30]/80 backdrop-blur-sm">
@@ -522,8 +549,8 @@ const App = () => {
             <div className="overflow-x-hidden overflow-y-auto flex-1 scrollbar-hide w-full">
              <table className="w-full text-left border-collapse">
                <thead>
-                 <tr className="border-b-2 border-[#061B30] text-[8px] sm:text-[9px] text-gray-500 font-black uppercase tracking-tighter">
-                   <th className="pb-3 text-[#061B30]">Mês</th>
+                 <tr className="border-b-2 border-[#061B30] text-[9px] text-gray-500 font-black uppercase tracking-tighter">
+                   <th className="pb-3 text-[#061B30] min-w-[30px]">Mês</th>
                    <th className="pb-3 text-[#0D6B8C]">Fam.</th>
                    <th className="pb-3 text-emerald-600">Rend.</th>
                    <th className="pb-3 text-red-500">Saída</th>
@@ -531,14 +558,14 @@ const App = () => {
                    <th className="pb-3 text-right">%</th>
                  </tr>
                </thead>
-               <tbody className="text-[9px] sm:text-[10px] font-black text-[#061B30]">
+               <tbody className="text-[10px] sm:text-xs font-black text-[#061B30]">
                  {dadosEvolucao.map(item => (
                    <tr key={item.mesAbbr} onClick={() => { setSelectedMonth(item.mesAbbr); setActiveModal(null); }} className="border-b border-gray-100 hover:bg-[#F4F5F7] transition-colors cursor-pointer">
                      <td className="py-4 pr-1 text-gray-500 tracking-tighter">{item.mesAbbr}</td>
                      <td className="py-4 pr-1 text-[#0D6B8C]">{item.arrec > 0 ? item.arrec.toLocaleString('pt-BR') : '—'}</td>
                      <td className="py-4 pr-1 text-emerald-600">{item.rendM > 0 ? `+${item.rendM.toLocaleString('pt-BR')}` : '—'}</td>
                      <td className="py-4 pr-1 text-red-500">{item.saidaM > 0 ? `-${item.saidaM.toLocaleString('pt-BR')}` : '—'}</td>
-                     <td className="py-4 pr-1 text-[#CBAA61]">R$ {item.saldo.toLocaleString('pt-BR')}</td>
+                     <td className="py-4 pr-1 text-[#CBAA61] whitespace-nowrap">R$ {item.saldo.toLocaleString('pt-BR')}</td>
                      <td className={`py-4 text-right ${item.arrec >= item.meta ? 'text-emerald-500' : 'text-gray-400'}`}>
                        {item.arrec > 0 ? `${((item.arrec/item.meta)*100).toFixed(0)}%` : '0%'}
                      </td>

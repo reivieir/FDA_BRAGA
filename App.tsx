@@ -14,6 +14,7 @@ const App = () => {
   const [docs, setDocs] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedMembroId, setSelectedMembroId] = useState<number | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [expandedGrupo, setExpandedGrupo] = useState<number | null>(null);
   const [senha, setSenha] = useState('');
   
@@ -27,7 +28,7 @@ const App = () => {
   const [tipoFluxo, setTipoFluxo] = useState('saida'); 
   const [showLogin, setShowLogin] = useState(false);
 
-  // NOVO: Controlador unificado de Modais (Pop-ups)
+  // Controlador unificado de Modais (Pop-ups)
   const [activeModal, setActiveModal] = useState<string | null>(null); // 'evolucao', 'membros', 'extratos', 'fluxo'
 
   const hoje = new Date();
@@ -128,7 +129,7 @@ const App = () => {
   
   const saldoAtual = totalArrecadado + totalRendimentos - totalSaidas;
 
-  // --- TELA DETALHE DO MEMBRO (Mantida separada por ser um fluxo interno do Pop-up) ---
+  // --- TELA DETALHE DO MEMBRO (Fluxo interno do Pop-up) ---
   if (selectedMembroId) {
     const m = membros.find(x => x.id === selectedMembroId);
     const pags = historico.filter(h => h.membro_id === selectedMembroId);
@@ -140,8 +141,8 @@ const App = () => {
 
     return (
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#061B30]/90 backdrop-blur-sm">
-        <div className="bg-white w-full max-w-md p-6 md:p-8 rounded-[30px] shadow-2xl relative max-h-[90vh] overflow-y-auto">
-          <button onClick={() => setSelectedMembroId(null)} className="absolute top-6 right-6 text-gray-400 hover:text-[#061B30] font-black text-2xl leading-none">×</button>
+        <div className="bg-white w-full max-w-md p-6 md:p-8 rounded-[30px] shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-hide">
+          <button onClick={() => setSelectedMembroId(null)} className="absolute top-6 right-6 text-gray-400 hover:text-[#061B30] font-black text-2xl leading-none transition-colors">×</button>
           
           <div className="flex flex-col items-center mb-6 pt-4">
              <div className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full mb-4 ${statusColor}`}>{statusText}</div>
@@ -181,7 +182,7 @@ const App = () => {
     );
   }
 
-  // TELA ADMIN (Colorida no novo tema)
+  // TELA ADMIN 
   if (isAdmin) {
     return (
       <div className="p-4 md:p-6 bg-[#F4F5F7] min-h-screen font-sans pb-20 text-[#061B30]">
@@ -336,7 +337,6 @@ const App = () => {
         {/* CARTÃO PRINCIPAL (Degradê Azul) */}
         <div className="bg-gradient-to-br from-[#061B30] to-[#0D6B8C] rounded-[40px] p-8 shadow-2xl relative overflow-hidden text-white">
           
-          {/* Efeito decorativo sutil de fundo do cartão */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
           
           {/* TOPO: Título e Login Admin */}
@@ -409,41 +409,35 @@ const App = () => {
 
         {/* MÓDULOS DE AÇÃO (GRID DE BOTÕES) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-          
-          {/* Botão Evolução Mensal */}
           <button onClick={() => setActiveModal('evolucao')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
             <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
             <span className="text-[10px] font-black uppercase tracking-widest">Evolução</span>
           </button>
 
-          {/* Botão Membros e Metas */}
           <button onClick={() => setActiveModal('membros')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
             <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
             <span className="text-[10px] font-black uppercase tracking-widest">Membros</span>
           </button>
 
-          {/* Botão Extratos */}
           <button onClick={() => setActiveModal('docs')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
             <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             <span className="text-[10px] font-black uppercase tracking-widest">Extratos</span>
           </button>
 
-          {/* Botão Fluxo de Caixa */}
           <button onClick={() => setActiveModal('fluxo')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
             <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
             <span className="text-[10px] font-black uppercase tracking-widest">Fluxo</span>
           </button>
-
         </div>
       </div>
 
       {/* ========================================= */}
-      {/* MODAL 1: EVOLUÇÃO MENSAL (Tabela Clássica) */}
+      {/* MODAL 1: EVOLUÇÃO MENSAL (Em Lista Compacta Responsiva) */}
       {/* ========================================= */}
       {activeModal === 'evolucao' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm">
-          <div className="bg-white rounded-[30px] w-full max-w-4xl p-6 md:p-10 shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/90 backdrop-blur-sm">
+          <div className="bg-white rounded-[30px] w-full max-w-md p-6 md:p-8 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
               <div>
                  <h2 className="text-xl md:text-2xl font-black text-[#061B30] uppercase tracking-widest">Evolução Mensal</h2>
                  <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1 font-bold">Histórico de Performance</p>
@@ -451,33 +445,40 @@ const App = () => {
               <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-red-500 font-black text-3xl leading-none transition-colors">×</button>
             </div>
             
-            <div className="overflow-x-auto overflow-y-auto flex-1 scrollbar-hide">
-             <table className="w-full text-left border-collapse min-w-[500px]">
-               <thead>
-                 <tr className="border-b-2 border-[#061B30] text-[10px] text-gray-500 font-black uppercase tracking-wider">
-                   <th className="pb-4 pl-2 text-[#061B30]">Mês</th>
-                   <th className="pb-4 text-[#0D6B8C]">Entrada (Família)</th>
-                   <th className="pb-4 text-emerald-600">Rendimento</th>
-                   <th className="pb-4 text-red-500">Saída</th>
-                   <th className="pb-4 text-[#CBAA61]">Saldo Banco</th>
-                   <th className="pb-4 text-right pr-2">Status</th>
-                 </tr>
-               </thead>
-               <tbody className="text-xs font-black text-[#061B30]">
-                 {dadosEvolucao.map(item => (
-                   <tr key={item.mesAbbr} onClick={() => { setSelectedMonth(item.mesAbbr); setActiveModal(null); }} className="border-b border-gray-100 hover:bg-[#F4F5F7] transition-colors cursor-pointer">
-                     <td className="py-5 pl-2 tracking-wide text-gray-500">{item.mesAbbr}</td>
-                     <td className="py-5 text-[#0D6B8C]">{item.arrec > 0 ? `R$ ${item.arrec.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
-                     <td className="py-5 text-emerald-600">{item.rendM > 0 ? `+ R$ ${item.rendM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
-                     <td className="py-5 text-red-500">{item.saidaM > 0 ? `- R$ ${item.saidaM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
-                     <td className="py-5 text-[#CBAA61] text-sm">R$ {item.saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                     <td className={`py-5 text-right pr-2 ${item.arrec >= item.meta ? 'text-emerald-500' : 'text-gray-400'}`}>
-                       {item.arrec > 0 ? `${((item.arrec/item.meta)*100).toFixed(0)}%` : '0%'}
-                     </td>
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
+            {/* Lista em formato de Cartões em vez de Tabela para não ter barra horizontal */}
+            <div className="overflow-y-auto flex-1 scrollbar-hide pr-2">
+              {dadosEvolucao.map(item => (
+                <div key={item.mesAbbr} onClick={() => { setSelectedMonth(item.mesAbbr); setActiveModal(null); }} className="bg-[#F4F5F7] rounded-2xl p-4 border border-gray-100 hover:border-[#0D6B8C]/50 transition-colors cursor-pointer mb-4 last:mb-0 shadow-sm">
+                  
+                  <div className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
+                    <span className="text-sm font-black text-[#061B30] uppercase tracking-widest">{item.mesAbbr}</span>
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${item.arrec >= item.meta ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-200 text-gray-500'}`}>
+                      {item.arrec > 0 ? `${((item.arrec/item.meta)*100).toFixed(0)}%` : '0%'}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2 mb-3">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-gray-500 font-bold uppercase tracking-wider">Família</span>
+                      <span className="font-black text-[#0D6B8C]">{item.arrec > 0 ? `R$ ${item.arrec.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-gray-500 font-bold uppercase tracking-wider">Rend.</span>
+                      <span className="font-black text-emerald-600">{item.rendM > 0 ? `+ R$ ${item.rendM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-gray-500 font-bold uppercase tracking-wider">Saídas</span>
+                      <span className="font-black text-red-500">{item.saidaM > 0 ? `- R$ ${item.saidaM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-3 border-t border-gray-200 flex justify-between items-end">
+                    <span className="text-[9px] uppercase tracking-widest text-[#CBAA61] font-black">Saldo Caixa</span>
+                    <span className="text-sm font-black text-[#061B30]">R$ {item.saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                  </div>
+
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -487,7 +488,7 @@ const App = () => {
       {/* MODAL 2: MEMBROS E METAS                  */}
       {/* ========================================= */}
       {activeModal === 'membros' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/90 backdrop-blur-sm">
           <div className="bg-white rounded-[30px] w-full max-w-2xl p-6 md:p-8 shadow-2xl flex flex-col max-h-[90vh]">
             <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
               <div>
@@ -502,7 +503,7 @@ const App = () => {
                 const expectCount = g.nomes.filter(n => n !== 'Manu' || isManuActive(mesAtualFull)).length;
                 const paidCount = g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtualFull)).length;
                 return (
-                  <div key={gIdx} className="bg-[#F4F5F7] border border-gray-200 rounded-2xl overflow-hidden">
+                  <div key={gIdx} className="bg-[#F4F5F7] border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
                     <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-4 flex justify-between items-center hover:bg-gray-100 transition-colors">
                       <div className="text-left">
                         <h2 className="text-[11px] font-black uppercase tracking-widest text-[#061B30]">{g.titulo}</h2>
@@ -542,7 +543,7 @@ const App = () => {
       {/* MODAL 3: EXTRATOS E DOCS                  */}
       {/* ========================================= */}
       {activeModal === 'docs' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/90 backdrop-blur-sm">
           <div className="bg-white rounded-[30px] w-full max-w-md p-6 md:p-8 shadow-2xl flex flex-col max-h-[85vh]">
             <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
               <div>
@@ -554,7 +555,7 @@ const App = () => {
             
             <div className="overflow-y-auto flex-1 pr-2 space-y-3 scrollbar-hide">
               {docs.map(d => (
-                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 bg-[#F4F5F7] rounded-xl border border-gray-200 hover:border-[#0D6B8C]/50 transition-all group">
+                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 bg-[#F4F5F7] rounded-xl border border-gray-200 hover:border-[#0D6B8C]/50 transition-all shadow-sm group">
                   <div className="flex flex-col gap-1">
                      <span className="text-[10px] font-black text-[#061B30] uppercase truncate tracking-widest group-hover:text-[#0D6B8C] transition-colors">{d.nome_exibicao}</span>
                      <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Ref: {d.mes}</span>
@@ -572,7 +573,7 @@ const App = () => {
       {/* MODAL 4: FLUXO DE CAIXA                   */}
       {/* ========================================= */}
       {activeModal === 'fluxo' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/90 backdrop-blur-sm">
           <div className="bg-white rounded-[30px] w-full max-w-md p-6 md:p-8 shadow-2xl flex flex-col max-h-[85vh]">
             <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
               <div>

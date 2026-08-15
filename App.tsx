@@ -572,7 +572,7 @@ const App = () => {
                    <th className="pb-3 text-[#0D6B8C]">Entr.</th>
                    <th className="pb-3 text-emerald-600">Rend.</th>
                    <th className="pb-3 text-red-500">Saída</th>
-                   <th className="pb-3 text-[#CBAA61]">Saldo</th>
+                   <th className="pb-3 text-[#CBAA61]">Saldo Mês</th>
                    <th className="pb-3 text-right">%</th>
                  </tr>
                </thead>

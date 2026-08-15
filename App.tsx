@@ -128,9 +128,8 @@ const App = () => {
   
   const saldoAtual = totalArrecadado + totalRendimentos - totalSaidas;
 
-  // --- RENDERS ---
+  // --- RENDERS DAS TELAS SECUNDÁRIAS ---
 
-  // TELA 1: DETALHE DO MÊS
   if (selectedMonth) {
     const mesDb = mesesMap[selectedMonth] || selectedMonth;
     const pagsMes = historico.filter(p => (p.mes_caixa || p.mes) === mesDb);
@@ -141,33 +140,37 @@ const App = () => {
     const totalEsperadoMes = isManuActive(mesDb) ? 27 : 26; 
 
     return (
-      <div className="min-h-screen bg-[#09090B] p-6 font-sans text-zinc-100">
-        <button onClick={() => setSelectedMonth(null)} className="mb-8 font-bold text-[#E5B582] uppercase text-xs tracking-widest hover:text-white transition-colors">← Voltar</button>
-        <div className="max-w-xl mx-auto bg-[#18181B] p-8 rounded-3xl shadow-xl border border-white/5 border-b-4 border-b-rose-500 text-center">
-          <h2 className="text-4xl font-black uppercase tracking-tighter text-zinc-100">{selectedMonth}</h2>
-          <div className="mt-6 border-t border-white/10 pt-6 flex justify-between items-end">
-            <div className="text-left">
-              <p className="text-[11px] text-zinc-400 uppercase font-bold tracking-wider mb-1">Saldo Período</p>
-              <p className="text-2xl font-black text-emerald-400">R$ {(arrecMes + rendMes - saidaMes).toLocaleString('pt-BR')}</p>
-              <p className="text-xs text-[#E5B582] font-bold uppercase mt-1">
+      <div className="min-h-screen bg-[#FAFAFA] p-6 font-sans text-black">
+        <button onClick={() => setSelectedMonth(null)} className="mb-8 font-bold text-gray-400 uppercase text-xs tracking-widest hover:text-black transition-colors flex items-center gap-2">
+          <span className="text-lg leading-none mb-1">←</span> Voltar
+        </button>
+        <div className="max-w-xl mx-auto bg-white p-8 md:p-12 border border-black shadow-sm relative">
+          <div className="absolute -inset-2 border border-gray-200 -z-10 hidden md:block"></div>
+          <h2 className="text-4xl font-light uppercase tracking-widest text-black mb-8">{selectedMonth}</h2>
+          <div className="border-t border-black pt-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div className="text-left w-full">
+              <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-2">Saldo Período</p>
+              <p className="text-3xl font-light text-black">R$ {(arrecMes + rendMes - saidaMes).toLocaleString('pt-BR')}</p>
+              <p className="text-xs text-gray-400 uppercase tracking-widest mt-2 border-l-2 border-black pl-2">
                 {pagantesUnicosCount} PIXs (de {totalEsperadoMes})
               </p>
             </div>
-            <div className="text-right flex flex-col gap-1">
-              <p className="text-xs text-emerald-400 font-bold uppercase">Rendimentos: R$ {rendMes}</p>
-              <p className="text-xs text-rose-400 font-bold uppercase">Saída: R$ {saidaMes}</p>
-              <p className="text-xs font-bold text-zinc-400 mt-2">Meta Caixa: R$ {getMetaMensal(mesDb)}</p>
+            <div className="text-left md:text-right flex flex-col gap-2 w-full md:w-auto border-t md:border-t-0 border-gray-200 pt-4 md:pt-0">
+              <p className="text-xs text-green-700 uppercase tracking-wider"><span className="text-gray-400 mr-2">Rendimentos</span> R$ {rendMes}</p>
+              <p className="text-xs text-red-600 uppercase tracking-wider"><span className="text-gray-400 mr-2">Saída</span> R$ {saidaMes}</p>
+              <p className="text-xs font-bold text-black uppercase tracking-wider mt-2">Meta: R$ {getMetaMensal(mesDb)}</p>
             </div>
           </div>
         </div>
-        <div className="max-w-xl mx-auto mt-6 space-y-3">
+        <div className="max-w-xl mx-auto mt-12 space-y-4">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Detalhamento dos Lançamentos</p>
             {pagsMes.map(p => (
-              <div key={p.id} className="bg-[#18181B] p-5 rounded-2xl flex justify-between items-center border border-white/5 shadow-sm">
+              <div key={p.id} className="bg-white p-5 flex justify-between items-center border border-gray-200 hover:border-black transition-colors">
                 <div>
-                  <span className="font-bold text-zinc-200 uppercase text-sm block">{p.membros?.nome}</span>
-                  {p.mes !== mesDb && <span className="text-[10px] text-rose-400 uppercase font-bold tracking-wider">Ref. parcela de {p.mes}</span>}
+                  <span className="font-bold text-black uppercase text-xs tracking-widest block">{p.membros?.nome}</span>
+                  {p.mes !== mesDb && <span className="text-[9px] text-red-500 uppercase tracking-widest mt-1 block">Ref. parcela de {p.mes}</span>}
                 </div>
-                <span className="font-black text-emerald-400 text-base">R$ {p.valor}</span>
+                <span className="font-light text-black text-lg">R$ {p.valor}</span>
               </div>
             ))}
         </div>
@@ -175,37 +178,48 @@ const App = () => {
     );
   }
 
-  // TELA 2: DETALHE DO MEMBRO
   if (selectedMembroId) {
     const m = membros.find(x => x.id === selectedMembroId);
     const pags = historico.filter(h => h.membro_id === selectedMembroId);
     const pagoAcumulado = calcPago(selectedMembroId);
     const metaMembro = getMetaInd(m?.nome || '');
     const pagouMes = pags.some(p => p.mes === mesAtualFull);
-    const statusText = pagouMes ? "✨ Até que enfim pagou" : diaDoMes > 15 ? "⚠️ Paga o que deve caloteiro" : "⏳ Aguardando Pix até dia 15";
-    const statusColor = pagouMes ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : diaDoMes > 15 ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
+    const statusText = pagouMes ? "QUITADO" : diaDoMes > 15 ? "ATRASADO" : "PENDENTE";
+    const statusColor = pagouMes ? 'bg-black text-white' : diaDoMes > 15 ? 'bg-red-600 text-white' : 'bg-gray-200 text-black';
 
     return (
-      <div className="min-h-screen bg-[#09090B] p-6 font-sans text-zinc-100">
-        <button onClick={() => setSelectedMembroId(null)} className="mb-8 font-bold text-[#E5B582] uppercase text-xs tracking-widest hover:text-white transition-colors">← Voltar</button>
-        <div className="max-w-xl mx-auto bg-[#18181B] p-8 rounded-3xl shadow-xl border border-white/5 border-b-4 border-b-emerald-500">
-          <h2 className="text-3xl font-black uppercase text-zinc-100 tracking-tighter">{m?.nome}</h2>
-          <div className={`mt-4 p-4 rounded-xl text-center font-bold uppercase text-xs tracking-wider ${statusColor}`}>{statusText}</div>
-          <div className="flex justify-between mt-8 text-sm font-bold">
-            <span className="text-emerald-400 font-black text-2xl">R$ {pagoAcumulado}</span>
-            <span className="text-zinc-400 pt-2 uppercase text-xs tracking-wide">Meta Natal R$ {metaMembro}</span>
+      <div className="min-h-screen bg-[#FAFAFA] p-6 font-sans text-black">
+        <button onClick={() => setSelectedMembroId(null)} className="mb-8 font-bold text-gray-400 uppercase text-xs tracking-widest hover:text-black transition-colors flex items-center gap-2">
+          <span className="text-lg leading-none mb-1">←</span> Voltar
+        </button>
+        <div className="max-w-xl mx-auto bg-white p-8 md:p-12 border border-black relative">
+          <div className="absolute -inset-2 border border-gray-200 -z-10 hidden md:block"></div>
+          <div className="flex justify-between items-start mb-8">
+             <h2 className="text-3xl font-light uppercase text-black tracking-widest">{m?.nome}</h2>
+             <div className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest ${statusColor}`}>{statusText}</div>
           </div>
-          <div className="w-full bg-[#27272A] h-3 rounded-full mt-3 overflow-hidden">
-             <div className="bg-emerald-500 h-full transition-all duration-1000" style={{ width: `${Math.min((pagoAcumulado/metaMembro)*100, 100)}%` }}></div>
+          
+          <div className="border-t border-black pt-6 flex justify-between items-end">
+            <div>
+               <span className="text-[10px] text-gray-400 uppercase tracking-widest block mb-2">Total Contribuído</span>
+               <span className="font-light text-4xl text-black">R$ {pagoAcumulado}</span>
+            </div>
+            <span className="text-xs uppercase tracking-widest text-gray-500 font-bold border-l-2 border-gray-200 pl-3 pb-1">Meta: R$ {metaMembro}</span>
           </div>
-          <div className="mt-8 space-y-3">
+          
+          <div className="w-full bg-gray-100 h-[2px] mt-8 overflow-hidden">
+             <div className="bg-black h-full transition-all duration-1000" style={{ width: `${Math.min((pagoAcumulado/metaMembro)*100, 100)}%` }}></div>
+          </div>
+          
+          <div className="mt-12 space-y-3">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Histórico de Pagamentos</p>
             {pags.map(p => (
-              <div key={p.id} className="flex justify-between items-center p-5 bg-[#27272A] rounded-2xl border border-white/5">
+              <div key={p.id} className="flex justify-between items-center p-5 bg-white border border-gray-200 hover:border-black transition-colors">
                 <div className="flex flex-col gap-1">
-                  <span className="font-bold text-zinc-300 uppercase text-sm tracking-wide">Ref: {p.mes}</span>
-                  {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Pago em: {p.mes_caixa}</span>}
+                  <span className="font-bold text-black uppercase text-xs tracking-widest">Ref: {p.mes}</span>
+                  {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[9px] text-gray-500 uppercase tracking-widest">Pago em: {p.mes_caixa}</span>}
                 </div>
-                <span className="font-black text-emerald-400 text-base">R$ {p.valor}</span>
+                <span className="font-light text-black text-lg">R$ {p.valor}</span>
               </div>
             ))}
           </div>
@@ -214,120 +228,132 @@ const App = () => {
     );
   }
 
-  // TELA 3: ADMIN
+  // TELA 3: ADMIN (Refinada para o estilo minimalista)
   if (isAdmin) {
     return (
-      <div className="p-4 bg-[#09090B] min-h-screen font-sans pb-20 text-zinc-100">
-        <div className="flex justify-between items-center mb-8 max-w-2xl mx-auto">
-           <button onClick={() => setIsAdmin(false)} className="text-[#E5B582] font-bold text-xs uppercase tracking-widest hover:text-white transition-colors">← Voltar ao Site</button>
+      <div className="p-6 bg-[#FAFAFA] min-h-screen font-sans pb-20 text-black">
+        <div className="flex justify-between items-center mb-12 max-w-4xl mx-auto border-b border-black pb-6">
+           <button onClick={() => setIsAdmin(false)} className="font-bold text-gray-500 uppercase text-xs tracking-widest hover:text-black transition-colors flex items-center gap-2">
+             <span className="text-lg leading-none mb-1">←</span> Sair
+           </button>
            
-           <div className="flex gap-3">
+           <div className="flex gap-4">
              <div className="flex flex-col text-right">
-                <span className="text-[9px] text-zinc-500 font-black uppercase mb-1 tracking-wider">Referente a (Dívida)</span>
-                <select className="p-2 border border-[#27272A] rounded-xl text-xs font-bold bg-[#18181B] text-zinc-200 outline-none focus:border-[#E5B582]" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
+                <span className="text-[9px] text-gray-500 font-bold uppercase mb-2 tracking-widest">Referente a (Dívida)</span>
+                <select className="p-2 border border-gray-300 text-xs font-bold bg-white text-black outline-none focus:border-black rounded-none" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
                   {Object.values(mesesMap).map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
              </div>
              <div className="flex flex-col text-right">
-                <span className="text-[9px] text-emerald-500 font-black uppercase mb-1 tracking-wider">Caiu no banco em</span>
-                <select className="p-2 border border-emerald-500/50 rounded-xl text-xs font-bold bg-[#18181B] text-zinc-200 outline-none focus:border-emerald-500" value={mesCaixaGlobal} onChange={e => setMesCaixaGlobal(e.target.value)}>
+                <span className="text-[9px] text-gray-500 font-bold uppercase mb-2 tracking-widest">Caiu no banco em</span>
+                <select className="p-2 border border-gray-300 text-xs font-bold bg-white text-black outline-none focus:border-black rounded-none" value={mesCaixaGlobal} onChange={e => setMesCaixaGlobal(e.target.value)}>
                   {Object.values(mesesMap).map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
              </div>
            </div>
         </div>
 
-        <div className="space-y-6 max-w-2xl mx-auto">
-          {/* Box Auditoria */}
-          <div className="bg-[#18181B] p-6 rounded-3xl shadow-xl border border-white/5 border-b-4 border-b-sky-500">
-            <h2 className="text-xs font-black uppercase mb-5 tracking-widest text-sky-400">1. Subir Extrato Banco</h2>
-            <div className="flex flex-col md:flex-row gap-3 mb-4">
-              <input type="text" placeholder="Nome do arquivo" className="flex-1 p-3 rounded-xl bg-[#09090B] border border-[#27272A] text-zinc-200 text-xs outline-none focus:border-sky-500" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
-              <input type="file" className="w-full md:w-auto text-xs pt-3 text-zinc-400" onChange={e => setFileToUpload(e.target.files?.[0] || null)} />
-              <button onClick={handleUpload} className="bg-sky-600 hover:bg-sky-500 text-white px-6 py-3 rounded-xl text-xs font-black tracking-wider transition-colors">SUBIR</button>
-            </div>
-            {docs.map(d => (
-              <div key={d.id} className="flex justify-between items-center bg-[#27272A] p-3 rounded-xl text-[11px] mb-2 font-bold text-zinc-300">
-                <span>{d.mes}: <span className="text-zinc-100">{d.nome_exibicao}</span></span>
-                <button onClick={() => excluirDoc(d.id, d.url_arquivo)} className="text-rose-400 hover:text-rose-300 font-black px-2">X</button>
-              </div>
-            ))}
-          </div>
-
-          {/* Box Movimentação */}
-          <div className="bg-[#18181B] p-6 rounded-3xl shadow-xl border border-white/5 border-b-4 border-b-rose-500">
-            <h2 className="text-xs font-black uppercase mb-5 tracking-widest text-zinc-200">2. Fluxo da Conta Bancária</h2>
-            
-            <div className="flex gap-2 mb-4">
-              <button onClick={() => setTipoFluxo('saida')} className={`flex-1 p-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${tipoFluxo === 'saida' ? 'bg-rose-500 text-white' : 'bg-[#27272A] text-zinc-400 hover:bg-[#3f3f46]'}`}>Saída (Gasto)</button>
-              <button onClick={() => setTipoFluxo('rendimento')} className={`flex-1 p-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors ${tipoFluxo === 'rendimento' ? 'bg-emerald-500 text-white' : 'bg-[#27272A] text-zinc-400 hover:bg-[#3f3f46]'}`}>Rendimento</button>
-            </div>
-
-            <input type="text" placeholder="Descrição (ex: Rendimento CDB)" className="w-full p-3 rounded-xl bg-[#09090B] border border-[#27272A] text-zinc-200 text-sm mb-3 outline-none focus:border-zinc-500" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
-            <div className="flex gap-2">
-                <input type="number" placeholder="R$ Valor" className="w-1/2 p-3 rounded-xl bg-[#09090B] border border-[#27272A] text-zinc-200 text-sm font-bold outline-none focus:border-zinc-500" value={valorSaida} onChange={e => setValorSaida(e.target.value)} />
-                <button onClick={lancarMovimentacao} className="w-1/2 bg-[#E5B582] hover:bg-[#D4A373] text-[#09090B] font-black rounded-xl text-xs uppercase tracking-wider transition-colors">Registrar</button>
-            </div>
-            
-            <div className="mt-6 space-y-2 border-t border-white/10 pt-4 max-h-[250px] overflow-y-auto pr-2">
-               {saidas.map(s => (
-                 <div key={s.id} className="flex justify-between items-center text-[11px] bg-[#09090B] p-3 rounded-xl border border-white/5">
-                   <div className="flex items-center gap-3">
-                     <span className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider ${s.tipo === 'rendimento' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                       {s.tipo === 'rendimento' ? 'ENTRADA' : 'SAÍDA'}
-                     </span>
-                     <span className="text-zinc-300 font-bold">{s.mes} • {s.descricao}</span>
+        <div className="space-y-12 max-w-4xl mx-auto">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+             {/* Box Auditoria */}
+             <div className="bg-white p-8 border border-black relative">
+               <h2 className="text-[10px] font-bold uppercase mb-8 tracking-widest text-gray-400">01. Subir Extrato</h2>
+               <div className="flex flex-col gap-4 mb-6">
+                 <input type="text" placeholder="Nome do arquivo" className="w-full p-3 border border-gray-200 text-black text-xs outline-none focus:border-black" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
+                 <input type="file" className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-black hover:file:bg-gray-200 cursor-pointer" onChange={e => setFileToUpload(e.target.files?.[0] || null)} />
+                 <button onClick={handleUpload} className="bg-black text-white px-6 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors w-full mt-2">Enviar Documento</button>
+               </div>
+               <div className="space-y-2 mt-8 pt-6 border-t border-gray-100">
+                 {docs.map(d => (
+                   <div key={d.id} className="flex justify-between items-center bg-gray-50 p-3 text-[10px] border border-gray-100 uppercase tracking-wider">
+                     <span className="text-gray-500">{d.mes}: <span className="text-black font-bold ml-1">{d.nome_exibicao}</span></span>
+                     <button onClick={() => excluirDoc(d.id, d.url_arquivo)} className="text-red-500 font-bold px-2 hover:text-red-700">X</button>
                    </div>
-                   <div className="flex items-center gap-3">
-                     <span className={`font-black ${s.tipo === 'rendimento' ? 'text-emerald-400' : 'text-rose-400'}`}>R$ {s.valor}</span>
-                     <button onClick={() => excluirItem(s.id, 'saidas_caixa')} className="text-rose-500 hover:text-rose-400 font-black">X</button>
-                   </div>
-                 </div>
-               ))}
-            </div>
+                 ))}
+               </div>
+             </div>
+
+             {/* Box Movimentação */}
+             <div className="bg-white p-8 border border-black relative">
+               <h2 className="text-[10px] font-bold uppercase mb-8 tracking-widest text-gray-400">02. Fluxo da Conta</h2>
+               
+               <div className="flex gap-2 mb-6">
+                 <button onClick={() => setTipoFluxo('saida')} className={`flex-1 p-3 text-[9px] font-bold uppercase tracking-widest transition-colors border ${tipoFluxo === 'saida' ? 'bg-black text-white border-black' : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400'}`}>Saída</button>
+                 <button onClick={() => setTipoFluxo('rendimento')} className={`flex-1 p-3 text-[9px] font-bold uppercase tracking-widest transition-colors border ${tipoFluxo === 'rendimento' ? 'bg-black text-white border-black' : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400'}`}>Rendimento</button>
+               </div>
+
+               <input type="text" placeholder="Descrição do lançamento" className="w-full p-3 bg-white border border-gray-200 text-black text-xs mb-4 outline-none focus:border-black" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
+               <div className="flex gap-2">
+                   <input type="number" placeholder="R$ Valor" className="w-1/2 p-3 bg-white border border-gray-200 text-black text-xs font-bold outline-none focus:border-black" value={valorSaida} onChange={e => setValorSaida(e.target.value)} />
+                   <button onClick={lancarMovimentacao} className="w-1/2 bg-black text-white font-bold text-[10px] uppercase tracking-widest hover:bg-gray-800 transition-colors">Registrar</button>
+               </div>
+               
+               <div className="mt-8 space-y-2 border-t border-gray-100 pt-6 max-h-[200px] overflow-y-auto pr-2">
+                  {saidas.map(s => (
+                    <div key={s.id} className="flex justify-between items-center text-[10px] bg-white p-3 border border-gray-100 uppercase tracking-wider">
+                      <div className="flex items-center gap-3">
+                        <span className={`font-bold ${s.tipo === 'rendimento' ? 'text-green-600' : 'text-red-500'}`}>
+                          {s.tipo === 'rendimento' ? 'IN' : 'OUT'}
+                        </span>
+                        <span className="text-gray-500">{s.mes} • {s.descricao}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-black">R$ {s.valor}</span>
+                        <button onClick={() => excluirItem(s.id, 'saidas_caixa')} className="text-red-500 font-bold hover:text-red-700">X</button>
+                      </div>
+                    </div>
+                  ))}
+               </div>
+             </div>
           </div>
 
           {/* Box Grupos */}
-          {gruposDef.map((g, idx) => (
-            <div key={idx} className="bg-[#18181B] p-6 rounded-3xl shadow-xl border border-white/5">
-              <h2 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4">{g.titulo}</h2>
-              <select className="w-full p-3 border border-[#27272A] rounded-xl mb-5 bg-[#09090B] text-zinc-200 text-sm font-bold outline-none focus:border-[#E5B582]" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
-                <option value="Todos">Lançar Novo PIX...</option>
-                {g.nomes.filter(n => n !== 'Manu' || isManuActive(mesGlobal)).map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
-              <div className="space-y-3">
-                {g.nomes
-                  .filter(n => n !== 'Manu' || isManuActive(mesGlobal))
-                  .filter(n => filtrosGrupos[idx] === 'Todos' || filtrosGrupos[idx] === n)
-                  .map(nome => {
-                  const m = membros.find(x => x.nome === nome);
-                  if (!m) return null;
-                  if (filtrosGrupos[idx] === 'Todos') {
-                    return (
-                      <div key={m.id} className="flex items-center gap-3 border-t border-white/5 pt-3">
-                        <span className="text-[11px] font-black w-24 truncate uppercase text-zinc-300 tracking-wider">{m.nome}</span>
-                        <input type="number" placeholder="R$" className="flex-1 p-3 bg-[#09090B] border border-[#27272A] rounded-xl text-xs font-bold text-zinc-200 outline-none focus:border-emerald-500" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
-                        <button onClick={() => lancarPagamento(m.id, valoresLote[m.id])} className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-xl text-[10px] font-black tracking-wider transition-colors">OK</button>
-                      </div>
-                    );
-                  } else {
-                    return historico.filter(h => h.membro_id === m.id).map(p => (
-                      <div key={p.id} className="flex justify-between items-center p-4 bg-[#27272A] rounded-xl border border-white/5 mt-2">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[11px] font-bold text-zinc-200 tracking-wider uppercase">Ref: {p.mes}</span>
-                          {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">Caiu em: {p.mes_caixa}</span>}
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <span className="text-sm font-black text-emerald-400">R$ {p.valor}</span>
-                          <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-rose-500 hover:text-rose-400 font-black text-xs uppercase tracking-wider">Excluir</button>
-                        </div>
-                      </div>
-                    ));
-                  }
-                })}
-              </div>
-            </div>
-          ))}
+          <div className="border-t border-black pt-12">
+             <h2 className="text-[10px] font-bold uppercase mb-8 tracking-widest text-gray-400">03. Lançamento de PIX (Membros)</h2>
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {gruposDef.map((g, idx) => (
+                  <div key={idx} className="bg-white p-6 border border-gray-200">
+                    <h2 className="text-xs font-bold text-black uppercase tracking-widest mb-6">{g.titulo}</h2>
+                    <select className="w-full p-3 border border-gray-200 mb-6 bg-white text-gray-600 text-xs font-bold outline-none focus:border-black rounded-none uppercase tracking-wider" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
+                      <option value="Todos">Selecionar Membro...</option>
+                      {g.nomes.filter(n => n !== 'Manu' || isManuActive(mesGlobal)).map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                    <div className="space-y-4">
+                      {g.nomes
+                        .filter(n => n !== 'Manu' || isManuActive(mesGlobal))
+                        .filter(n => filtrosGrupos[idx] === 'Todos' || filtrosGrupos[idx] === n)
+                        .map(nome => {
+                        const m = membros.find(x => x.nome === nome);
+                        if (!m) return null;
+                        if (filtrosGrupos[idx] === 'Todos') {
+                          return (
+                            <div key={m.id} className="flex items-center gap-2 border-t border-gray-100 pt-4">
+                              <span className="text-[10px] font-bold w-20 truncate uppercase text-gray-500 tracking-wider">{m.nome}</span>
+                              <input type="number" placeholder="R$" className="flex-1 p-2 bg-white border border-gray-200 text-xs font-bold text-black outline-none focus:border-black" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
+                              <button onClick={() => lancarPagamento(m.id, valoresLote[m.id])} className="bg-black text-white px-4 py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">OK</button>
+                            </div>
+                          );
+                        } else {
+                          return historico.filter(h => h.membro_id === m.id).map(p => (
+                            <div key={p.id} className="flex justify-between items-center p-4 bg-gray-50 border border-gray-200 mt-2">
+                              <div className="flex flex-col gap-1">
+                                <span className="text-[10px] font-bold text-black tracking-widest uppercase">Ref: {p.mes}</span>
+                                {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Caixa: {p.mes_caixa}</span>}
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <span className="text-xs font-bold text-black">R$ {p.valor}</span>
+                                <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-red-500 hover:text-red-700 font-black text-xs uppercase tracking-wider">X</button>
+                              </div>
+                            </div>
+                          ));
+                        }
+                      })}
+                    </div>
+                  </div>
+                ))}
+             </div>
+          </div>
         </div>
       </div>
     );
@@ -348,132 +374,159 @@ const App = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#09090B] p-4 md:p-8 font-sans text-zinc-100 relative selection:bg-[#E5B582] selection:text-black">
+    <div className="min-h-screen bg-[#FAFAFA] font-sans text-black selection:bg-black selection:text-white pb-24">
       
-      {/* NOVO LOGIN (CADEADO) NO CANTO SUPERIOR DIREITO */}
-      <div className="absolute top-4 right-4 md:top-8 md:right-8 z-40">
+      {/* NOVO LOGIN MINIMALISTA NO TOPO DIREITO */}
+      <div className="absolute top-6 right-6 md:top-10 md:right-10 z-40">
         {!showLogin ? (
-           <button onClick={() => setShowLogin(true)} className="text-zinc-500 hover:text-[#E5B582] transition-colors p-3 bg-[#18181B] rounded-full border border-white/5 hover:border-[#E5B582]/30" title="Acesso Admin">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
+           <button onClick={() => setShowLogin(true)} className="text-gray-400 hover:text-black transition-colors" title="Acesso Restrito">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
            </button>
         ) : (
-           <div className="flex items-center gap-3 bg-[#18181B] p-2 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
-              <input type="password" placeholder="Senha" className="p-3 w-32 border border-[#27272A] bg-[#09090B] text-xs font-bold rounded-xl text-white focus:outline-none focus:border-[#E5B582] transition-colors" value={senha} onChange={e => {
+           <div className="flex items-center gap-0 bg-white border border-black shadow-sm">
+              <input type="password" placeholder="SENHA" className="p-3 w-32 bg-transparent text-[10px] uppercase tracking-widest font-bold text-black outline-none placeholder:text-gray-300" value={senha} onChange={e => {
                  setSenha(e.target.value);
                  if (e.target.value === '041252') { setIsAdmin(true); setShowLogin(false); setSenha(''); }
               }} autoFocus />
-              <button onClick={() => setShowLogin(false)} className="text-zinc-500 hover:text-rose-400 font-black px-2 text-sm transition-colors">X</button>
+              <button onClick={() => setShowLogin(false)} className="text-gray-400 hover:text-black font-bold px-4 text-xs transition-colors border-l border-gray-100">X</button>
            </div>
         )}
       </div>
 
-      {/* CABEÇALHO */}
-      <header className="text-center mb-10 pt-6 md:pt-2">
-        <h1 className="text-4xl md:text-5xl font-black text-[#E5B582] uppercase tracking-tighter mb-2">
-          Família da Alegria
-        </h1>
-        <p className="text-[10px] md:text-xs font-black tracking-[0.4em] uppercase text-zinc-500">
-          <span className="text-emerald-400">Natal</span> Bragança City
-        </p>
+      {/* CABEÇALHO EDITORIAL */}
+      <header className="pt-16 pb-12 px-6 max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-end justify-between border-b border-black">
+        <div>
+           <p className="text-[9px] tracking-[0.4em] uppercase text-gray-400 mb-4">Dezembro 2026</p>
+           <h1 className="text-4xl md:text-6xl font-light tracking-tighter text-black uppercase">Família da Alegria</h1>
+        </div>
+        <div className="text-left md:text-right mt-6 md:mt-0 flex flex-col gap-1 border-l-2 md:border-l-0 border-black pl-4 md:pl-0">
+           <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Projeto Natal</p>
+           <p className="text-sm uppercase tracking-widest text-black font-light">Bragança City</p>
+        </div>
       </header>
 
       {/* BLOCO PRINCIPAL: SALDOS E META */}
-      <div className="max-w-4xl mx-auto bg-[#18181B] rounded-[40px] p-8 shadow-2xl border border-white/5 mb-8">
-        <div className="flex flex-col md:flex-row justify-between gap-8 mb-8">
-          <div className="flex-1">
-            <p className="text-[11px] text-[#E5B582] font-black uppercase tracking-widest mb-2">Saldo em Caixa Atual</p>
-            <h1 className="text-5xl md:text-7xl font-black text-emerald-400 tracking-tighter">R$ {saldoAtual.toLocaleString('pt-BR')}</h1>
-          </div>
-          <div className="bg-[#27272A] p-5 rounded-3xl border border-white/5 self-start md:self-center flex flex-col sm:flex-row gap-6">
-            <div>
-              <p className="text-[9px] text-zinc-400 font-black uppercase mb-1 tracking-wider">Arrecadado Família</p>
-              <p className="text-xl font-black text-zinc-100">R$ {totalArrecadado.toLocaleString('pt-BR')}</p>
-            </div>
-            <div className="border-t sm:border-t-0 sm:border-l border-white/10 pt-4 sm:pt-0 sm:pl-6">
-              <p className="text-[9px] text-emerald-500 font-black uppercase mb-1 tracking-wider">Rendimento Bancário</p>
-              <p className="text-xl font-black text-emerald-400">+ R$ {totalRendimentos.toLocaleString('pt-BR')}</p>
+      <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-8">
+        
+        {/* Painel Principal de Saldo */}
+        <div className="lg:col-span-2 relative group">
+          <div className="absolute -top-3 -left-3 w-full h-full border border-gray-200 -z-10 hidden md:block transition-transform group-hover:translate-x-1 group-hover:translate-y-1"></div>
+          <div className="bg-white border border-black p-8 md:p-14">
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Saldo em Caixa Atual</p>
+            <h1 className="text-5xl md:text-7xl font-light text-black tracking-tighter">R$ {saldoAtual.toLocaleString('pt-BR')}</h1>
+            
+            <div className="mt-16 pt-8 border-t border-gray-100">
+               <div className="flex justify-between items-end mb-4">
+                  <div>
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Meta Global Bragança</p>
+                    <p className="text-xl font-light text-black">R$ {metaGlobalBragança.toLocaleString('pt-BR')}</p>
+                  </div>
+                  <p className="text-2xl font-light text-black">{( (totalArrecadado/metaGlobalBragança)*100 ).toFixed(1)}%</p>
+               </div>
+               <div className="w-full bg-gray-100 h-[2px] overflow-hidden relative">
+                  <div className="bg-black h-full transition-all duration-1000" style={{ width: `${(totalArrecadado/metaGlobalBragança)*100}%` }}></div>
+               </div>
             </div>
           </div>
         </div>
 
-        <div className="mb-10">
-           <div className="flex justify-between items-end mb-3">
-              <div>
-                <p className="text-[10px] text-zinc-400 font-black uppercase tracking-wider mb-1">Meta Global Bragança</p>
-                <p className="text-2xl font-black text-zinc-200">R$ {metaGlobalBragança.toLocaleString('pt-BR')}</p>
-              </div>
-              <p className="text-2xl font-black text-emerald-400">{( (totalArrecadado/metaGlobalBragança)*100 ).toFixed(1)}%</p>
-           </div>
-           <div className="w-full bg-[#09090B] h-4 rounded-full overflow-hidden border border-white/5">
-              <div className="bg-emerald-400 h-full transition-all duration-1000 relative overflow-hidden" style={{ width: `${(totalArrecadado/metaGlobalBragança)*100}%` }}>
-                <div className="absolute inset-0 bg-white/20 w-full h-full animate-pulse"></div>
-              </div>
-           </div>
-        </div>
-
-        <div className="mt-8 border-t border-white/10 pt-8">
-           <h2 className="text-[11px] text-zinc-400 font-black uppercase tracking-widest mb-6">Evolução Mensal</h2>
-           <div className="overflow-x-auto -mx-8 px-8">
-             <table className="w-full text-left border-collapse min-w-[400px]">
-               <thead>
-                 <tr className="border-b border-[#27272A] text-[10px] text-zinc-500 font-black uppercase tracking-wider">
-                   <th className="pb-4 pl-2">Mês</th>
-                   <th className="pb-4 text-zinc-300">Família</th>
-                   <th className="pb-4 text-emerald-500">Rendimento</th>
-                   <th className="pb-4 text-rose-400">Saída</th>
-                   <th className="pb-4 text-sky-400">Caixa Mês</th>
-                   <th className="pb-4 text-right pr-2">Status (%)</th>
-                 </tr>
-               </thead>
-               <tbody className="text-[12px] font-bold text-zinc-200">
-                 {dadosEvolucao.map(item => (
-                   <tr key={item.mesAbbr} onClick={() => setSelectedMonth(item.mesAbbr)} className="border-b border-[#27272A]/50 hover:bg-white/5 transition-colors cursor-pointer">
-                     <td className="py-5 pl-2 text-zinc-400 tracking-wide">{item.mesAbbr}</td>
-                     <td className="py-5 text-emerald-400">{item.arrec > 0 ? `R$ ${item.arrec.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
-                     <td className="py-5 text-emerald-600">{item.rendM > 0 ? `+ R$ ${item.rendM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
-                     <td className="py-5 text-rose-400">{item.saidaM > 0 ? `- R$ ${item.saidaM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
-                     <td className="py-5 text-sky-400">R$ {item.saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                     <td className={`py-5 text-right pr-2 ${item.arrec >= item.meta ? 'text-emerald-400' : 'text-zinc-500'}`}>
-                       {item.arrec > 0 ? `${((item.arrec/item.meta)*100).toFixed(0)}%` : '—'}
-                     </td>
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
-           </div>
+        {/* Caixas Secundárias */}
+        <div className="flex flex-col gap-6 justify-between">
+          <div className="bg-white border border-black p-8 flex-1 flex flex-col justify-center relative">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+               <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </div>
+            <p className="text-[9px] text-gray-500 font-bold uppercase mb-2 tracking-widest">Arrecadado Família</p>
+            <p className="text-3xl font-light text-black">R$ {totalArrecadado.toLocaleString('pt-BR')}</p>
+          </div>
+          <div className="bg-white border border-black p-8 flex-1 flex flex-col justify-center border-l-4 border-l-black relative">
+            <p className="text-[9px] text-gray-500 font-bold uppercase mb-2 tracking-widest">Rendimento Bancário</p>
+            <p className="text-3xl font-light text-black">+ R$ {totalRendimentos.toLocaleString('pt-BR')}</p>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 pb-24">
+      {/* EVOLUÇÃO MENSAL (AGORA EM CARDS RESPONSIVOS - Fim da Tabela que precisa arrastar) */}
+      <div className="max-w-6xl mx-auto px-6 py-12">
+         <div className="flex items-center gap-6 mb-10">
+            <h2 className="text-[10px] text-gray-400 font-bold uppercase tracking-widest whitespace-nowrap">Evolução Mensal</h2>
+            <div className="h-[1px] bg-gray-200 w-full"></div>
+         </div>
+         
+         {/* GRID INTELIGENTE: 1 Coluna no Celular, 2 no Tablet, 3 no PC */}
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+           {dadosEvolucao.map(item => (
+             <div key={item.mesAbbr} onClick={() => setSelectedMonth(item.mesAbbr)} className="bg-white border border-black p-6 cursor-pointer hover:-translate-y-1 transition-transform group relative">
+               <div className="absolute top-0 left-0 w-1 h-0 bg-black transition-all group-hover:h-full"></div>
+               
+               <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+                 <span className="text-xl font-light uppercase tracking-widest text-black">{item.mesAbbr}</span>
+                 <span className={`text-[9px] font-bold uppercase tracking-widest px-3 py-1 ${item.arrec >= item.meta ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'}`}>
+                   {item.arrec > 0 ? `${((item.arrec/item.meta)*100).toFixed(0)}%` : '0%'}
+                 </span>
+               </div>
+               
+               <div className="space-y-3 mb-6">
+                 <div className="flex justify-between items-center text-xs">
+                   <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Família</span>
+                   <span className="font-light text-black">{item.arrec > 0 ? `R$ ${item.arrec.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
+                 </div>
+                 <div className="flex justify-between items-center text-xs">
+                   <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Rendimento</span>
+                   <span className="font-light text-green-700">{item.rendM > 0 ? `+ R$ ${item.rendM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
+                 </div>
+                 <div className="flex justify-between items-center text-xs">
+                   <span className="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Saídas</span>
+                   <span className="font-light text-red-600">{item.saidaM > 0 ? `- R$ ${item.saidaM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
+                 </div>
+               </div>
+               
+               <div className="pt-4 border-t border-black flex justify-between items-end">
+                 <span className="text-[9px] uppercase tracking-widest text-black font-bold">Caixa Mês</span>
+                 <span className="text-xl font-light text-black">R$ {item.saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+               </div>
+             </div>
+           ))}
+         </div>
+      </div>
+
+      {/* TERCEIRA SEÇÃO: BLOCOS DE ADMINISTRAÇÃO E DADOS */}
+      <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-8 border-t border-gray-200 mt-8">
         
         {/* COLUNA 1: MEMBROS E METAS */}
-        <div className="space-y-4">
-          <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-2">Membros e Metas</h2>
+        <div className="space-y-6">
+          <div className="flex items-center gap-4 mb-2">
+            <h2 className="text-[10px] font-bold text-black uppercase tracking-widest">Acompanhamento</h2>
+            <div className="h-[1px] bg-black w-8"></div>
+          </div>
+          
           {gruposDef.map((g, gIdx) => {
             const expectCount = g.nomes.filter(n => n !== 'Manu' || isManuActive(mesAtualFull)).length;
+            const paidCount = g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtualFull)).length;
+            
             return (
-              <div key={gIdx} className="bg-[#18181B] rounded-3xl border border-white/5 overflow-hidden shadow-lg transition-all">
-                <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-5 flex justify-between items-center hover:bg-white/5 transition-colors">
+              <div key={gIdx} className="bg-transparent border border-black overflow-hidden group">
+                <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className={`w-full p-6 flex justify-between items-center transition-colors ${expandedGrupo === gIdx ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-50'}`}>
                   <div className="text-left">
-                    <h2 className="text-sm font-black text-zinc-200 uppercase tracking-wide">{g.titulo}</h2>
-                    <p className="text-[9px] font-bold text-zinc-500 uppercase mt-1 tracking-widest">
-                      {g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtualFull)).length} de {expectCount} pagos no mês
+                    <h2 className="text-xs font-bold uppercase tracking-widest">{g.titulo}</h2>
+                    <p className={`text-[8px] font-bold uppercase mt-2 tracking-widest ${expandedGrupo === gIdx ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {paidCount} de {expectCount} confirmados
                     </p>
                   </div>
-                  <span className="text-[#E5B582] text-xl font-light">{expandedGrupo === gIdx ? '−' : '+'}</span>
+                  <span className="text-xl font-light">{expandedGrupo === gIdx ? '−' : '+'}</span>
                 </button>
-                <div className={`transition-all duration-300 ${expandedGrupo === gIdx ? 'max-h-[800px] p-5 pt-0' : 'max-h-0'} overflow-hidden`}>
-                  <div className="grid grid-cols-1 gap-2 pt-2 border-t border-white/5">
+                <div className={`transition-all duration-500 ${expandedGrupo === gIdx ? 'max-h-[800px] bg-white' : 'max-h-0'} overflow-hidden`}>
+                  <div className="p-6 pt-2 space-y-1">
                     {g.nomes.map(nome => {
                       const m = membros.find(x => x.nome === nome);
                       const pg = m ? calcPago(m.id) : 0;
                       const meta = getMetaInd(nome);
                       return (
-                        <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="bg-[#09090B] p-4 rounded-xl flex justify-between items-center border border-white/5 hover:border-white/10 cursor-pointer transition-colors">
-                          <span className="font-bold text-[11px] uppercase text-zinc-300 tracking-wider">{nome}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[11px] font-black text-emerald-400">R$ {pg}</span>
-                            <div className={`h-2 w-2 rounded-full ${pg >= meta ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' : 'bg-[#27272A]'}`}></div>
+                        <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="py-3 flex justify-between items-center border-b border-gray-100 last:border-0 cursor-pointer group/item hover:pl-2 transition-all">
+                          <span className="font-bold text-[10px] uppercase text-gray-500 tracking-widest group-hover/item:text-black">{nome}</span>
+                          <div className="flex items-center gap-4">
+                            <span className="text-xs font-light text-black">R$ {pg}</span>
+                            <div className={`h-[4px] w-[4px] rotate-45 ${pg >= meta ? 'bg-black' : 'bg-gray-200'}`}></div>
                           </div>
                         </div>
                       );
@@ -486,76 +539,90 @@ const App = () => {
         </div>
 
         {/* COLUNA 2: EXTRATOS */}
-        <div className="space-y-4">
-          <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-2">Auditoria e Extratos</h2>
-          <div className="bg-[#18181B] rounded-[30px] p-6 border border-white/5 min-h-[120px] flex flex-col justify-between shadow-lg">
+        <div className="space-y-6">
+          <div className="flex items-center gap-4 mb-2">
+            <h2 className="text-[10px] font-bold text-black uppercase tracking-widest">Documentação</h2>
+            <div className="h-[1px] bg-black w-8"></div>
+          </div>
+          
+          <div className="bg-white border border-black p-8 min-h-[120px] flex flex-col justify-between relative">
+            <div className="absolute top-0 right-0 w-8 h-8 border-b border-l border-gray-100"></div>
             <div>
               {docs.slice(0, 5).map(d => (
-                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 mb-2 bg-[#09090B] rounded-xl border border-white/5 hover:bg-white/5 transition-colors group">
-                  <span className="text-[11px] font-bold text-zinc-300 uppercase truncate pr-4 tracking-wider group-hover:text-sky-400 transition-colors">{d.nome_exibicao}</span>
-                  <span className="text-sky-500 font-black text-lg">↓</span>
+                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center py-4 border-b border-gray-100 last:border-0 group">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase truncate pr-4 tracking-widest group-hover:text-black transition-colors">{d.nome_exibicao}</span>
+                  <span className="text-black font-light text-lg transition-transform group-hover:translate-y-1">↓</span>
                 </a>
               ))}
             </div>
             
             {docs.length > 5 && (
-              <button onClick={() => setShowAllDocs(true)} className="w-full mt-4 py-3 border border-sky-500/30 rounded-xl text-[10px] font-black text-sky-400 uppercase tracking-widest hover:bg-sky-500/10 transition-colors">
-                Ver Todos os Extratos ({docs.length})
+              <button onClick={() => setShowAllDocs(true)} className="w-full mt-8 pt-4 border-t border-black text-[9px] font-bold text-black uppercase tracking-widest text-left hover:text-gray-500 transition-colors flex justify-between items-center">
+                <span>Ver Todos os Extratos</span>
+                <span>({docs.length}) →</span>
               </button>
             )}
           </div>
         </div>
 
         {/* COLUNA 3: MOVIMENTAÇÕES */}
-        <div className="space-y-4">
-          <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-2">Fluxo da Conta</h2>
-          <div className="bg-[#18181B] rounded-[30px] p-6 border border-white/5 min-h-[120px] flex flex-col justify-between shadow-lg">
+        <div className="space-y-6">
+          <div className="flex items-center gap-4 mb-2">
+            <h2 className="text-[10px] font-bold text-black uppercase tracking-widest">Histórico de Caixa</h2>
+            <div className="h-[1px] bg-black w-8"></div>
+          </div>
+
+          <div className="bg-white border border-black p-8 min-h-[120px] flex flex-col justify-between">
             <div>
-              {saidas.slice(0, 5).map(s => (
-                <div key={s.id} className="mb-4 border-b border-[#27272A] pb-4 last:border-0 last:mb-0 last:pb-0">
+              {saidas.slice(0, 4).map(s => (
+                <div key={s.id} className="mb-6 last:mb-0">
                   <div className="flex justify-between items-start mb-2">
-                     <span className={`${s.tipo === 'rendimento' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'} px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-wider`}>
-                       {s.mes} • {s.tipo === 'rendimento' ? 'ENTRADA' : 'SAÍDA'}
+                     <span className={`border px-2 py-1 text-[8px] font-bold uppercase tracking-widest ${s.tipo === 'rendimento' ? 'border-gray-200 text-gray-500' : 'border-black text-black'}`}>
+                       {s.mes} • {s.tipo === 'rendimento' ? 'IN' : 'OUT'}
                      </span>
-                     <span className={`text-xs font-black ${s.tipo === 'rendimento' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                     <span className={`text-xs font-light ${s.tipo === 'rendimento' ? 'text-black' : 'text-gray-500'}`}>
                        {s.tipo === 'rendimento' ? '+' : '-'} R$ {s.valor}
                      </span>
                   </div>
-                  <p className="text-[11px] font-bold text-zinc-400 leading-snug">{s.descricao}</p>
+                  <p className="text-[10px] font-bold text-gray-400 tracking-wider uppercase">{s.descricao}</p>
                 </div>
               ))}
             </div>
             
-            {saidas.length > 5 && (
-              <button onClick={() => setShowAllMovimentacoes(true)} className="w-full mt-5 py-3 border border-white/10 rounded-xl text-[10px] font-black text-zinc-400 uppercase tracking-widest hover:bg-white/5 hover:text-zinc-200 transition-colors">
-                Ver Histórico Completo ({saidas.length})
-              </button>
+            {saidas.length > 4 && (
+               <button onClick={() => setShowAllMovimentacoes(true)} className="w-full mt-8 pt-4 border-t border-black text-[9px] font-bold text-black uppercase tracking-widest text-left hover:text-gray-500 transition-colors flex justify-between items-center">
+                 <span>Registro Completo</span>
+                 <span>({saidas.length}) →</span>
+               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* POP-UP (MODAL) DO HISTÓRICO DE MOVIMENTAÇÕES */}
+      {/* MODAL MOVIMENTAÇÕES */}
       {showAllMovimentacoes && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-[#18181B] border border-white/10 rounded-[30px] w-full max-w-md p-8 shadow-2xl flex flex-col max-h-[85vh]">
-            <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
-              <h2 className="text-[11px] font-black text-zinc-200 uppercase tracking-widest">Histórico da Conta</h2>
-              <button onClick={() => setShowAllMovimentacoes(false)} className="text-zinc-500 hover:text-rose-400 font-black text-2xl leading-none transition-colors">×</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-white/90 backdrop-blur-sm">
+          <div className="bg-white border border-black w-full max-w-lg p-8 md:p-12 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-start mb-10">
+              <div>
+                 <h2 className="text-xs font-bold text-black uppercase tracking-widest mb-1">Registro Completo</h2>
+                 <p className="text-[9px] text-gray-400 uppercase tracking-widest">Fluxo de Caixa Bancário</p>
+              </div>
+              <button onClick={() => setShowAllMovimentacoes(false)} className="text-black hover:text-gray-400 font-light text-4xl leading-none transition-colors -mt-2">×</button>
             </div>
             
-            <div className="overflow-y-auto pr-3 space-y-5 flex-1 scrollbar-hide">
+            <div className="overflow-y-auto pr-4 space-y-6 flex-1 scrollbar-hide border-t border-black pt-8">
               {saidas.map(s => (
-                <div key={s.id} className="border-b border-[#27272A] pb-4 last:border-0">
+                <div key={s.id} className="pb-6 border-b border-gray-100 last:border-0 last:pb-0">
                   <div className="flex justify-between items-start mb-2">
-                     <span className={`${s.tipo === 'rendimento' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'} border px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-wider`}>
-                       {s.mes} • {s.tipo === 'rendimento' ? 'ENTRADA' : 'SAÍDA'}
+                     <span className={`border px-2 py-1 text-[8px] font-bold uppercase tracking-widest ${s.tipo === 'rendimento' ? 'border-gray-200 text-gray-500' : 'border-black text-black'}`}>
+                       {s.mes} • {s.tipo === 'rendimento' ? 'IN' : 'OUT'}
                      </span>
-                     <span className={`text-sm font-black ${s.tipo === 'rendimento' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                     <span className={`text-sm font-light ${s.tipo === 'rendimento' ? 'text-black' : 'text-gray-500'}`}>
                        {s.tipo === 'rendimento' ? '+' : '-'} R$ {s.valor}
                      </span>
                   </div>
-                  <p className="text-[12px] font-bold text-zinc-300">{s.descricao}</p>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{s.descricao}</p>
                 </div>
               ))}
             </div>
@@ -563,23 +630,26 @@ const App = () => {
         </div>
       )}
 
-      {/* POP-UP (MODAL) DE TODOS OS EXTRATOS */}
+      {/* MODAL EXTRATOS */}
       {showAllDocs && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-[#18181B] border border-white/10 rounded-[30px] w-full max-w-md p-8 shadow-2xl flex flex-col max-h-[85vh]">
-            <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
-              <h2 className="text-[11px] font-black text-sky-400 uppercase tracking-widest">Todos os Extratos</h2>
-              <button onClick={() => setShowAllDocs(false)} className="text-zinc-500 hover:text-rose-400 font-black text-2xl leading-none transition-colors">×</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-white/90 backdrop-blur-sm">
+          <div className="bg-white border border-black w-full max-w-lg p-8 md:p-12 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-start mb-10">
+              <div>
+                 <h2 className="text-xs font-bold text-black uppercase tracking-widest mb-1">Acervo Digital</h2>
+                 <p className="text-[9px] text-gray-400 uppercase tracking-widest">Extratos e Comprovantes</p>
+              </div>
+              <button onClick={() => setShowAllDocs(false)} className="text-black hover:text-gray-400 font-light text-4xl leading-none transition-colors -mt-2">×</button>
             </div>
             
-            <div className="overflow-y-auto pr-3 space-y-3 flex-1 scrollbar-hide">
+            <div className="overflow-y-auto pr-4 space-y-4 flex-1 scrollbar-hide border-t border-black pt-8">
               {docs.map(d => (
-                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 bg-[#09090B] rounded-2xl border border-white/5 hover:border-sky-500/30 hover:bg-sky-500/5 transition-all group">
+                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-5 bg-white border border-gray-200 hover:border-black transition-all group">
                   <div className="flex flex-col gap-1">
-                     <span className="text-xs font-bold text-zinc-200 uppercase truncate tracking-wide group-hover:text-sky-400 transition-colors">{d.nome_exibicao}</span>
-                     <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Ref: {d.mes}</span>
+                     <span className="text-[11px] font-bold text-black uppercase truncate tracking-widest">{d.nome_exibicao}</span>
+                     <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Ref: {d.mes}</span>
                   </div>
-                  <span className="text-sky-500 font-black text-xl pl-4 group-hover:-translate-y-1 transition-transform">↓</span>
+                  <span className="text-black font-light text-xl pl-4 transition-transform group-hover:translate-y-1">↓</span>
                 </a>
               ))}
             </div>

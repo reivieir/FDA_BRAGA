@@ -14,7 +14,6 @@ const App = () => {
   const [docs, setDocs] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedMembroId, setSelectedMembroId] = useState<number | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [expandedGrupo, setExpandedGrupo] = useState<number | null>(null);
   const [senha, setSenha] = useState('');
   
@@ -26,9 +25,10 @@ const App = () => {
   const [nomeDoc, setNomeDoc] = useState('');
 
   const [tipoFluxo, setTipoFluxo] = useState('saida'); 
-  const [showAllMovimentacoes, setShowAllMovimentacoes] = useState(false);
-  const [showAllDocs, setShowAllDocs] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+
+  // NOVO: Controlador unificado de Modais (Pop-ups)
+  const [activeModal, setActiveModal] = useState<string | null>(null); // 'evolucao', 'membros', 'extratos', 'fluxo'
 
   const hoje = new Date();
   const diaDoMes = hoje.getDate();
@@ -128,52 +128,7 @@ const App = () => {
   
   const saldoAtual = totalArrecadado + totalRendimentos - totalSaidas;
 
-  // --- RENDERS DAS TELAS SECUNDÁRIAS ---
-
-  if (selectedMonth) {
-    const mesDb = mesesMap[selectedMonth] || selectedMonth;
-    const pagsMes = historico.filter(p => (p.mes_caixa || p.mes) === mesDb);
-    const arrecMes = pagsMes.reduce((acc, p) => acc + Number(p.valor), 0);
-    const rendMes = rendimentosConta.filter(r => r.mes === mesDb).reduce((acc, r) => acc + Number(r.valor), 0);
-    const saidaMes = saidasReais.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
-    const pagantesUnicosCount = new Set(pagsMes.map(p => p.membro_id)).size;
-    const totalEsperadoMes = isManuActive(mesDb) ? 27 : 26; 
-
-    return (
-      <div className="min-h-screen bg-[#0B0C10] p-6 font-sans text-white">
-        <button onClick={() => setSelectedMonth(null)} className="mb-6 font-black text-[#D4A373] uppercase text-xs tracking-widest hover:text-white transition-colors">← Voltar</button>
-        <div className="max-w-xl mx-auto bg-[#121418] p-6 rounded-3xl shadow-2xl border border-gray-800 border-b-4 border-b-sky-500">
-          <h2 className="text-3xl font-black uppercase tracking-tighter text-white mb-4">{selectedMonth}</h2>
-          <div className="border-t border-gray-800 pt-4 flex justify-between items-end">
-            <div className="text-left">
-              <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Saldo Período</p>
-              <p className="text-3xl font-black text-sky-400">R$ {(arrecMes + rendMes - saidaMes).toLocaleString('pt-BR')}</p>
-              <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest mt-1">
-                {pagantesUnicosCount} PIXs (de {totalEsperadoMes})
-              </p>
-            </div>
-            <div className="text-right flex flex-col gap-1">
-              <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Rend.: + R$ {rendMes}</p>
-              <p className="text-[10px] text-rose-400 font-bold uppercase tracking-wider">Saída: - R$ {saidaMes}</p>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Meta: R$ {getMetaMensal(mesDb)}</p>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-xl mx-auto mt-6 space-y-3">
-            {pagsMes.map(p => (
-              <div key={p.id} className="bg-[#1A1D23] p-4 rounded-xl flex justify-between items-center border border-gray-800 shadow-sm">
-                <div>
-                  <span className="font-black text-white uppercase text-xs tracking-widest block">{p.membros?.nome}</span>
-                  {p.mes !== mesDb && <span className="text-[9px] text-rose-400 uppercase font-bold tracking-widest mt-1 block">Ref. parcela de {p.mes}</span>}
-                </div>
-                <span className="font-black text-emerald-400 text-lg">R$ {p.valor}</span>
-              </div>
-            ))}
-        </div>
-      </div>
-    );
-  }
-
+  // --- TELA DETALHE DO MEMBRO (Mantida separada por ser um fluxo interno do Pop-up) ---
   if (selectedMembroId) {
     const m = membros.find(x => x.id === selectedMembroId);
     const pags = historico.filter(h => h.membro_id === selectedMembroId);
@@ -181,63 +136,68 @@ const App = () => {
     const metaMembro = getMetaInd(m?.nome || '');
     const pagouMes = pags.some(p => p.mes === mesAtualFull);
     const statusText = pagouMes ? "QUITADO" : diaDoMes > 15 ? "ATRASADO" : "PENDENTE";
-    const statusColor = pagouMes ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : diaDoMes > 15 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-gray-800 text-gray-400 border border-gray-700';
+    const statusColor = pagouMes ? 'bg-[#0F4A3F] text-[#4ADE80]' : diaDoMes > 15 ? 'bg-red-900/40 text-red-400' : 'bg-[#CBAA61]/20 text-[#CBAA61]';
 
     return (
-      <div className="min-h-screen bg-[#0B0C10] p-6 font-sans text-white">
-        <button onClick={() => setSelectedMembroId(null)} className="mb-6 font-black text-[#D4A373] uppercase text-xs tracking-widest hover:text-white transition-colors">← Voltar</button>
-        <div className="max-w-xl mx-auto bg-[#121418] p-6 rounded-3xl shadow-2xl border border-gray-800">
-          <div className="flex justify-between items-start mb-6">
-             <h2 className="text-2xl font-black uppercase text-white tracking-widest">{m?.nome}</h2>
-             <div className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg ${statusColor}`}>{statusText}</div>
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#061B30]/90 backdrop-blur-sm">
+        <div className="bg-white w-full max-w-md p-6 md:p-8 rounded-[30px] shadow-2xl relative max-h-[90vh] overflow-y-auto">
+          <button onClick={() => setSelectedMembroId(null)} className="absolute top-6 right-6 text-gray-400 hover:text-[#061B30] font-black text-2xl leading-none">×</button>
+          
+          <div className="flex flex-col items-center mb-6 pt-4">
+             <div className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full mb-4 ${statusColor}`}>{statusText}</div>
+             <h2 className="text-2xl font-black uppercase text-[#061B30] tracking-widest text-center">{m?.nome}</h2>
           </div>
           
-          <div className="border-t border-gray-800 pt-4 flex justify-between items-end">
-            <div>
-               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Total Contribuído</span>
-               <span className="font-black text-3xl text-emerald-400">R$ {pagoAcumulado}</span>
-            </div>
-            <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold border-l-2 border-gray-800 pl-3 pb-1">Meta: R$ {metaMembro}</span>
-          </div>
-          
-          <div className="w-full bg-[#1A1D23] h-2 rounded-full mt-4 overflow-hidden">
-             <div className="bg-emerald-500 h-full transition-all duration-1000" style={{ width: `${Math.min((pagoAcumulado/metaMembro)*100, 100)}%` }}></div>
+          <div className="bg-[#F4F5F7] p-6 rounded-3xl border border-gray-100 flex flex-col items-center">
+             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Total Contribuído</span>
+             <span className="font-black text-4xl text-[#0D6B8C] mb-4">R$ {pagoAcumulado}</span>
+             
+             <div className="w-full">
+               <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+                 <span>Progresso</span>
+                 <span>Meta: R$ {metaMembro}</span>
+               </div>
+               <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
+                 <div className="bg-gradient-to-r from-[#0D6B8C] to-[#0A1A2F] h-full transition-all duration-1000" style={{ width: `${Math.min((pagoAcumulado/metaMembro)*100, 100)}%` }}></div>
+               </div>
+             </div>
           </div>
           
           <div className="mt-8 space-y-3">
-            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Histórico de Pagamentos</p>
+            <p className="text-[10px] font-black text-[#CBAA61] uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">Histórico de Pix</p>
             {pags.map(p => (
-              <div key={p.id} className="flex justify-between items-center p-4 bg-[#1A1D23] rounded-xl border border-gray-800">
+              <div key={p.id} className="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
                 <div className="flex flex-col gap-1">
-                  <span className="font-bold text-white uppercase text-xs tracking-widest">Ref: {p.mes}</span>
-                  {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Pago em: {p.mes_caixa}</span>}
+                  <span className="font-black text-[#061B30] uppercase text-xs tracking-widest">Ref: {p.mes}</span>
+                  {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Pago em: {p.mes_caixa}</span>}
                 </div>
-                <span className="font-black text-emerald-400 text-lg">R$ {p.valor}</span>
+                <span className="font-black text-[#0D6B8C] text-lg">R$ {p.valor}</span>
               </div>
             ))}
+            {pags.length === 0 && <p className="text-xs text-gray-400 text-center font-bold italic py-4">Nenhum pagamento registrado.</p>}
           </div>
         </div>
       </div>
     );
   }
 
-  // TELA 3: ADMIN
+  // TELA ADMIN (Colorida no novo tema)
   if (isAdmin) {
     return (
-      <div className="p-4 md:p-6 bg-[#0B0C10] min-h-screen font-sans pb-20 text-white">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 max-w-5xl mx-auto border-b border-gray-800 pb-4">
-           <button onClick={() => setIsAdmin(false)} className="font-black text-sky-400 uppercase text-xs tracking-widest hover:text-white transition-colors">← Voltar ao Site</button>
+      <div className="p-4 md:p-6 bg-[#F4F5F7] min-h-screen font-sans pb-20 text-[#061B30]">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 max-w-5xl mx-auto border-b border-gray-200 pb-6">
+           <button onClick={() => setIsAdmin(false)} className="font-black text-[#0D6B8C] uppercase text-xs tracking-widest hover:text-[#061B30] transition-colors bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">← Voltar ao App</button>
            
-           <div className="flex gap-4 w-full md:w-auto">
+           <div className="flex gap-4 w-full md:w-auto bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
              <div className="flex flex-col flex-1 md:flex-none">
                 <span className="text-[9px] text-gray-500 font-black uppercase mb-1 tracking-widest">Referente a (Dívida)</span>
-                <select className="p-2 border border-gray-700 text-xs font-bold bg-[#121418] text-white outline-none focus:border-sky-500 rounded-xl" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
+                <select className="p-2 border border-gray-200 text-xs font-bold bg-[#F4F5F7] text-[#061B30] outline-none focus:border-[#CBAA61] rounded-xl" value={mesGlobal} onChange={e => setMesGlobal(e.target.value)}>
                   {Object.values(mesesMap).map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
              </div>
              <div className="flex flex-col flex-1 md:flex-none">
-                <span className="text-[9px] text-emerald-500 font-black uppercase mb-1 tracking-widest">Caiu no banco em</span>
-                <select className="p-2 border border-emerald-500/50 text-xs font-bold bg-[#121418] text-white outline-none focus:border-emerald-500 rounded-xl" value={mesCaixaGlobal} onChange={e => setMesCaixaGlobal(e.target.value)}>
+                <span className="text-[9px] text-[#0D6B8C] font-black uppercase mb-1 tracking-widest">Caiu no banco em</span>
+                <select className="p-2 border border-[#0D6B8C]/30 text-xs font-bold bg-[#0D6B8C]/5 text-[#0D6B8C] outline-none focus:border-[#0D6B8C] rounded-xl" value={mesCaixaGlobal} onChange={e => setMesCaixaGlobal(e.target.value)}>
                   {Object.values(mesesMap).map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
              </div>
@@ -245,57 +205,56 @@ const App = () => {
         </div>
 
         <div className="space-y-6 max-w-5xl mx-auto">
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              {/* Box Auditoria */}
-             <div className="bg-[#121418] p-6 rounded-3xl border border-gray-800 border-b-4 border-b-sky-500 shadow-xl">
-               <h2 className="text-[10px] font-black uppercase mb-5 tracking-widest text-sky-400">1. Subir Extrato</h2>
+             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-md">
+               <h2 className="text-[10px] font-black uppercase mb-5 tracking-widest text-[#0D6B8C]">1. Subir Extrato</h2>
                <div className="flex flex-col gap-3 mb-4">
-                 <input type="text" placeholder="Nome do arquivo" className="w-full p-3 rounded-xl bg-[#0B0C10] border border-gray-800 text-white text-xs outline-none focus:border-sky-500" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
+                 <input type="text" placeholder="Nome do arquivo" className="w-full p-3 rounded-xl bg-[#F4F5F7] border border-gray-200 text-[#061B30] text-xs font-bold outline-none focus:border-[#CBAA61]" value={nomeDoc} onChange={e => setNomeDoc(e.target.value)} />
                  <div className="flex gap-2">
-                   <input type="file" className="flex-1 text-[9px] text-gray-400 file:mr-2 file:py-2 file:px-3 file:border-0 file:rounded-lg file:text-[9px] file:font-black file:bg-gray-800 file:text-white hover:file:bg-gray-700 cursor-pointer" onChange={e => setFileToUpload(e.target.files?.[0] || null)} />
-                   <button onClick={handleUpload} className="bg-sky-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-sky-400 transition-colors">Subir</button>
+                   <input type="file" className="flex-1 text-[9px] text-gray-500 file:mr-2 file:py-2 file:px-3 file:border-0 file:rounded-xl file:text-[9px] file:font-black file:bg-[#061B30] file:text-white hover:file:bg-[#0D6B8C] cursor-pointer" onChange={e => setFileToUpload(e.target.files?.[0] || null)} />
+                   <button onClick={handleUpload} className="bg-[#CBAA61] text-[#061B30] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#BCA15D] transition-colors">Subir</button>
                  </div>
                </div>
-               <div className="space-y-2 mt-4 pt-4 border-t border-gray-800 max-h-[150px] overflow-y-auto pr-2">
+               <div className="space-y-2 mt-4 pt-4 border-t border-gray-100 max-h-[150px] overflow-y-auto pr-2">
                  {docs.map(d => (
-                   <div key={d.id} className="flex justify-between items-center bg-[#1A1D23] p-3 rounded-xl text-[10px] border border-gray-800 uppercase tracking-wider">
-                     <span className="text-gray-400">{d.mes}: <span className="text-white font-bold ml-1">{d.nome_exibicao}</span></span>
-                     <button onClick={() => excluirDoc(d.id, d.url_arquivo)} className="text-rose-500 font-black px-2 hover:text-rose-400">X</button>
+                   <div key={d.id} className="flex justify-between items-center bg-[#F4F5F7] p-3 rounded-xl text-[10px] border border-gray-200 uppercase tracking-wider">
+                     <span className="text-gray-500">{d.mes}: <span className="text-[#061B30] font-black ml-1">{d.nome_exibicao}</span></span>
+                     <button onClick={() => excluirDoc(d.id, d.url_arquivo)} className="text-red-500 font-black px-2 hover:text-red-600">X</button>
                    </div>
                  ))}
                </div>
              </div>
 
              {/* Box Movimentação */}
-             <div className="bg-[#121418] p-6 rounded-3xl border border-gray-800 border-b-4 border-b-rose-500 shadow-xl">
-               <h2 className="text-[10px] font-black uppercase mb-5 tracking-widest text-white">2. Fluxo Bancário</h2>
+             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-md">
+               <h2 className="text-[10px] font-black uppercase mb-5 tracking-widest text-[#061B30]">2. Fluxo Bancário</h2>
                
                <div className="flex gap-2 mb-4">
-                 <button onClick={() => setTipoFluxo('saida')} className={`flex-1 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border ${tipoFluxo === 'saida' ? 'bg-rose-500/20 text-rose-400 border-rose-500/50' : 'bg-[#1A1D23] text-gray-500 border-gray-800'}`}>Saída</button>
-                 <button onClick={() => setTipoFluxo('rendimento')} className={`flex-1 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border ${tipoFluxo === 'rendimento' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50' : 'bg-[#1A1D23] text-gray-500 border-gray-800'}`}>Rend.</button>
+                 <button onClick={() => setTipoFluxo('saida')} className={`flex-1 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border ${tipoFluxo === 'saida' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-[#F4F5F7] text-gray-400 border-gray-200'}`}>Saída</button>
+                 <button onClick={() => setTipoFluxo('rendimento')} className={`flex-1 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors border ${tipoFluxo === 'rendimento' ? 'bg-[#0D6B8C]/10 text-[#0D6B8C] border-[#0D6B8C]/30' : 'bg-[#F4F5F7] text-gray-400 border-gray-200'}`}>Rend.</button>
                </div>
 
                <div className="flex flex-col gap-3">
-                 <input type="text" placeholder="Descrição (ex: Rendimento)" className="w-full p-3 rounded-xl bg-[#0B0C10] border border-gray-800 text-white text-xs outline-none focus:border-gray-500" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
+                 <input type="text" placeholder="Descrição (ex: Rendimento CDB)" className="w-full p-3 rounded-xl bg-[#F4F5F7] border border-gray-200 text-[#061B30] text-xs font-bold outline-none focus:border-[#CBAA61]" value={descSaida} onChange={e => setDescSaida(e.target.value)} />
                  <div className="flex gap-2">
-                     <input type="number" placeholder="R$ Valor" className="w-1/2 p-3 rounded-xl bg-[#0B0C10] border border-gray-800 text-white text-xs font-bold outline-none focus:border-gray-500" value={valorSaida} onChange={e => setValorSaida(e.target.value)} />
-                     <button onClick={lancarMovimentacao} className="w-1/2 bg-white text-black rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-colors">Registrar</button>
+                     <input type="number" placeholder="R$ Valor" className="w-1/2 p-3 rounded-xl bg-[#F4F5F7] border border-gray-200 text-[#061B30] text-xs font-black outline-none focus:border-[#CBAA61]" value={valorSaida} onChange={e => setValorSaida(e.target.value)} />
+                     <button onClick={lancarMovimentacao} className="w-1/2 bg-[#061B30] text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#0D6B8C] transition-colors">Registrar</button>
                  </div>
                </div>
                
-               <div className="mt-4 space-y-2 border-t border-gray-800 pt-4 max-h-[150px] overflow-y-auto pr-2">
+               <div className="mt-4 space-y-2 border-t border-gray-100 pt-4 max-h-[150px] overflow-y-auto pr-2">
                   {saidas.map(s => (
-                    <div key={s.id} className="flex justify-between items-center text-[10px] bg-[#1A1D23] p-3 rounded-xl border border-gray-800 uppercase tracking-wider">
+                    <div key={s.id} className="flex justify-between items-center text-[10px] bg-[#F4F5F7] p-3 rounded-xl border border-gray-200 uppercase tracking-wider">
                       <div className="flex items-center gap-2">
-                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-black ${s.tipo === 'rendimento' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-black ${s.tipo === 'rendimento' ? 'bg-[#0D6B8C]/10 text-[#0D6B8C]' : 'bg-red-100 text-red-600'}`}>
                           {s.tipo === 'rendimento' ? 'IN' : 'OUT'}
                         </span>
-                        <span className="text-gray-400">{s.mes} • {s.descricao}</span>
+                        <span className="text-gray-500 font-bold">{s.mes} • {s.descricao}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white">R$ {s.valor}</span>
-                        <button onClick={() => excluirItem(s.id, 'saidas_caixa')} className="text-rose-500 font-black hover:text-rose-400">X</button>
+                        <span className="font-black text-[#061B30]">R$ {s.valor}</span>
+                        <button onClick={() => excluirItem(s.id, 'saidas_caixa')} className="text-red-500 font-black hover:text-red-600">X</button>
                       </div>
                     </div>
                   ))}
@@ -304,13 +263,13 @@ const App = () => {
           </div>
 
           {/* Box Grupos */}
-          <div className="bg-[#121418] p-6 rounded-3xl border border-gray-800 shadow-xl mt-6">
-             <h2 className="text-[10px] font-black uppercase mb-6 tracking-widest text-gray-500">3. Lançamento de PIX</h2>
+          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-md mt-6">
+             <h2 className="text-[10px] font-black uppercase mb-6 tracking-widest text-[#CBAA61]">3. Lançamento de PIX</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {gruposDef.map((g, idx) => (
-                  <div key={idx} className="bg-[#1A1D23] p-5 rounded-2xl border border-gray-800">
-                    <h2 className="text-[11px] font-black text-white uppercase tracking-widest mb-4">{g.titulo}</h2>
-                    <select className="w-full p-2.5 rounded-xl border border-gray-700 mb-4 bg-[#0B0C10] text-gray-400 text-xs font-bold outline-none focus:border-white uppercase tracking-wider" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
+                  <div key={idx} className="bg-[#F4F5F7] p-5 rounded-2xl border border-gray-200">
+                    <h2 className="text-[11px] font-black text-[#061B30] uppercase tracking-widest mb-4">{g.titulo}</h2>
+                    <select className="w-full p-3 rounded-xl border border-gray-300 mb-4 bg-white text-gray-500 text-xs font-bold outline-none focus:border-[#0D6B8C] uppercase tracking-wider" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
                       <option value="Todos">Selecionar Membro...</option>
                       {g.nomes.filter(n => n !== 'Manu' || isManuActive(mesGlobal)).map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
@@ -323,22 +282,22 @@ const App = () => {
                         if (!m) return null;
                         if (filtrosGrupos[idx] === 'Todos') {
                           return (
-                            <div key={m.id} className="flex items-center gap-2 border-t border-gray-800 pt-3">
-                              <span className="text-[10px] font-bold w-20 truncate uppercase text-gray-400 tracking-wider">{m.nome}</span>
-                              <input type="number" placeholder="R$" className="flex-1 p-2 rounded-xl bg-[#0B0C10] border border-gray-700 text-xs font-bold text-white outline-none focus:border-emerald-500" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
-                              <button onClick={() => lancarPagamento(m.id, valoresLote[m.id])} className="bg-emerald-500 text-[#0B0C10] rounded-xl px-3 py-2 text-[9px] font-black uppercase tracking-widest hover:bg-emerald-400 transition-colors">OK</button>
+                            <div key={m.id} className="flex items-center gap-2 border-t border-gray-200 pt-3">
+                              <span className="text-[10px] font-black w-20 truncate uppercase text-gray-500 tracking-wider">{m.nome}</span>
+                              <input type="number" placeholder="R$" className="flex-1 p-2.5 rounded-xl bg-white border border-gray-300 text-xs font-black text-[#061B30] outline-none focus:border-[#CBAA61]" value={valoresLote[m.id] || ''} onChange={e => setValoresLote({...valoresLote, [m.id]: e.target.value})} />
+                              <button onClick={() => lancarPagamento(m.id, valoresLote[m.id])} className="bg-[#0D6B8C] text-white rounded-xl px-3 py-2.5 text-[9px] font-black uppercase tracking-widest hover:bg-[#061B30] transition-colors">OK</button>
                             </div>
                           );
                         } else {
                           return historico.filter(h => h.membro_id === m.id).map(p => (
-                            <div key={p.id} className="flex justify-between items-center p-3 bg-[#0B0C10] rounded-xl border border-gray-800 mt-2">
+                            <div key={p.id} className="flex justify-between items-center p-3 bg-white rounded-xl border border-gray-200 mt-2 shadow-sm">
                               <div className="flex flex-col gap-1">
-                                <span className="text-[9px] font-bold text-gray-300 tracking-widest uppercase">Ref: {p.mes}</span>
-                                {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[8px] text-gray-600 font-bold uppercase tracking-widest">Caixa: {p.mes_caixa}</span>}
+                                <span className="text-[9px] font-black text-gray-600 tracking-widest uppercase">Ref: {p.mes}</span>
+                                {(p.mes_caixa && p.mes_caixa !== p.mes) && <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Caixa: {p.mes_caixa}</span>}
                               </div>
                               <div className="flex items-center gap-3">
-                                <span className="text-[11px] font-black text-emerald-400">R$ {p.valor}</span>
-                                <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-rose-500 hover:text-rose-400 font-black text-[10px] uppercase">X</button>
+                                <span className="text-[11px] font-black text-[#0D6B8C]">R$ {p.valor}</span>
+                                <button onClick={() => excluirItem(p.id, 'pagamentos_detalhes')} className="text-red-500 hover:text-red-600 font-black text-[10px] uppercase bg-red-50 w-6 h-6 rounded-full flex items-center justify-center">X</button>
                               </div>
                             </div>
                           ));
@@ -354,8 +313,7 @@ const App = () => {
     );
   }
 
-  // --- RENDER PRINCIPAL ---
-  
+  // --- PRÉ-CÁLCULOS PRINCIPAIS ---
   let saldoAcumuladoLoop = 0;
   const evolucaoCompleta = mesesAbbr.map(mesAbbr => {
     const mesDb = mesesMap[mesAbbr];
@@ -363,270 +321,282 @@ const App = () => {
     const rendM = rendimentosConta.filter(r => r.mes === mesDb).reduce((acc, r) => acc + Number(r.valor), 0);
     const saidaM = saidasReais.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
     const meta = getMetaMensal(mesDb);
-    
     saldoAcumuladoLoop = saldoAcumuladoLoop + arrec + rendM - saidaM;
     return { mesAbbr, arrec, rendM, saidaM, saldo: saldoAcumuladoLoop, meta };
   });
 
-  // MÁGICA DE USABILIDADE: Oculta meses zerados e inverte a ordem para exibir do mais atual para o mais antigo!
-  const dadosEvolucao = evolucaoCompleta
-    .filter(item => item.arrec > 0 || item.rendM > 0 || item.saidaM > 0)
-    .reverse();
+  const dadosEvolucao = evolucaoCompleta.filter(item => item.arrec > 0 || item.rendM > 0 || item.saidaM > 0).reverse();
 
+  // --- APP PRINCIPAL (Estilo Fintech Bank Card) ---
   return (
-    <div className="min-h-screen bg-[#0B0C10] font-sans text-white selection:bg-[#D4A373] selection:text-black pb-24">
+    <div className="min-h-screen bg-[#F4F5F7] font-sans text-[#061B30] selection:bg-[#CBAA61] selection:text-white pb-24">
       
-      {/* LOGIN MINIMALISTA NO TOPO DIREITO */}
-      <div className="absolute top-4 right-4 md:top-6 md:right-6 z-40">
-        {!showLogin ? (
-           <button onClick={() => setShowLogin(true)} className="text-gray-600 hover:text-[#D4A373] transition-colors p-2 bg-[#121418] rounded-full border border-gray-800" title="Acesso Restrito">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
-           </button>
-        ) : (
-           <div className="flex items-center bg-[#121418] border border-gray-700 rounded-xl overflow-hidden shadow-2xl">
-              <input type="password" placeholder="SENHA" className="p-2 w-28 bg-transparent text-[10px] uppercase tracking-widest font-bold text-white outline-none placeholder:text-gray-600" value={senha} onChange={e => {
-                 setSenha(e.target.value);
-                 if (e.target.value === '041252') { setIsAdmin(true); setShowLogin(false); setSenha(''); }
-              }} autoFocus />
-              <button onClick={() => setShowLogin(false)} className="text-gray-500 hover:text-white font-black px-3 py-2 text-xs transition-colors bg-gray-800/50">X</button>
-           </div>
-        )}
-      </div>
-
-      {/* CABEÇALHO */}
-      <header className="pt-10 pb-8 px-4 text-center">
-        <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-[#D4A373] uppercase mb-1">Família da Alegria</h1>
-        <p className="text-[9px] uppercase tracking-[0.3em] text-gray-500 font-bold">
-           <span className="text-emerald-500">Natal</span> Bragança City
-        </p>
-      </header>
-
-      {/* BLOCO PRINCIPAL: SALDOS E META (COMPACTO) */}
-      <div className="max-w-5xl mx-auto px-4 mb-6">
-        <div className="bg-[#121418] rounded-[30px] p-6 shadow-2xl border border-gray-800">
+      <div className="max-w-xl mx-auto pt-6 px-4">
+        
+        {/* CARTÃO PRINCIPAL (Degradê Azul) */}
+        <div className="bg-gradient-to-br from-[#061B30] to-[#0D6B8C] rounded-[40px] p-8 shadow-2xl relative overflow-hidden text-white">
           
-          <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-6 mb-6">
-            <div className="text-center md:text-left w-full md:w-auto">
-              <p className="text-[10px] text-[#D4A373] font-black uppercase tracking-widest mb-1">Saldo em Caixa Atual</p>
-              <h1 className="text-4xl md:text-5xl font-black text-emerald-400 tracking-tighter">R$ {saldoAtual.toLocaleString('pt-BR')}</h1>
+          {/* Efeito decorativo sutil de fundo do cartão */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+          
+          {/* TOPO: Título e Login Admin */}
+          <div className="flex justify-between items-start mb-8 relative z-10">
+            <div>
+              <p className="text-[9px] uppercase tracking-[0.3em] text-[#CBAA61] font-black mb-1">Olá,</p>
+              <h1 className="text-xl font-black tracking-widest uppercase text-white">Família da Alegria</h1>
             </div>
             
-            <div className="bg-[#1A1D23] p-4 rounded-2xl border border-gray-800 flex flex-row gap-4 w-full md:w-auto justify-center md:justify-start">
-              <div className="text-center md:text-left">
-                <p className="text-[8px] text-gray-500 font-black uppercase mb-1 tracking-widest">Arrecadado</p>
-                <p className="text-lg font-black text-white">R$ {totalArrecadado.toLocaleString('pt-BR')}</p>
-              </div>
-              <div className="border-l border-gray-700 pl-4 text-center md:text-left">
-                <p className="text-[8px] text-emerald-600 font-black uppercase mb-1 tracking-widest">Rendimento</p>
-                <p className="text-lg font-black text-emerald-500">+ R$ {totalRendimentos.toLocaleString('pt-BR')}</p>
-              </div>
+            <div className="relative">
+              {!showLogin ? (
+                 <button onClick={() => setShowLogin(true)} className="text-white/60 hover:text-[#CBAA61] transition-colors p-2 bg-white/10 rounded-full backdrop-blur-md" title="Acesso Restrito">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
+                 </button>
+              ) : (
+                 <div className="absolute top-0 right-0 flex items-center bg-[#061B30] border border-[#CBAA61] rounded-2xl overflow-hidden shadow-2xl z-50">
+                    <input type="password" placeholder="SENHA" className="p-3 w-32 bg-transparent text-[10px] uppercase tracking-widest font-black text-white outline-none placeholder:text-gray-500" value={senha} onChange={e => {
+                       setSenha(e.target.value);
+                       if (e.target.value === '041252') { setIsAdmin(true); setShowLogin(false); setSenha(''); }
+                    }} autoFocus />
+                    <button onClick={() => setShowLogin(false)} className="text-[#CBAA61] hover:text-white font-black px-4 py-3 text-xs transition-colors bg-white/5">X</button>
+                 </div>
+              )}
             </div>
           </div>
 
-          <div className="pt-4 border-t border-gray-800">
+          {/* CAIXA INTERNA DOURADA: Entradas e Rendimentos */}
+          <div className="border border-[#CBAA61]/50 rounded-3xl p-5 mb-8 flex justify-between items-center bg-black/10 backdrop-blur-sm relative z-10">
+            <div className="flex items-center gap-4">
+               <div className="grid grid-cols-2 gap-1 opacity-80">
+                 <div className="w-3 h-3 border-2 border-[#CBAA61] rounded-sm"></div>
+                 <div className="w-3 h-3 border-2 border-[#CBAA61] rounded-sm"></div>
+                 <div className="w-3 h-3 border-2 border-[#CBAA61] rounded-sm"></div>
+                 <div className="w-3 h-3 border-2 border-[#CBAA61] rounded-sm"></div>
+               </div>
+               <div>
+                  <p className="text-[8px] text-[#CBAA61] font-black uppercase tracking-widest mb-1">Arrecadado</p>
+                  <p className="text-sm font-black tracking-wide">R$ {totalArrecadado.toLocaleString('pt-BR')}</p>
+               </div>
+            </div>
+            
+            <div className="text-right">
+              <p className="text-[8px] text-[#CBAA61] font-black uppercase tracking-widest mb-1">Rendimentos</p>
+              <p className="text-sm font-black tracking-wide text-emerald-300">+ R$ {totalRendimentos.toLocaleString('pt-BR')}</p>
+            </div>
+          </div>
+
+          {/* SALDO PRINCIPAL */}
+          <div className="relative z-10 mb-8">
+            <p className="text-[10px] text-white/60 font-black uppercase tracking-widest mb-2">Meu Saldo</p>
+            <h1 className="text-5xl font-black tracking-tighter">R$ {saldoAtual.toLocaleString('pt-BR')}</h1>
+          </div>
+
+          {/* META BRAGANÇA & PROGRESSO */}
+          <div className="relative z-10 pt-6 border-t border-white/10">
              <div className="flex justify-between items-end mb-2">
                 <div>
-                  <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-0.5">Meta Bragança</p>
-                  <p className="text-sm font-bold text-gray-300">R$ {metaGlobalBragança.toLocaleString('pt-BR')}</p>
+                  <p className="text-[8px] text-[#CBAA61] font-black uppercase tracking-widest mb-1">Meta Global Bragança</p>
+                  <p className="text-xs font-bold text-white/80">R$ {metaGlobalBragança.toLocaleString('pt-BR')}</p>
                 </div>
-                <p className="text-lg font-black text-emerald-400">{( (totalArrecadado/metaGlobalBragança)*100 ).toFixed(1)}%</p>
+                <p className="text-sm font-black text-white">{( (totalArrecadado/metaGlobalBragança)*100 ).toFixed(1)}%</p>
              </div>
-             <div className="w-full bg-[#0B0C10] h-2 rounded-full overflow-hidden border border-gray-800">
-                <div className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full transition-all duration-1000" style={{ width: `${(totalArrecadado/metaGlobalBragança)*100}%` }}></div>
+             <div className="w-full bg-black/30 h-2 rounded-full overflow-hidden">
+                <div className="bg-[#CBAA61] h-full transition-all duration-1000 relative" style={{ width: `${(totalArrecadado/metaGlobalBragança)*100}%` }}>
+                  <div className="absolute inset-0 bg-white/30 w-full h-full animate-pulse"></div>
+                </div>
              </div>
           </div>
         </div>
-      </div>
 
-      {/* EVOLUÇÃO MENSAL: CARDS RESPONSIVOS E COLORIDOS (ORDEM INVERTIDA) */}
-      <div className="max-w-5xl mx-auto px-4 mb-8">
-         <div className="flex items-center gap-4 mb-4 ml-2">
-            <h2 className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Evolução Mensal</h2>
-            <div className="h-[1px] bg-gray-800 flex-1"></div>
-         </div>
-         
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-           {dadosEvolucao.map(item => (
-             <div key={item.mesAbbr} onClick={() => setSelectedMonth(item.mesAbbr)} className="bg-[#121418] border border-gray-800 p-4 rounded-2xl cursor-pointer hover:border-gray-600 transition-colors group">
-               
-               <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
-                 <span className="text-lg font-black uppercase tracking-widest text-gray-200 group-hover:text-white transition-colors">{item.mesAbbr}</span>
-                 <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${item.arrec >= item.meta ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-[#1A1D23] text-gray-500 border border-gray-800'}`}>
-                   {item.arrec > 0 ? `${((item.arrec/item.meta)*100).toFixed(0)}%` : '0%'}
-                 </span>
-               </div>
-               
-               <div className="space-y-1.5 mb-3">
-                 <div className="flex justify-between items-center text-[10px]">
-                   <span className="text-gray-500 font-bold uppercase tracking-wider">Família</span>
-                   <span className="font-black text-white">{item.arrec > 0 ? `R$ ${item.arrec.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
-                 </div>
-                 <div className="flex justify-between items-center text-[10px]">
-                   <span className="text-gray-500 font-bold uppercase tracking-wider">Rend.</span>
-                   <span className="font-black text-emerald-500">{item.rendM > 0 ? `+ R$ ${item.rendM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
-                 </div>
-                 <div className="flex justify-between items-center text-[10px]">
-                   <span className="text-gray-500 font-bold uppercase tracking-wider">Saídas</span>
-                   <span className="font-black text-rose-500">{item.saidaM > 0 ? `- R$ ${item.saidaM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</span>
-                 </div>
-               </div>
-               
-               <div className="pt-2 border-t border-gray-800 flex justify-between items-end">
-                 <span className="text-[9px] uppercase tracking-widest text-sky-500 font-black">Caixa Mês</span>
-                 <span className="text-sm font-black text-sky-400">R$ {item.saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-               </div>
-             </div>
-           ))}
-         </div>
-      </div>
+        {/* MÓDULOS DE AÇÃO (GRID DE BOTÕES) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+          
+          {/* Botão Evolução Mensal */}
+          <button onClick={() => setActiveModal('evolucao')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest">Evolução</span>
+          </button>
 
-      {/* BLOCOS INFERIORES: MEMBROS, EXTRATOS, FLUXO */}
-      <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* COLUNA 1: MEMBROS */}
-        <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">Membros & Metas</h2>
-          {gruposDef.map((g, gIdx) => {
-            const expectCount = g.nomes.filter(n => n !== 'Manu' || isManuActive(mesAtualFull)).length;
-            const paidCount = g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtualFull)).length;
-            
-            return (
-              <div key={gIdx} className="bg-[#121418] border border-gray-800 rounded-2xl overflow-hidden">
-                <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-4 flex justify-between items-center hover:bg-[#1A1D23] transition-colors">
-                  <div className="text-left">
-                    <h2 className="text-[11px] font-black uppercase tracking-widest text-gray-200">{g.titulo}</h2>
-                    <p className={`text-[8px] font-bold uppercase mt-1 tracking-widest ${paidCount === expectCount ? 'text-emerald-500' : 'text-gray-500'}`}>
-                      {paidCount} de {expectCount} pagos
-                    </p>
-                  </div>
-                  <span className="text-[#D4A373] font-light text-xl">{expandedGrupo === gIdx ? '−' : '+'}</span>
-                </button>
-                <div className={`transition-all duration-300 ${expandedGrupo === gIdx ? 'max-h-[800px]' : 'max-h-0'} overflow-hidden`}>
-                  <div className="p-4 pt-0 space-y-2 border-t border-gray-800 mx-4">
-                    {g.nomes.map(nome => {
-                      const m = membros.find(x => x.nome === nome);
-                      const pg = m ? calcPago(m.id) : 0;
-                      const meta = getMetaInd(nome);
-                      return (
-                        <div key={nome} onClick={() => m && setSelectedMembroId(m.id)} className="py-2 flex justify-between items-center border-b border-gray-800/50 last:border-0 cursor-pointer hover:pl-1 transition-all">
-                          <span className="font-bold text-[10px] uppercase text-gray-400 tracking-wider">{nome}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[10px] font-black text-white">R$ {pg}</span>
-                            <div className={`h-[6px] w-[6px] rounded-full ${pg >= meta ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'bg-gray-700'}`}></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+          {/* Botão Membros e Metas */}
+          <button onClick={() => setActiveModal('membros')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest">Membros</span>
+          </button>
 
-        {/* COLUNA 2: EXTRATOS */}
-        <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">Documentos</h2>
-          <div className="bg-[#121418] border border-gray-800 rounded-2xl p-5 min-h-[120px] flex flex-col justify-between">
-            <div className="space-y-2">
-              {docs.slice(0, 5).map(d => (
-                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-3 bg-[#1A1D23] rounded-xl border border-gray-800 hover:border-sky-500/30 transition-colors group">
-                  <span className="text-[9px] font-bold text-gray-300 uppercase truncate pr-2 tracking-widest group-hover:text-white">{d.nome_exibicao}</span>
-                  <span className="text-sky-400 font-black text-sm">↓</span>
-                </a>
-              ))}
-            </div>
-            
-            {docs.length > 5 && (
-              <button onClick={() => setShowAllDocs(true)} className="w-full mt-4 py-2.5 bg-[#1A1D23] rounded-xl border border-gray-800 text-[9px] font-black text-sky-400 uppercase tracking-widest hover:bg-gray-800 transition-colors">
-                Ver Todos ({docs.length})
-              </button>
-            )}
-          </div>
-        </div>
+          {/* Botão Extratos */}
+          <button onClick={() => setActiveModal('docs')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest">Extratos</span>
+          </button>
 
-        {/* COLUNA 3: MOVIMENTAÇÕES */}
-        <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">Fluxo de Caixa</h2>
-          <div className="bg-[#121418] border border-gray-800 rounded-2xl p-5 min-h-[120px] flex flex-col justify-between">
-            <div className="space-y-3">
-              {saidas.slice(0, 4).map(s => (
-                <div key={s.id} className="pb-3 border-b border-gray-800 last:border-0 last:pb-0">
-                  <div className="flex justify-between items-start mb-1.5">
-                     <span className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest ${s.tipo === 'rendimento' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                       {s.mes} • {s.tipo === 'rendimento' ? 'IN' : 'OUT'}
-                     </span>
-                     <span className={`text-[10px] font-black ${s.tipo === 'rendimento' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                       {s.tipo === 'rendimento' ? '+' : '-'} R$ {s.valor}
-                     </span>
-                  </div>
-                  <p className="text-[9px] font-bold text-gray-400 tracking-wider uppercase truncate">{s.descricao}</p>
-                </div>
-              ))}
-            </div>
-            
-            {saidas.length > 4 && (
-               <button onClick={() => setShowAllMovimentacoes(true)} className="w-full mt-4 py-2.5 bg-[#1A1D23] rounded-xl border border-gray-800 text-[9px] font-black text-gray-400 uppercase tracking-widest hover:text-white hover:bg-gray-800 transition-colors">
-                 Registro Completo ({saidas.length})
-               </button>
-            )}
-          </div>
+          {/* Botão Fluxo de Caixa */}
+          <button onClick={() => setActiveModal('fluxo')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest">Fluxo</span>
+          </button>
+
         </div>
       </div>
 
-      {/* MODAL MOVIMENTAÇÕES */}
-      {showAllMovimentacoes && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#121418] border border-gray-800 rounded-[30px] w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[85vh]">
-            <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+      {/* ========================================= */}
+      {/* MODAL 1: EVOLUÇÃO MENSAL (Tabela Clássica) */}
+      {/* ========================================= */}
+      {activeModal === 'evolucao' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm">
+          <div className="bg-white rounded-[30px] w-full max-w-4xl p-6 md:p-10 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
               <div>
-                 <h2 className="text-[11px] font-black text-white uppercase tracking-widest">Fluxo de Caixa</h2>
-                 <p className="text-[8px] text-gray-500 uppercase tracking-widest mt-1">Registro Completo</p>
+                 <h2 className="text-xl md:text-2xl font-black text-[#061B30] uppercase tracking-widest">Evolução Mensal</h2>
+                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1 font-bold">Histórico de Performance</p>
               </div>
-              <button onClick={() => setShowAllMovimentacoes(false)} className="text-gray-600 hover:text-rose-500 font-black text-2xl leading-none transition-colors">×</button>
+              <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-red-500 font-black text-3xl leading-none transition-colors">×</button>
             </div>
             
-            <div className="overflow-y-auto pr-2 space-y-4 flex-1 scrollbar-hide">
-              {saidas.map(s => (
-                <div key={s.id} className="pb-3 border-b border-gray-800 last:border-0 last:pb-0">
-                  <div className="flex justify-between items-start mb-1.5">
-                     <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${s.tipo === 'rendimento' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                       {s.mes} • {s.tipo === 'rendimento' ? 'IN' : 'OUT'}
-                     </span>
-                     <span className={`text-[11px] font-black ${s.tipo === 'rendimento' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                       {s.tipo === 'rendimento' ? '+' : '-'} R$ {s.valor}
-                     </span>
-                  </div>
-                  <p className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">{s.descricao}</p>
-                </div>
-              ))}
+            <div className="overflow-x-auto overflow-y-auto flex-1 scrollbar-hide">
+             <table className="w-full text-left border-collapse min-w-[500px]">
+               <thead>
+                 <tr className="border-b-2 border-[#061B30] text-[10px] text-gray-500 font-black uppercase tracking-wider">
+                   <th className="pb-4 pl-2 text-[#061B30]">Mês</th>
+                   <th className="pb-4 text-[#0D6B8C]">Entrada (Família)</th>
+                   <th className="pb-4 text-emerald-600">Rendimento</th>
+                   <th className="pb-4 text-red-500">Saída</th>
+                   <th className="pb-4 text-[#CBAA61]">Saldo Banco</th>
+                   <th className="pb-4 text-right pr-2">Status</th>
+                 </tr>
+               </thead>
+               <tbody className="text-xs font-black text-[#061B30]">
+                 {dadosEvolucao.map(item => (
+                   <tr key={item.mesAbbr} onClick={() => { setSelectedMonth(item.mesAbbr); setActiveModal(null); }} className="border-b border-gray-100 hover:bg-[#F4F5F7] transition-colors cursor-pointer">
+                     <td className="py-5 pl-2 tracking-wide text-gray-500">{item.mesAbbr}</td>
+                     <td className="py-5 text-[#0D6B8C]">{item.arrec > 0 ? `R$ ${item.arrec.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
+                     <td className="py-5 text-emerald-600">{item.rendM > 0 ? `+ R$ ${item.rendM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
+                     <td className="py-5 text-red-500">{item.saidaM > 0 ? `- R$ ${item.saidaM.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'}</td>
+                     <td className="py-5 text-[#CBAA61] text-sm">R$ {item.saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                     <td className={`py-5 text-right pr-2 ${item.arrec >= item.meta ? 'text-emerald-500' : 'text-gray-400'}`}>
+                       {item.arrec > 0 ? `${((item.arrec/item.meta)*100).toFixed(0)}%` : '0%'}
+                     </td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL EXTRATOS */}
-      {showAllDocs && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#121418] border border-gray-800 rounded-[30px] w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[85vh]">
-            <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+      {/* ========================================= */}
+      {/* MODAL 2: MEMBROS E METAS                  */}
+      {/* ========================================= */}
+      {activeModal === 'membros' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm">
+          <div className="bg-white rounded-[30px] w-full max-w-2xl p-6 md:p-8 shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
               <div>
-                 <h2 className="text-[11px] font-black text-sky-400 uppercase tracking-widest">Documentação</h2>
-                 <p className="text-[8px] text-gray-500 uppercase tracking-widest mt-1">Todos os Extratos</p>
+                 <h2 className="text-xl md:text-2xl font-black text-[#061B30] uppercase tracking-widest">Membros e Metas</h2>
+                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1 font-bold">Acompanhamento do Grupo</p>
               </div>
-              <button onClick={() => setShowAllDocs(false)} className="text-gray-600 hover:text-rose-500 font-black text-2xl leading-none transition-colors">×</button>
+              <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-red-500 font-black text-3xl leading-none transition-colors">×</button>
             </div>
             
-            <div className="overflow-y-auto pr-2 space-y-2 flex-1 scrollbar-hide">
-              {docs.map(d => (
-                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 bg-[#1A1D23] rounded-xl border border-gray-800 hover:border-sky-500/50 transition-all group">
-                  <div className="flex flex-col gap-1">
-                     <span className="text-[10px] font-bold text-white uppercase truncate tracking-widest group-hover:text-sky-400 transition-colors">{d.nome_exibicao}</span>
-                     <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Ref: {d.mes}</span>
+            <div className="overflow-y-auto flex-1 pr-2 space-y-4 scrollbar-hide">
+              {gruposDef.map((g, gIdx) => {
+                const expectCount = g.nomes.filter(n => n !== 'Manu' || isManuActive(mesAtualFull)).length;
+                const paidCount = g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtualFull)).length;
+                return (
+                  <div key={gIdx} className="bg-[#F4F5F7] border border-gray-200 rounded-2xl overflow-hidden">
+                    <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-4 flex justify-between items-center hover:bg-gray-100 transition-colors">
+                      <div className="text-left">
+                        <h2 className="text-[11px] font-black uppercase tracking-widest text-[#061B30]">{g.titulo}</h2>
+                        <p className={`text-[8px] font-bold uppercase mt-1 tracking-widest ${paidCount === expectCount ? 'text-emerald-600' : 'text-gray-500'}`}>
+                          {paidCount} de {expectCount} pagos
+                        </p>
+                      </div>
+                      <span className="text-[#CBAA61] font-black text-xl">{expandedGrupo === gIdx ? '−' : '+'}</span>
+                    </button>
+                    <div className={`transition-all duration-300 ${expandedGrupo === gIdx ? 'max-h-[800px]' : 'max-h-0'} overflow-hidden`}>
+                      <div className="p-4 pt-0 space-y-2 border-t border-gray-200 mx-4">
+                        {g.nomes.map(nome => {
+                          const m = membros.find(x => x.nome === nome);
+                          const pg = m ? calcPago(m.id) : 0;
+                          const meta = getMetaInd(nome);
+                          return (
+                            <div key={nome} onClick={() => { setSelectedMembroId(m?.id || null); setActiveModal(null); }} className="py-2 flex justify-between items-center border-b border-gray-200/50 last:border-0 cursor-pointer hover:pl-2 transition-all">
+                              <span className="font-bold text-[10px] uppercase text-gray-600 tracking-wider">{nome}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[10px] font-black text-[#0D6B8C]">R$ {pg}</span>
+                                <div className={`h-2 w-2 rounded-full ${pg >= meta ? 'bg-emerald-500' : 'bg-gray-300'}`}></div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-sky-500 font-black text-lg pl-4 transition-transform group-hover:translate-y-1">↓</span>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================= */}
+      {/* MODAL 3: EXTRATOS E DOCS                  */}
+      {/* ========================================= */}
+      {activeModal === 'docs' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm">
+          <div className="bg-white rounded-[30px] w-full max-w-md p-6 md:p-8 shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+              <div>
+                 <h2 className="text-xl md:text-2xl font-black text-[#061B30] uppercase tracking-widest">Documentação</h2>
+                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1 font-bold">Acervo de Extratos</p>
+              </div>
+              <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-red-500 font-black text-3xl leading-none transition-colors">×</button>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 pr-2 space-y-3 scrollbar-hide">
+              {docs.map(d => (
+                <a key={d.id} href={d.url_arquivo} download target="_blank" className="flex justify-between items-center p-4 bg-[#F4F5F7] rounded-xl border border-gray-200 hover:border-[#0D6B8C]/50 transition-all group">
+                  <div className="flex flex-col gap-1">
+                     <span className="text-[10px] font-black text-[#061B30] uppercase truncate tracking-widest group-hover:text-[#0D6B8C] transition-colors">{d.nome_exibicao}</span>
+                     <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Ref: {d.mes}</span>
+                  </div>
+                  <span className="text-[#CBAA61] font-black text-lg pl-4 transition-transform group-hover:translate-y-1">↓</span>
                 </a>
               ))}
+              {docs.length === 0 && <p className="text-xs text-gray-400 text-center font-bold italic py-8">Nenhum documento anexado.</p>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================= */}
+      {/* MODAL 4: FLUXO DE CAIXA                   */}
+      {/* ========================================= */}
+      {activeModal === 'fluxo' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm">
+          <div className="bg-white rounded-[30px] w-full max-w-md p-6 md:p-8 shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+              <div>
+                 <h2 className="text-xl md:text-2xl font-black text-[#061B30] uppercase tracking-widest">Fluxo de Caixa</h2>
+                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1 font-bold">Saídas e Rendimentos</p>
+              </div>
+              <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-red-500 font-black text-3xl leading-none transition-colors">×</button>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 pr-2 space-y-4 scrollbar-hide">
+              {saidas.map(s => (
+                <div key={s.id} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                  <div className="flex justify-between items-start mb-2">
+                     <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${s.tipo === 'rendimento' ? 'bg-[#0D6B8C]/10 text-[#0D6B8C]' : 'bg-red-50 text-red-500'}`}>
+                       {s.mes} • {s.tipo === 'rendimento' ? 'ENTRADA' : 'SAÍDA'}
+                     </span>
+                     <span className={`text-sm font-black ${s.tipo === 'rendimento' ? 'text-[#0D6B8C]' : 'text-red-500'}`}>
+                       {s.tipo === 'rendimento' ? '+' : '-'} R$ {s.valor}
+                     </span>
+                  </div>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{s.descricao}</p>
+                </div>
+              ))}
+              {saidas.length === 0 && <p className="text-xs text-gray-400 text-center font-bold italic py-8">Nenhuma movimentação registrada.</p>}
             </div>
           </div>
         </div>

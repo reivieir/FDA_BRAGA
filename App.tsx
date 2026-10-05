@@ -21,6 +21,10 @@ const App = () => {
   const [expandedGrupo, setExpandedGrupo] = useState<number | null>(null);
   const [showLogin, setShowLogin] = useState(false);
   const [senha, setSenha] = useState('');
+  const [resumoAutorizado, setResumoAutorizado] = useState(false);
+  const [senhaResumo, setSenhaResumo] = useState('');
+  const [erroResumo, setErroResumo] = useState('');
+  const senhaAcesso = '041252';
   
   // Controles de Formulário Admin
   const [filtrosGrupos, setFiltrosGrupos] = useState<any>({ 0: 'Todos', 1: 'Todos', 2: 'Todos', 3: 'Todos', 4: 'Todos' });
@@ -130,6 +134,66 @@ const App = () => {
   const totalRendimentos = rendimentosConta.reduce((acc, r) => acc + Number(r.valor), 0);
   const totalSaidas = saidasReais.reduce((acc, s) => acc + Number(s.valor), 0);
   const saldoAtual = totalArrecadado + totalRendimentos - totalSaidas;
+
+  const moeda = (valor: number) => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const resumoMembros = membros.map(m => {
+    const meses = (m.nome === 'Manu' ? expectedMonthsAll.slice(0, 2) : expectedMonthsAll).map(mes => {
+      const previsto = (mes === 'Fevereiro' ? 60 : 70) / (m.nome === 'Pablo' ? 2 : 1);
+      const pago = historico.filter(h => h.membro_id === m.id && (mesesMap[h.mes] || h.mes) === mes)
+        .reduce((total, h) => total + Number(h.valor), 0);
+      const pendente = Math.max(0, Math.round((previsto - pago) * 100) / 100);
+      const vencido = hoje >= new Date(2026, expectedMonthsAll.indexOf(mes) + 1, 16);
+      const status = pendente === 0 ? 'Pago' : pago > 0 ? 'Parcial' : vencido ? 'Atrasado' : 'A vencer';
+      return { mes, pago, pendente, status };
+    });
+    const pago = calcPago(m.id);
+    return { ...m, meses, pago, pendente: Math.max(0, Math.round((getMetaInd(m.nome) - pago) * 100) / 100) };
+  });
+
+  if (activeModal === 'resumo' && resumoAutorizado) {
+    const totalPago = resumoMembros.reduce((total, m) => total + m.pago, 0);
+    const totalPendente = resumoMembros.reduce((total, m) => total + m.pendente, 0);
+    return (
+      <div className="min-h-screen bg-[#F4F5F7] p-4 md:p-8 text-[#061B30] font-sans">
+        <div className="max-w-5xl mx-auto">
+          <button onClick={() => { setActiveModal(null); setResumoAutorizado(false); }} className="bg-white rounded-xl px-4 py-3 text-xs font-black text-[#0D6B8C] shadow-sm">← Voltar ao início</button>
+          <h1 className="text-2xl md:text-3xl font-black mt-6">Resumo de pagamentos</h1>
+          <p className="text-sm text-gray-500 mt-2">Todos os membros • Fevereiro a dezembro de 2026</p>
+          <div className="grid grid-cols-2 gap-3 my-6">
+            <div className="bg-[#061B30] text-white p-5 rounded-2xl"><p className="text-xs mb-2">Total pago</p><p className="text-xl md:text-3xl font-black">{moeda(totalPago)}</p></div>
+            <div className="bg-white border border-gray-200 p-5 rounded-2xl"><p className="text-xs mb-2">Total pendente</p><p className="text-xl md:text-3xl font-black text-rose-600">{moeda(totalPendente)}</p></div>
+          </div>
+          <p className="text-xs text-gray-500 mb-5">O pendente é o saldo para a meta total, incluindo parcelas futuras. Os meses consideram a referência de cada pagamento; valores parciais não quitam a parcela.</p>
+          <div className="space-y-4">
+            {resumoMembros.map(m => (
+              <article key={m.id} className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div><h2 className="font-black text-lg">{m.nome}</h2><p className="text-xs text-gray-500">{gruposDef.find(g => g.nomes.includes(m.nome))?.titulo || 'Outros membros'}</p></div>
+                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${m.pendente === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{m.pendente === 0 ? 'Quitado' : 'Com saldo pendente'}</span>
+                </div>
+                <dl className="grid grid-cols-3 gap-2 mb-5 text-xs">
+                  <div><dt className="text-gray-500">Meta</dt><dd className="font-black mt-1">{moeda(getMetaInd(m.nome))}</dd></div>
+                  <div><dt className="text-gray-500">Pago</dt><dd className="font-black text-[#0D6B8C] mt-1">{moeda(m.pago)}</dd></div>
+                  <div><dt className="text-gray-500">Pendente</dt><dd className="font-black text-rose-600 mt-1">{moeda(m.pendente)}</dd></div>
+                </dl>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                  {m.meses.map((parcela: any) => (
+                    <div key={parcela.mes} className={`rounded-xl border p-2 text-center ${parcela.status === 'Pago' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : parcela.status === 'Atrasado' ? 'bg-rose-50 border-rose-200 text-rose-700' : parcela.status === 'Parcial' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+                      <p className="text-xs font-black">{parcela.mes.slice(0, 3)}</p>
+                      <p className="text-[10px] font-bold mt-1">{parcela.status}</p>
+                      <p className="text-[10px] mt-1">Pago: {moeda(parcela.pago)}</p>
+                      {parcela.pendente > 0 && <p className="text-[10px]">Falta: {moeda(parcela.pendente)}</p>}
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))}
+            {resumoMembros.length === 0 && <p className="text-center text-gray-500 py-8">Nenhum membro carregado.</p>}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ==========================================
   // TELA 1: DETALHAMENTO DO MÊS
@@ -462,7 +526,7 @@ const App = () => {
                  <div className="absolute top-0 right-0 flex items-center bg-[#061B30] border border-[#CBAA61] rounded-2xl overflow-hidden shadow-2xl z-50">
                     <input type="password" placeholder="SENHA" className="p-3 w-32 bg-transparent text-[10px] uppercase tracking-widest font-black text-white outline-none placeholder:text-gray-500" value={senha} onChange={e => {
                        setSenha(e.target.value);
-                       if (e.target.value === '041252') { setIsAdmin(true); setShowLogin(false); setSenha(''); }
+                       if (e.target.value === senhaAcesso) { setIsAdmin(true); setShowLogin(false); setSenha(''); }
                     }} autoFocus />
                     <button onClick={() => setShowLogin(false)} className="text-[#CBAA61] hover:text-white font-black px-4 py-3 text-xs transition-colors bg-white/5">X</button>
                  </div>
@@ -514,8 +578,12 @@ const App = () => {
           </div>
         </div>
 
-        {/* MÓDULOS DE AÇÃO (GRID DE 6 BOTÕES - VOLTOU A SER 2 COLUNAS NO CELULAR E MAIORZINHO) */}
+        {/* MÓDULOS DE AÇÃO */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
+          <button onClick={() => { setResumoAutorizado(false); setSenhaResumo(''); setErroResumo(''); setShowLogin(false); setSenha(''); setActiveModal('resumo'); }} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
+            <svg aria-hidden="true" className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6M8 4H6a2 2 0 00-2 2v14h16V6a2 2 0 00-2-2h-2M8 2h8v4H8z" /></svg>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Resumo de pagamentos</span>
+          </button>
           
           <button onClick={() => setActiveModal('pagamento')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
             <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -553,6 +621,20 @@ const App = () => {
       {/* ============================================================ */}
       {/* MODAL 1: EVOLUÇÃO MENSAL (Tabela Compacta sem barra lateral) */}
       {/* ============================================================ */}
+      {activeModal === 'resumo' && !resumoAutorizado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="resumo-login-titulo">
+          <form onSubmit={e => { e.preventDefault(); if (senhaResumo === senhaAcesso) { setResumoAutorizado(true); setSenhaResumo(''); setErroResumo(''); } else { setErroResumo('Senha incorreta. Tente novamente.'); } }} className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="flex justify-between items-start gap-4 mb-4">
+              <h2 id="resumo-login-titulo" className="text-xl font-black">Resumo de pagamentos</h2>
+              <button type="button" aria-label="Fechar" onClick={() => { setActiveModal(null); setSenhaResumo(''); setErroResumo(''); }} className="text-2xl text-gray-500">×</button>
+            </div>
+            <label htmlFor="senha-resumo" className="block text-sm text-gray-500 mb-2">Digite a senha de acesso</label>
+            <input id="senha-resumo" type="password" autoComplete="current-password" autoFocus required value={senhaResumo} onChange={e => { setSenhaResumo(e.target.value); setErroResumo(''); }} className="w-full p-3 rounded-xl border border-gray-300 text-[#061B30]" />
+            {erroResumo && <p role="alert" className="text-sm text-rose-600 mt-3">{erroResumo}</p>}
+            <button type="submit" className="w-full bg-[#061B30] text-white rounded-xl p-3 font-bold mt-4">Entrar</button>
+          </form>
+        </div>
+      )}
       {activeModal === 'evolucao' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#061B30]/80 backdrop-blur-sm">
           <div className="bg-white rounded-[30px] w-full max-w-4xl p-5 md:p-8 shadow-2xl flex flex-col max-h-[90vh]">

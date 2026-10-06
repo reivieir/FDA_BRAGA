@@ -164,9 +164,14 @@ const App = () => {
             <div className="bg-white border border-gray-200 p-5 rounded-2xl"><p className="text-xs mb-2">Total pendente</p><p className="text-xl md:text-3xl font-black text-rose-600">{moeda(totalPendente)}</p></div>
           </div>
           <p className="text-xs text-gray-500 mb-5">O pendente é o saldo para a meta total, incluindo parcelas futuras. Os meses consideram a referência de cada pagamento; valores parciais não quitam a parcela.</p>
-          <div className="space-y-4">
+          <p className="text-sm text-gray-500 mb-3">Clique em um nome para ver os detalhes dos pagamentos.</p>
+          <div className="space-y-3">
             {resumoMembros.map(m => (
-              <article key={m.id} className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
+              <details key={m.id} name="resumo-membro" className="group bg-white rounded-2xl border border-gray-200 shadow-sm">
+                <summary className="cursor-pointer rounded-2xl p-4 md:p-5 font-black text-[#061B30] hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0D6B8C]">
+                  <span className="ml-2">{m.nome}</span>
+                </summary>
+                <article className="border-t border-gray-100 p-4 md:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <div><h2 className="font-black text-lg">{m.nome}</h2><p className="text-xs text-gray-500">{gruposDef.find(g => g.nomes.includes(m.nome))?.titulo || 'Outros membros'}</p></div>
                   <span className={`text-xs font-bold px-3 py-1 rounded-full ${m.pendente === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{m.pendente === 0 ? 'Quitado' : 'Com saldo pendente'}</span>
@@ -186,7 +191,8 @@ const App = () => {
                     </div>
                   ))}
                 </div>
-              </article>
+                </article>
+              </details>
             ))}
             {resumoMembros.length === 0 && <p className="text-center text-gray-500 py-8">Nenhum membro carregado.</p>}
           </div>

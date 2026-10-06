@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 
 // Inicialização segura do ecossistema
-const supabaseUrl = 'https://jqpdampcglodtmfmeivk.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcGRhbXBjZ2xvZHRtZm1laXZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTE1MjYsImV4cCI6MjA4NjU4NzUyNn0.yjEPWO1bEq0LxCW5gECXOyIwsO9ol3IS_1KfueHdEKs';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const App = () => {
@@ -24,7 +24,29 @@ const App = () => {
   const [resumoAutorizado, setResumoAutorizado] = useState(false);
   const [senhaResumo, setSenhaResumo] = useState('');
   const [erroResumo, setErroResumo] = useState('');
-  const senhaAcesso = '041252';
+  const [validandoAcesso, setValidandoAcesso] = useState(false);
+  const [erroAcesso, setErroAcesso] = useState('');
+  const validarSenha = async (valor: string, resumo: boolean) => {
+    if (validandoAcesso) return;
+    setValidandoAcesso(true);
+    setErroAcesso('');
+    try {
+      const response = await fetch('/api/validar-acesso', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senha: valor })
+      });
+      if (!response.ok) {
+        const mensagem = response.status === 401 ? 'Senha incorreta. Tente novamente.' : 'Não foi possível validar o acesso. Tente novamente.';
+        if (resumo) setErroResumo(mensagem); else setErroAcesso(mensagem);
+        return;
+      }
+      if (resumo) { setResumoAutorizado(true); setSenhaResumo(''); setErroResumo(''); }
+      else { setIsAdmin(true); setShowLogin(false); setSenha(''); }
+    } catch {
+      if (resumo) setErroResumo('Falha de conexão. Tente novamente.');
+      else setErroAcesso('Falha de conexão. Tente novamente.');
+    } finally { setValidandoAcesso(false); }
+  };
   
   // Controles de Formulário Admin
   const [filtrosGrupos, setFiltrosGrupos] = useState<any>({ 0: 'Todos', 1: 'Todos', 2: 'Todos', 3: 'Todos', 4: 'Todos' });
@@ -34,6 +56,14 @@ const App = () => {
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [nomeDoc, setNomeDoc] = useState('');
   const [tipoFluxo, setTipoFluxo] = useState('saida'); 
+
+  const [nomeMembro, setNomeMembro] = useState('');
+  const [grupoMembro, setGrupoMembro] = useState('Grupo Adriana');
+  const [salvandoMembro, setSalvandoMembro] = useState(false);
+  const [erroMembro, setErroMembro] = useState('');
+  const isPagante = (m: any) => m?.pagante !== false;
+  const membrosPagantes = membros.filter(isPagante);
+  const membrosNaoPagantes = membros.filter(m => !isPagante(m));
 
   const hoje = new Date();
   const diaDoMes = hoje.getDate();
@@ -69,13 +99,31 @@ const App = () => {
   
   const metaGlobalBragança = 19510;
 
-  const gruposDef = [
+  const gruposBase = [
     { titulo: "Grupo Adriana", nomes: ["Adriana", "Silvinho", "Adriano", "Angela", "Vini", "Stefany"] },
     { titulo: "Grupo Helena", nomes: ["Helena", "Antonio", "Paty", "Jair", "Giovana", "Manu", "Pablo"] },
     { titulo: "Grupo Clarice", nomes: ["Clarice", "Gilson", "Deia", "Helio", "Amanda", "Reinaldo"] },
     { titulo: "Grupo Katia", nomes: ["Katia", "Giovani", "Cintia", "Rafael", "Ju", "Bia"] },
     { titulo: "Grupo Julia", nomes: ["Julia", "Juan"] }
   ];
+
+  const gruposDef = [...gruposBase, { titulo: 'Outros membros', nomes: [] as string[] }].map(g => ({
+    ...g, nomes: Array.from(new Set([...g.nomes, ...membros.filter(m =>
+      m.grupo === g.titulo || (g.titulo === 'Outros membros' && !gruposBase.some(b => b.nomes.includes(m.nome) || b.titulo === m.grupo))
+    ).map(m => m.nome)]))
+  }));
+  const metaDoMembro = (m: any) => isPagante(m) ? getMetaInd(m.nome) : 0;
+  const cadastrarNaoPagante = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nomeMembro.trim() || salvandoMembro) return;
+    setSalvandoMembro(true); setErroMembro('');
+    try {
+      const { error } = await supabase.from('membros').insert({ nome: nomeMembro.trim(), pagante: false, grupo: grupoMembro });
+      if (error) { setErroMembro(error.code === '23505' ? 'Já existe um membro com esse nome.' : 'Não foi possível salvar o membro. Tente novamente.'); return; }
+      setNomeMembro(''); await fetchAll();
+    } catch { setErroMembro('Falha de conexão ao salvar. Tente novamente.'); }
+    finally { setSalvandoMembro(false); }
+  };
 
   useEffect(() => { 
     fetchAll(); 
@@ -103,7 +151,7 @@ const App = () => {
   };
 
   const lancarPagamento = async (id: number, valor: string) => {
-    if (!valor || parseFloat(valor) <= 0) return;
+    if (!isPagante(membros.find(m => m.id === id)) || !valor || parseFloat(valor) <= 0) return;
     await supabase.from('pagamentos_detalhes').insert([{ membro_id: id, valor: parseFloat(valor), mes: mesGlobal, mes_caixa: mesCaixaGlobal }]);
     setValoresLote({ ...valoresLote, [id]: '' }); fetchAll();
   };
@@ -137,7 +185,7 @@ const App = () => {
 
   const moeda = (valor: number) => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const resumoMembros = membros.map(m => {
-    const meses = (m.nome === 'Manu' ? expectedMonthsAll.slice(0, 2) : expectedMonthsAll).map(mes => {
+    const meses = (!isPagante(m) ? [] : m.nome === 'Manu' ? expectedMonthsAll.slice(0, 2) : expectedMonthsAll).map(mes => {
       const previsto = (mes === 'Fevereiro' ? 60 : 70) / (m.nome === 'Pablo' ? 2 : 1);
       const pago = historico.filter(h => h.membro_id === m.id && (mesesMap[h.mes] || h.mes) === mes)
         .reduce((total, h) => total + Number(h.valor), 0);
@@ -147,7 +195,7 @@ const App = () => {
       return { mes, pago, pendente, status };
     });
     const pago = calcPago(m.id);
-    return { ...m, meses, pago, pendente: Math.max(0, Math.round((getMetaInd(m.nome) - pago) * 100) / 100) };
+    return { ...m, meses, pago, pendente: Math.max(0, Math.round((metaDoMembro(m) - pago) * 100) / 100) };
   });
 
   if (activeModal === 'resumo' && resumoAutorizado) {
@@ -169,10 +217,10 @@ const App = () => {
               <article key={m.id} className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <div><h2 className="font-black text-lg">{m.nome}</h2><p className="text-xs text-gray-500">{gruposDef.find(g => g.nomes.includes(m.nome))?.titulo || 'Outros membros'}</p></div>
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${m.pendente === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{m.pendente === 0 ? 'Quitado' : 'Com saldo pendente'}</span>
+                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${m.pendente === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{!isPagante(m) ? 'Não pagante • Isento' : m.pendente === 0 ? 'Quitado' : 'Com saldo pendente'}</span>
                 </div>
                 <dl className="grid grid-cols-3 gap-2 mb-5 text-xs">
-                  <div><dt className="text-gray-500">Meta</dt><dd className="font-black mt-1">{moeda(getMetaInd(m.nome))}</dd></div>
+                  <div><dt className="text-gray-500">Meta</dt><dd className="font-black mt-1">{moeda(metaDoMembro(m))}</dd></div>
                   <div><dt className="text-gray-500">Pago</dt><dd className="font-black text-[#0D6B8C] mt-1">{moeda(m.pago)}</dd></div>
                   <div><dt className="text-gray-500">Pendente</dt><dd className="font-black text-rose-600 mt-1">{moeda(m.pendente)}</dd></div>
                 </dl>
@@ -204,8 +252,8 @@ const App = () => {
     const arrecMes = pagsMes.reduce((acc, p) => acc + Number(p.valor), 0);
     const rendMes = rendimentosConta.filter(r => r.mes === mesDb).reduce((acc, r) => acc + Number(r.valor), 0);
     const saidaMes = saidasReais.filter(s => s.mes === mesDb).reduce((acc, s) => acc + Number(s.valor), 0);
-    const pagantesUnicosCount = new Set(pagsMes.map(p => p.membro_id)).size;
-    const totalEsperadoMes = isManuActive(mesDb) ? 27 : 26; 
+    const pagantesUnicosCount = new Set(pagsMes.filter(p => membrosPagantes.some(m => m.id === p.membro_id)).map(p => p.membro_id)).size;
+    const totalEsperadoMes = membrosPagantes.filter(m => m.nome !== 'Manu' || isManuActive(mesDb)).length; 
 
     return (
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#061B30]/90 backdrop-blur-sm">
@@ -267,7 +315,17 @@ const App = () => {
     const m = membros.find(x => x.id === selectedMembroId);
     const pags = historico.filter(h => h.membro_id === selectedMembroId);
     const pagoAcumulado = calcPago(selectedMembroId);
-    const metaMembro = getMetaInd(m?.nome || '');
+    const metaMembro = m ? metaDoMembro(m) : 0;
+    if (m && !isPagante(m)) return (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#061B30]/90">
+        <div className="bg-white rounded-3xl p-8 w-full max-w-md text-center">
+          <button onClick={() => setSelectedMembroId(null)} className="float-right font-black">×</button>
+          <h2 className="text-2xl font-black">{m.nome}</h2>
+          <p className="mt-4 text-[#0D6B8C] font-bold">Não pagante • Isento</p>
+          <p className="mt-3 text-sm text-gray-500">Participa da lista de membros, sem mensalidades ou pendências.</p>
+        </div>
+      </div>
+    );
     
     const isManu = m?.nome === 'Manu';
     const memberExpectedMonths = isManu ? ["Fevereiro", "Março"] : expectedMonthsAll;
@@ -434,6 +492,18 @@ const App = () => {
              </div>
           </div>
 
+<form onSubmit={cadastrarNaoPagante} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-md mt-6">
+            <h2 className="font-black mb-3">Membros — cadastrar não pagante</h2>
+            <p className="text-xs text-gray-500 mb-4">Crianças e membros isentos entram apenas na lista e na contagem, sem cobranças.</p>
+            <label className="block text-xs mb-1" htmlFor="nome-nao-pagante">Nome</label>
+            <input id="nome-nao-pagante" required maxLength={100} value={nomeMembro} onChange={e => setNomeMembro(e.target.value)} className="border rounded-xl p-3 w-full mb-3" />
+            <label className="block text-xs mb-1" htmlFor="grupo-nao-pagante">Grupo</label>
+            <select id="grupo-nao-pagante" value={grupoMembro} onChange={e => setGrupoMembro(e.target.value)} className="border rounded-xl p-3 w-full mb-3">
+              {gruposDef.map(g => <option key={g.titulo}>{g.titulo}</option>)}
+            </select>
+            {erroMembro && <p role="alert" className="text-red-600 text-sm mb-3">{erroMembro}</p>}
+            <button disabled={salvandoMembro} className="bg-[#0D6B8C] text-white rounded-xl px-4 py-3 disabled:opacity-50">{salvandoMembro ? 'Salvando...' : 'Adicionar não pagante'}</button>
+          </form>
           {/* Box Grupos */}
           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-md mt-6">
              <h2 className="text-[10px] font-black uppercase mb-6 tracking-widest text-[#CBAA61]">3. Lançamento de PIX</h2>
@@ -443,11 +513,11 @@ const App = () => {
                     <h2 className="text-[11px] font-black text-[#061B30] uppercase tracking-widest mb-4">{g.titulo}</h2>
                     <select className="w-full p-3 rounded-xl border border-gray-300 mb-4 bg-white text-gray-500 text-xs font-bold outline-none focus:border-[#0D6B8C] uppercase tracking-wider" value={filtrosGrupos[idx]} onChange={e => setFiltrosGrupos({...filtrosGrupos, [idx]: e.target.value})}>
                       <option value="Todos">Selecionar Membro...</option>
-                      {g.nomes.filter(n => n !== 'Manu' || isManuActive(mesGlobal)).map(n => <option key={n} value={n}>{n}</option>)}
+                      {g.nomes.filter(n => isPagante(membros.find(m => m.nome === n)) && (n !== 'Manu' || isManuActive(mesGlobal))).map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
                     <div className="space-y-3">
                       {g.nomes
-                        .filter(n => n !== 'Manu' || isManuActive(mesGlobal))
+                        .filter(n => isPagante(membros.find(m => m.nome === n)) && (n !== 'Manu' || isManuActive(mesGlobal)))
                         .filter(n => filtrosGrupos[idx] === 'Todos' || filtrosGrupos[idx] === n)
                         .map(nome => {
                         const m = membros.find(x => x.nome === nome);
@@ -524,9 +594,10 @@ const App = () => {
                  </button>
               ) : (
                  <div className="absolute top-0 right-0 flex items-center bg-[#061B30] border border-[#CBAA61] rounded-2xl overflow-hidden shadow-2xl z-50">
-                    <input type="password" placeholder="SENHA" className="p-3 w-32 bg-transparent text-[10px] uppercase tracking-widest font-black text-white outline-none placeholder:text-gray-500" value={senha} onChange={e => {
+                    {erroAcesso && <span role="alert" className="text-xs text-rose-300 p-2">{erroAcesso}</span>}
+                    <input disabled={validandoAcesso} type="password" placeholder="SENHA" className="p-3 w-32 bg-transparent text-[10px] uppercase tracking-widest font-black text-white outline-none placeholder:text-gray-500" value={senha} onChange={e => {
                        setSenha(e.target.value);
-                       if (e.target.value === senhaAcesso) { setIsAdmin(true); setShowLogin(false); setSenha(''); }
+                       if (e.target.value.length === 6) void validarSenha(e.target.value, false);
                     }} autoFocus />
                     <button onClick={() => setShowLogin(false)} className="text-[#CBAA61] hover:text-white font-black px-4 py-3 text-xs transition-colors bg-white/5">X</button>
                  </div>
@@ -602,7 +673,8 @@ const App = () => {
 
           <button onClick={() => setActiveModal('membros')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
             <svg className="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Membros</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Membros ({membros.length})</span>
+            <span className="text-[9px]">{membrosPagantes.length} pagantes • {membrosNaoPagantes.length} não pagantes</span>
           </button>
 
           <button onClick={() => setActiveModal('docs')} className="bg-[#CBAA61] hover:bg-[#BCA15D] text-[#061B30] rounded-3xl p-5 flex flex-col items-center justify-center gap-3 transition-transform hover:-translate-y-1 shadow-md">
@@ -623,7 +695,7 @@ const App = () => {
       {/* ============================================================ */}
       {activeModal === 'resumo' && !resumoAutorizado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#061B30]/80 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="resumo-login-titulo">
-          <form onSubmit={e => { e.preventDefault(); if (senhaResumo === senhaAcesso) { setResumoAutorizado(true); setSenhaResumo(''); setErroResumo(''); } else { setErroResumo('Senha incorreta. Tente novamente.'); } }} className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+          <form onSubmit={e => { e.preventDefault(); void validarSenha(senhaResumo, true); }} className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
             <div className="flex justify-between items-start gap-4 mb-4">
               <h2 id="resumo-login-titulo" className="text-xl font-black">Resumo de pagamentos</h2>
               <button type="button" aria-label="Fechar" onClick={() => { setActiveModal(null); setSenhaResumo(''); setErroResumo(''); }} className="text-2xl text-gray-500">×</button>
@@ -692,10 +764,15 @@ const App = () => {
               <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-red-500 font-black text-3xl leading-none transition-colors">×</button>
             </div>
             
+            <div className="grid grid-cols-3 gap-2 mb-4 text-center text-xs">
+              <div className="bg-gray-50 rounded-xl p-3">Total de membros<strong className="block text-lg">{membros.length}</strong></div>
+              <div className="bg-gray-50 rounded-xl p-3">Pagantes<strong className="block text-lg">{membrosPagantes.length}</strong></div>
+              <div className="bg-gray-50 rounded-xl p-3">Não pagantes<strong className="block text-lg">{membrosNaoPagantes.length}</strong></div>
+            </div>
             <div className="overflow-y-auto flex-1 pr-2 space-y-4 scrollbar-hide">
               {gruposDef.map((g, gIdx) => {
-                const expectCount = g.nomes.filter(n => n !== 'Manu' || isManuActive(mesAtualFull)).length;
-                const paidCount = g.nomes.filter(n => historico.some(h => h.membros?.nome === n && h.mes === mesAtualFull)).length;
+                const expectCount = g.nomes.filter(n => isPagante(membros.find(m => m.nome === n)) && (n !== 'Manu' || isManuActive(mesAtualFull))).length;
+                const paidCount = g.nomes.filter(n => isPagante(membros.find(m => m.nome === n)) && (n !== 'Manu' || isManuActive(mesAtualFull)) && historico.some(h => h.membros?.nome === n && h.mes === mesAtualFull)).length;
                 return (
                   <div key={gIdx} className="bg-[#F4F5F7] border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
                     <button onClick={() => setExpandedGrupo(expandedGrupo === gIdx ? null : gIdx)} className="w-full p-4 flex justify-between items-center hover:bg-gray-100 transition-colors">
@@ -712,12 +789,12 @@ const App = () => {
                         {g.nomes.map(nome => {
                           const m = membros.find(x => x.nome === nome);
                           const pg = m ? calcPago(m.id) : 0;
-                          const meta = getMetaInd(nome);
+                          const meta = m ? metaDoMembro(m) : getMetaInd(nome);
                           return (
                             <div key={nome} onClick={() => { setSelectedMembroId(m?.id || null); setActiveModal(null); }} className="py-2 flex justify-between items-center border-b border-gray-200/50 last:border-0 cursor-pointer hover:pl-2 transition-all">
                               <span className="font-bold text-[10px] uppercase text-gray-600 tracking-wider">{nome}</span>
                               <div className="flex items-center gap-3">
-                                <span className="text-[10px] font-black text-[#0D6B8C]">R$ {pg}</span>
+                                <span className="text-[10px] font-black text-[#0D6B8C]">{m && !isPagante(m) ? 'Não pagante • Isento' : `R$ ${pg}`}</span>
                                 <div className={`h-2 w-2 rounded-full ${pg >= meta ? 'bg-emerald-500' : 'bg-gray-300'}`}></div>
                               </div>
                             </div>
@@ -919,3 +996,4 @@ const App = () => {
 const container = document.getElementById('root');
 if (container) { createRoot(container).render(<App />); }
 export default App;
+

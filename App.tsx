@@ -570,13 +570,6 @@ const App = () => {
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 mb-5 px-4 py-3 rounded-2xl border border-white/20 bg-white/5" role="status" aria-live="polite">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Acessos à página</span>
-            <span className="text-sm font-black text-[#CBAA61]">
-              {erroAcessos ? 'Indisponível no momento' : totalAcessos === null ? 'Carregando…' : totalAcessos.toLocaleString('pt-BR')}
-            </span>
-          </div>
-
           {/* CAIXA INTERNA DOURADA: Entradas e Rendimentos */}
           <div className="border border-[#CBAA61]/50 rounded-3xl p-5 mb-8 flex justify-between items-center bg-black/10 backdrop-blur-sm relative z-10">
             <div className="flex items-center gap-4">
@@ -659,6 +652,14 @@ const App = () => {
           </button>
 
         </div>
+        <footer className="mt-8 rounded-2xl bg-[#061B30] text-white shadow-md">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 rounded-2xl border border-white/20 bg-white/5" role="status" aria-live="polite">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Acessos à página</span>
+            <span className="text-sm font-black text-[#CBAA61]">
+              {erroAcessos ? 'Indisponível no momento' : totalAcessos === null ? 'Carregando…' : totalAcessos.toLocaleString('pt-BR')}
+            </span>
+          </div>
+        </footer>
       </div>
 
       {/* ============================================================ */}

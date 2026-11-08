@@ -7,7 +7,37 @@ const supabaseUrl = 'https://jqpdampcglodtmfmeivk.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcGRhbXBjZ2xvZHRtZm1laXZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTE1MjYsImV4cCI6MjA4NjU4NzUyNn0.yjEPWO1bEq0LxCW5gECXOyIwsO9ol3IS_1KfueHdEKs';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Uma promessa por carregamento evita contar novamente ao abrir cards ou renderizar.
+let acessoPromise: Promise<number> | null = null;
+const registrarAcesso = () => {
+  if (!acessoPromise) {
+    acessoPromise = (async () => {
+      const { data, error } = await supabase.rpc('registrar_acesso_fda', {
+        acesso_id: crypto.randomUUID()
+      });
+      if (error) throw error;
+      const total = Number(data);
+      if (data == null || !Number.isSafeInteger(total) || total < 0) throw new Error('Contagem inválida');
+      return total;
+    })();
+  }
+  return acessoPromise;
+};
+
 const App = () => {
+  const [totalAcessos, setTotalAcessos] = useState<number | null>(null);
+  const [erroAcessos, setErroAcessos] = useState(false);
+
+  useEffect(() => {
+    let ativo = true;
+    registrarAcesso().then(total => {
+      if (ativo) setTotalAcessos(total);
+    }).catch(() => {
+      if (ativo) setErroAcessos(true);
+    });
+    return () => { ativo = false; };
+  }, []);
+
   const [membros, setMembros] = useState<any[]>([]);
   const [historico, setHistorico] = useState<any[]>([]);
   const [saidas, setSaidas] = useState<any[]>([]);
@@ -538,6 +568,13 @@ const App = () => {
                  </div>
               )}
             </div>
+          </div>
+
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 mb-5 px-4 py-3 rounded-2xl border border-white/20 bg-white/5" role="status" aria-live="polite">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Acessos à página</span>
+            <span className="text-sm font-black text-[#CBAA61]">
+              {erroAcessos ? 'Indisponível no momento' : totalAcessos === null ? 'Carregando…' : totalAcessos.toLocaleString('pt-BR')}
+            </span>
           </div>
 
           {/* CAIXA INTERNA DOURADA: Entradas e Rendimentos */}
